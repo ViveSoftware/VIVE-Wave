@@ -1,0 +1,39 @@
+{
+    "name": "WVR_Input",
+    "maps": [
+        {
+            "name": "mouse",
+            "id": "0d530d8d-74a4-45d7-99e6-71c645e26595",
+            "actions": [
+                {
+                    "name": "axis",
+                    "type": "Value",
+                    "id": "f7a4cffd-4f5a-4017-8acc-fed4ebbd61bf",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "a91aa86a-743b-459b-96a0-db196ddacb0b",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "WVR Native",
+                    "action": "axis",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "WVR Native",
+            "bindingGroup": "WVR Native",
+            "devices": []
+        }
+    ]
+}

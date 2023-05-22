@@ -1,0 +1,667 @@
+[
+    
+    {
+        "DeviceName": "FOCUS3",
+        "Response": [
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 0,
+                "Value": "Vive VBStreaming Focus3"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 1,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 2,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 0,
+                "Value": "generic_hmd"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 1,
+                "Value": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_right",
+                "NewValue": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_right"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 2,
+                "Value": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_left",
+                "NewValue": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_left"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 0,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 1,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 2,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 0,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 1,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 2,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1035,
+                "index": 1,
+                "Value": "htc_business_streaming",
+                "NewValue": "htc_business_streaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1035,
+                "index": 2,
+                "Value": "htc_business_streaming",
+                "NewValue": "htc_business_streaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1036,
+                "index": 1,
+                "Value": "htc_business_streaming/vive_cosmos_controller",
+                "NewValue": "htc_business_streaming/vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1036,
+                "index": 2,
+                "Value": "htc_business_streaming/vive_cosmos_controller",
+                "NewValue": "htc_business_streaming/vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1037,
+                "index": 1,
+                "Value": "{htc_business_streaming}/input/vive_cosmos_controller_profile.json",
+                "NewValue": "{htc_business_streaming}/input/vive_focus3_controller_profile.json"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1037,
+                "index": 2,
+                "Value": "{htc_business_streaming}/input/vive_cosmos_controller_profile.json",
+                "NewValue": "{htc_business_streaming}/input/vive_focus3_controller_profile.json"
+            },
+            
+            {
+                "MainRequest": 32785,
+                "SubRequest": 1025,
+                "index": -1,
+                "Value": 1
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2011,
+                "index": -1,
+                "Value": 53794
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2015,
+                "index": -1,
+                "Value": 43521
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2026,
+                "index": -1,
+                "Value": 0.0
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2001,
+                "index": -1,
+                "Value": 0.0065
+            },
+            
+            {
+                "MainRequest": 32800,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    0,
+                    0,
+                    3456,
+                    1728
+                ]
+            },
+            
+            {
+                "MainRequest": 32801,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    1728,
+                    1728
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 0,
+                "index": -1,
+                "Value": [
+                    -1625606,
+                    825379,
+                    -1101966,
+                    1130856
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 1,
+                "index": -1,
+                "Value": [
+                    -830561,
+                    1616585,
+                    -1147049,
+                    1094425
+                ]
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 2074,
+                "index": 0,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 7000,
+                "index": 1,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 7000,
+                "index": 2,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            }
+        ]
+    },
+    
+    {
+        "DeviceName": "VIVE XR",
+        "Response": [
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 0,
+                "Value": "Vive XR Streaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 1,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 2,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 0,
+                "Value": "generic_hmd"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 1,
+                "Value": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_right",
+                "NewValue": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_right"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 2,
+                "Value": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_left",
+                "NewValue": "{htc_business_streaming}\\rendermodels\\vive_focus3_controller\\vive_focus3_controller_left"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 0,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 1,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 2,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 0,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 1,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 2,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1035,
+                "index": 1,
+                "Value": "htc_business_streaming",
+                "NewValue": "htc_business_streaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1035,
+                "index": 2,
+                "Value": "htc_business_streaming",
+                "NewValue": "htc_business_streaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1036,
+                "index": 1,
+                "Value": "htc_business_streaming/vive_cosmos_controller",
+                "NewValue": "htc_business_streaming/vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1036,
+                "index": 2,
+                "Value": "htc_business_streaming/vive_cosmos_controller",
+                "NewValue": "htc_business_streaming/vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1037,
+                "index": 1,
+                "Value": "{htc_business_streaming}/input/vive_cosmos_controller_profile.json",
+                "NewValue": "{htc_business_streaming}/input/vive_focus3_controller_profile.json"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1037,
+                "index": 2,
+                "Value": "{htc_business_streaming}/input/vive_cosmos_controller_profile.json",
+                "NewValue": "{htc_business_streaming}/input/vive_focus3_controller_profile.json"
+            },
+            
+            {
+                "MainRequest": 32785,
+                "SubRequest": 1025,
+                "index": -1,
+                "Value": 1
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2011,
+                "index": -1,
+                "Value": 53794
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2015,
+                "index": -1,
+                "Value": 43521
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2026,
+                "index": -1,
+                "Value": 0.0
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2001,
+                "index": -1,
+                "Value": 0.0065
+            },
+            
+            {
+                "MainRequest": 32800,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    0,
+                    0,
+                    3072,
+                    1536
+                ]
+            },
+            
+            {
+                "MainRequest": 32801,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    1536,
+                    1536
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 0,
+                "index": -1,
+                "Value": [
+                    -1222329,
+                    856812,
+                    -1018581,
+                    1032753
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 1,
+                "index": -1,
+                "Value": [
+                    -849113,
+                    1253602,
+                    -1015358,
+                    1023370
+                ]
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 2074,
+                "index": 0,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 7000,
+                "index": 1,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 7000,
+                "index": 2,
+                "Value": "vive_cosmos_controller",
+                "NewValue": "vive_focus3_controller"
+            }
+        ]
+    },
+    
+    {
+        "DeviceName": "COSMOS",
+        "Response": [
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 0,
+                "Value": "Vive VBStreaming"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 1,
+                "Value": "vive_cosmos_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1001,
+                "index": 2,
+                "Value": "vive_cosmos_controller"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 0,
+                "Value": "generic_hmd"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 1,
+                "Value": "vive_cosmos_controller\\vive_cosmos_controller_right"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1003,
+                "index": 2,
+                "Value": "vive_cosmos_controller\\vive_cosmos_controller_left"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 0,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 1,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1005,
+                "index": 2,
+                "Value": "htc_rr"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 0,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 1,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32784,
+                "SubRequest": 1000,
+                "index": 2,
+                "Value": "vive_eyes"
+            },
+            
+            {
+                "MainRequest": 32785,
+                "SubRequest": 1025,
+                "index": -1,
+                "Value": 1
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2011,
+                "index": -1,
+                "Value": 53794
+            },
+            
+            {
+                "MainRequest": 32786,
+                "SubRequest": 2015,
+                "index": -1,
+                "Value": 43521
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2026,
+                "index": -1,
+                "Value": 0.0
+            },
+            
+            {
+                "MainRequest": 32787,
+                "SubRequest": 2001,
+                "index": -1,
+                "Value": 0.0065
+            },
+            
+            {
+                "MainRequest": 32800,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    0,
+                    0,
+                    3456,
+                    1728
+                ]
+            },
+            
+            {
+                "MainRequest": 32801,
+                "SubRequest": -1,
+                "index": -1,
+                "Value": [
+                    1728,
+                    1728
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 0,
+                "index": -1,
+                "Value": [
+                    -1808752,
+                    1082012,
+                    -1366564,
+                    1364180
+                ]
+            },
+            
+            {
+                "MainRequest": 32802,
+                "SubRequest": 1,
+                "index": -1,
+                "Value": [
+                    -1055531,
+                    1822611,
+                    -1348949,
+                    1361345
+                ]
+            }
+        ]
+    }
+]

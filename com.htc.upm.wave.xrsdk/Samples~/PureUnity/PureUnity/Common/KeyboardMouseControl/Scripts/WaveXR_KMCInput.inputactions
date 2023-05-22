@@ -1,0 +1,39 @@
+{
+    "name": "WaveXR_KMCInput",
+    "maps": [
+        {
+            "name": "mouse",
+            "id": "b4f0013b-6844-4251-b956-56b25c4ba870",
+            "actions": [
+                {
+                    "name": "axis",
+                    "type": "Value",
+                    "id": "60665d76-fe83-468f-bbf9-5c51fbf0b23e",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "ce7ca386-b815-47d9-a986-3e0eaa9849ce",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Wave PureUnity",
+                    "action": "axis",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Wave PureUnity",
+            "bindingGroup": "Wave PureUnity",
+            "devices": []
+        }
+    ]
+}

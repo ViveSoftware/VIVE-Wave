@@ -1,0 +1,27 @@
+{
+    "name": "Wave.XRSDK",
+    "references": [
+        "GUID:e40ba710768534012815d3193fa296cb",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "WSA",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.management",
+            "expression": "3.2.0",
+            "define": "UNITY_XR_MANAGEMENT_320"
+        }
+    ],
+    "noEngineReferences": false
+}

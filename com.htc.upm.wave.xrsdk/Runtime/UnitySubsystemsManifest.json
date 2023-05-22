@@ -1,0 +1,23 @@
+{
+  "name": "WaveVR UnitySubsystem",
+  "version": "0.1.0",
+  "libraryName": "wvrunityxr",
+
+  "displays": [
+    {
+      "id": "WVR Display Provider",
+      "disablesLegacyVr": true,
+      "supportedMirrorBlitReservedModes": [ "leftEye", "rightEye", "sideBySide" ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "WVR Input Provider"
+    }
+  ],
+  "meshings": [
+    {
+      "id": "WVR Mesh Provider"
+    }
+  ]
+}

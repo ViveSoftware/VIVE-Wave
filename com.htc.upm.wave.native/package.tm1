@@ -1,0 +1,30 @@
+{
+  "name": "com.htc.upm.wave.native",
+  "displayName": "VIVE Wave XR Plugin - Native",
+  "version": "5.2.1-preview.0",
+  "unity": "2019.4",
+  "description": "The \u0022VIVE Wave XR Plugin - Native\u0022 package provides the wraper of WaveVR.\n\nView the documentation for additional information.\n\n",
+  "keywords": [
+    "vr",
+    "xr",
+    "reality"
+  ],
+  "author": {
+    "name": "HTC Corporation",
+    "email": "vivesoftware@htc.com",
+    "url": "https://www.htc.com"
+  },
+  "dependencies": {
+    "com.htc.upm.wave.xrsdk": "5.2.1-preview.0"
+  },
+  "samples": [
+    {
+      "displayName": "Native",
+      "description": "Basic sample showing how to use Wave Native.",
+      "path": "Samples~/Native/Native"
+    }
+  ],
+  "type": "library",
+  "documentationUrl": "https://hub.vive.com/storage/docs/en-us/UnityXR/UnityXRSdk.html",
+  "hideInEditor": false
+}

@@ -1,0 +1,24 @@
+{
+    "name": "Wave.Essence.Editor",
+    "references": [
+        "Wave.Essence",
+		"Wave.XRSDK"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "0.1.0",
+            "define": "URP_INSTALLED"
+        }
+    ],
+    "noEngineReferences": false
+}

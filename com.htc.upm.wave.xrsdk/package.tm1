@@ -1,0 +1,36 @@
+{
+  "name": "com.htc.upm.wave.xrsdk",
+  "displayName": "VIVE Wave XR Plugin",
+  "version": "5.2.1-preview.0",
+  "unity": "2019.4",
+  "description": "The \u0022VIVE Wave XR Plugin\u0022 package serves as a bridge between VIVE moblile devices and Unity.\nBy communicuating with Unity's \u0022XR Plugin Management\u0022 package, this package allows your application to run on VIVE mobile devices.\n\nView the documentation for additional information.\n\n",
+  "keywords": [
+    "vr",
+    "xr",
+    "reality",
+    "xreditorsubsystem"
+  ],
+  "author": {
+    "name": "HTC Corporation",
+    "email": "vivesoftware@htc.com",
+    "url": "https://www.htc.com"
+  },
+  "dependencies": {
+    "com.unity.xr.management": "3.2.4"
+  },
+  "samples": [
+    {
+      "displayName": "PureUnity",
+      "description": "Common sample. Created by pure Unity. Common used by other samples.  Please import com.unity.xr.management 3.0.6 or higher and com.unity.xr.legacyinputhelpers 2.1.4 or higher first",
+      "path": "Samples~/PureUnity/PureUnity"
+    },
+    {
+      "displayName": "XR",
+      "description": "Basic sample showing how to use Wave XR.",
+      "path": "Samples~/XR/XR"
+    }
+  ],
+  "type": "library",
+  "documentationUrl": "https://hub.vive.com/storage/docs/en-us/UnityXR/UnityXRSdk.html",
+  "hideInEditor": false
+}
