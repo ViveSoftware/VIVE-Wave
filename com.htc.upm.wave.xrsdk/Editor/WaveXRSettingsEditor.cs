@@ -238,6 +238,12 @@ namespace Wave.XR.Settings
         SerializedProperty Property_EnableSceneMesh = null;
         #endregion
 
+        #region Marker
+        static string PropertyName_EnableMarker = "EnableMarker";
+        static GUIContent Label_EnableMarker = new GUIContent("Enable Marker");
+        SerializedProperty Property_EnableMarker = null;
+        #endregion
+
         static string PropertyName_AllowSpectatorCamera = "allowSpectatorCamera";
         static GUIContent Label_AllowSpectatorCamera = new GUIContent("Allow Spectator Camera", "Allow this plugin to generate a spectator camera to produce images for Screenshot, Recording, or Broadcast usages.This camera will consume more performance when it is activated, but captured image will have better FOV result.");
         SerializedProperty Property_AllowSpectatorCamera;
@@ -278,6 +284,7 @@ namespace Wave.XR.Settings
         bool foldoutEye = true;
         bool foldoutLipExpression = true;
         bool foldoutScenePerception = true;
+        bool foldoutMarker = true;
         bool foldoutCommon = true;
 
         public void AndroidSettings()
@@ -348,6 +355,10 @@ namespace Wave.XR.Settings
             #region Scene Perception
             if (Property_EnableScenePerception == null) Property_EnableScenePerception = serializedObject.FindProperty(PropertyName_EnableScenePerception);
             if (Property_EnableSceneMesh == null) Property_EnableSceneMesh = serializedObject.FindProperty(PropertyName_EnableSceneMesh);
+            #endregion
+
+            #region Marker
+            if (Property_EnableMarker == null) Property_EnableMarker = serializedObject.FindProperty(PropertyName_EnableMarker);
             #endregion
 
             if (displayGamutPreference == null)
@@ -480,6 +491,19 @@ namespace Wave.XR.Settings
                 EditorGUILayout.PropertyField(Property_EnableScenePerception, Label_EnableScenePerception);
                 WaveXRSettings mySettings = target as WaveXRSettings;
                 if (mySettings.EnableScenePerception) { EditorGUILayout.PropertyField(Property_EnableSceneMesh, Label_EnableSceneMesh); }
+
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space();
+            #endregion
+
+            #region Marker
+            foldoutMarker = EditorGUILayout.Foldout(foldoutMarker, "Marker");
+            if (foldoutMarker)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(Property_EnableMarker, Label_EnableMarker);
 
                 EditorGUI.indentLevel--;
             }

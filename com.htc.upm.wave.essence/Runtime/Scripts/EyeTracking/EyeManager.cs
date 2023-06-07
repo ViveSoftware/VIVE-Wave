@@ -15,6 +15,7 @@ using Wave.Native;
 using Wave.Essence.Events;
 using Wave.OpenXR;
 using Wave.XR.Settings;
+using System.Text;
 #if UNITY_EDITOR
 using Wave.Essence.Editor;
 #endif
@@ -30,10 +31,23 @@ namespace Wave.Essence.Eye
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
 		}
+		void DEBUG(StringBuilder sb)
+		{
+			if (Log.EnableDebugLog)
+				Log.d(LOG_TAG, sb, true);
+		}
 		bool printIntervalLog = false;
 		int logFrame = 0;
-		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
+		void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+
+		private StringBuilder m_EyeManagerStringBuilder = null;
+		internal StringBuilder EyeManagerStringBuilder {
+			get {
+				if (m_EyeManagerStringBuilder == null) { m_EyeManagerStringBuilder = new StringBuilder(); }
+				return m_EyeManagerStringBuilder;
+			}
+		}
 
 		private static EyeManager m_Instance = null;
 		public static EyeManager Instance { get { return m_Instance; } }
@@ -158,20 +172,25 @@ namespace Wave.Essence.Eye
 			{
 				GetEyeTrackingData();
 
-				INTERVAL("Update() m_LocationSpace: " + m_LocationSpace + ", hasEyeTrackingData: " + hasEyeTrackingData);
-				INTERVAL("Update() m_CombinedEyeOriginValid: " + m_CombinedEyeOriginValid
-					+ ", m_CombinedEyeOrigin (" + m_CombinedEyeOrigin.x.ToString() + ", " + m_CombinedEyeOrigin.y.ToString() + ", " + m_CombinedEyeOrigin.z.ToString() + ")"
-					+ ", m_CombinedEyeDirectionValid: " + m_CombinedEyeDirectionValid
-					+ ", m_CombinedEyeDirection (" + m_CombinedEyeDirection.x.ToString() + ", " + m_CombinedEyeDirection.y.ToString() + ", " + m_CombinedEyeDirection.z.ToString() + ")");
-				INTERVAL("Update() m_LeftEyeOriginValid: " + m_LeftEyeOriginValid
-					+ ", m_LeftEyeOrigin (" + m_LeftEyeOrigin.x.ToString() + ", " + m_LeftEyeOrigin.y.ToString() + ", " + m_LeftEyeOrigin.z.ToString() + ")"
-					+ ", m_LeftEyeDirectionValid: " + m_LeftEyeDirectionValid
-					+ ", m_LeftEyeDirection (" + m_LeftEyeDirection.x.ToString() + ", " + m_LeftEyeDirection.y.ToString() + ", " + m_LeftEyeDirection.z.ToString() + ")");
-				INTERVAL("Update() m_RightEyeOriginValid: " + m_RightEyeOriginValid
-					+ ", m_RightEyeOrigin (" + m_RightEyeOrigin.x.ToString() + ", " + m_RightEyeOrigin.y.ToString() + ", " + m_RightEyeOrigin.z.ToString() + ")"
-					+ ", m_RightEyeDirectionValid: " + m_RightEyeDirectionValid
-					+ ", m_RightEyeDirection (" + m_RightEyeDirection.x.ToString() + ", " + m_RightEyeDirection.y.ToString() + ", " + m_RightEyeDirection.z.ToString() + ")"
-					);
+				if (printIntervalLog)
+				{
+					var sb = EyeManagerStringBuilder;
+					sb.Clear();
+					sb.Append("Update() m_LocationSpace: ").Append(m_LocationSpace).Append(", hasEyeTrackingData: ").Append(hasEyeTrackingData)
+					.Append("Update() m_CombinedEyeOriginValid: ").Append(m_CombinedEyeOriginValid)
+					.Append(", m_CombinedEyeOrigin (").Append(m_CombinedEyeOrigin.x.ToString()).Append(", ").Append(m_CombinedEyeOrigin.y.ToString()).Append(", ").Append(m_CombinedEyeOrigin.z.ToString()).Append(")")
+					.Append(", m_CombinedEyeDirectionValid: ").Append(m_CombinedEyeDirectionValid)
+					.Append(", m_CombinedEyeDirection (").Append(m_CombinedEyeDirection.x.ToString()).Append(", ").Append(m_CombinedEyeDirection.y.ToString()).Append(", ").Append(m_CombinedEyeDirection.z.ToString()).Append(")")
+					.Append("Update() m_LeftEyeOriginValid: ").Append(m_LeftEyeOriginValid)
+					.Append(", m_LeftEyeOrigin (").Append(m_LeftEyeOrigin.x.ToString()).Append(", ").Append(m_LeftEyeOrigin.y.ToString()).Append(", ").Append(m_LeftEyeOrigin.z.ToString()).Append(")")
+					.Append(", m_LeftEyeDirectionValid: ").Append(m_LeftEyeDirectionValid)
+					.Append(", m_LeftEyeDirection (").Append(m_LeftEyeDirection.x.ToString()).Append(", ").Append(m_LeftEyeDirection.y.ToString()).Append(", ").Append(m_LeftEyeDirection.z.ToString()).Append(")")
+					.Append("Update() m_RightEyeOriginValid: ").Append(m_RightEyeOriginValid)
+					.Append(", m_RightEyeOrigin (").Append(m_RightEyeOrigin.x.ToString()).Append(", ").Append(m_RightEyeOrigin.y.ToString()).Append(", ").Append(m_RightEyeOrigin.z.ToString()).Append(")")
+					.Append(", m_RightEyeDirectionValid: ").Append(m_RightEyeDirectionValid)
+					.Append(", m_RightEyeDirection (").Append(m_RightEyeDirection.x.ToString()).Append(", ").Append(m_RightEyeDirection.y.ToString()).Append(", ").Append(m_RightEyeDirection.z.ToString()).Append(")");
+					DEBUG(sb);
+				}
 			}
 		}
 		#endregion

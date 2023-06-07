@@ -220,6 +220,11 @@ namespace Wave.XR.Settings
         public bool EnableSceneMesh = false;
         #endregion
 
+        #region Marker
+        [SerializeField, Tooltip("Select to enable the Marker feature.")]
+        public bool EnableMarker = false;
+        #endregion
+
         public bool enableAutoFallbackForMultiLayerProperty
         {
             get

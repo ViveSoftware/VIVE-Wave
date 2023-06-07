@@ -122,8 +122,6 @@ namespace Wave.Essence.Hand
 		{
 			if (HandManager.Instance == null)
 				return;
-			if (!HandManager.Instance.EnableHandTracking)
-				return;
 
 			// 1. Get Hand Tracking data first.
 			boneTransform = GetBoneTransform(m_BoneType);

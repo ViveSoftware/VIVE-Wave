@@ -1,4 +1,4 @@
-﻿// "Wave SDK 
+// "Wave SDK 
 // © 2020 HTC Corporation. All Rights Reserved.
 //
 // Unless otherwise required by copyright law and practice,
@@ -23,7 +23,7 @@ namespace Wave.Essence.Raycast.Editor
 		/// RaycastPointer options
 		SerializedProperty m_ShowRay, m_RayStartWidth, m_RayEndWidth, m_RayMaterial, m_Pointer;
 		/// HandRaycastPointer options
-		SerializedProperty m_Hand, m_UsePose, m_PinchStrength, m_AlwaysEnable;
+		SerializedProperty m_Hand, m_UsePose, m_PinchStrength, m_PinchRelease, m_AlwaysEnable;
 
 		private void OnEnable()
 		{
@@ -41,6 +41,7 @@ namespace Wave.Essence.Raycast.Editor
 			m_Hand = serializedObject.FindProperty("m_Hand");
 			m_UsePose = serializedObject.FindProperty("m_UsePose");
 			m_PinchStrength = serializedObject.FindProperty("m_PinchStrength");
+			m_PinchRelease = serializedObject.FindProperty("m_PinchRelease");
 			m_AlwaysEnable = serializedObject.FindProperty("m_AlwaysEnable");
 		}
 		bool PhysicsRaycasterOptions = false, RayOptions = true, HandOptions = true;
@@ -76,7 +77,23 @@ namespace Wave.Essence.Raycast.Editor
 			{
 				EditorGUILayout.PropertyField(m_Hand);
 				EditorGUILayout.PropertyField(m_UsePose);
-				EditorGUILayout.PropertyField(m_PinchStrength);
+
+				EditorGUILayout.HelpBox(
+					"Use the system default pinch threshold.",
+					MessageType.Info);
+				myScript.UseDefaultPinch = EditorGUILayout.Toggle("Use Default Pinch", myScript.UseDefaultPinch);
+				if (!myScript.UseDefaultPinch)
+				{
+					EditorGUILayout.HelpBox(
+						"When the pinch strength is over threshold, the HandRaycastPointer will start sending events",
+						MessageType.Info);
+					EditorGUILayout.PropertyField(m_PinchStrength);
+
+					EditorGUILayout.HelpBox(
+						"The HandRaycastPointer will keep sending events until the Pinch strength is smaller than (PinchStrength - PinchRelease).",
+						MessageType.Info);
+					EditorGUILayout.PropertyField(m_PinchRelease);
+				}
 			}
 
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

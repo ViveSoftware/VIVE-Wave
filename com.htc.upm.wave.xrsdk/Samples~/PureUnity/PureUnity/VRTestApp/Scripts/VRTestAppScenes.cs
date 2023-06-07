@@ -127,6 +127,7 @@ namespace Wave.Generic.Sample
 				new SceneData(NotEntry, NoTitle, "CompositorLayerTest_ShapeSwitch", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "CompositorLayerTest_Scaling", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "CompositorLayerTest_Passthrough", NoHelp, NotForPC),
+				new SceneData(NotEntry, NoTitle, "CompositorLayerTest_CustomShader", NoHelp, NotForPC),
 
 				new SceneData(Entry, "318 Mirror Test", "MirrorTest", NoHelp, NotForPC),
 
@@ -144,6 +145,8 @@ namespace Wave.Generic.Sample
 				new SceneData(Entry, "327 Scene Perception", "ScenePerceptionDemoEntrance", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "ScenePerceptionDemo(PlaneAnchor)", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "ScenePerceptionDemo(SceneMeshAnchor)", NoHelp, NotForPC),
+
+				new SceneData(Entry, "328 Aruco Marker", "TrackableMarkerDemo(Aruco)", NoHelp, NotForPC),
 			};
 		}
 

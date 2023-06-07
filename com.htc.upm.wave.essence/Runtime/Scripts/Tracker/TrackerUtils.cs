@@ -24,6 +24,13 @@ namespace Wave.Essence.Tracker
 		Tracker6 = WVR_TrackerId.WVR_TrackerId_6,
 		Tracker7 = WVR_TrackerId.WVR_TrackerId_7,
 		Tracker8 = WVR_TrackerId.WVR_TrackerId_8,
+		Tracker9 = WVR_TrackerId.WVR_TrackerId_9,
+		Tracker10 = WVR_TrackerId.WVR_TrackerId_10,
+		Tracker11 = WVR_TrackerId.WVR_TrackerId_11,
+		Tracker12 = WVR_TrackerId.WVR_TrackerId_12,
+		Tracker13 = WVR_TrackerId.WVR_TrackerId_13,
+		Tracker14 = WVR_TrackerId.WVR_TrackerId_14,
+		Tracker15 = WVR_TrackerId.WVR_TrackerId_15,
 	}
 
 	public enum TrackerRole
@@ -33,22 +40,35 @@ namespace Wave.Essence.Tracker
 		Pair1_Right = WVR_TrackerRole.WVR_TrackerRole_Pair1_Right,
 		Pair1_Left  = WVR_TrackerRole.WVR_TrackerRole_Pair1_Left,
 
-		Upper_Arm_Right = WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Right,
-		Forearm_Right   = WVR_TrackerRole.WVR_TrackerRole_Forearm_Right,
-		Wrist_Right     = WVR_TrackerRole.WVR_TrackerRole_Wrist_Right,
-		Thigh_Right     = WVR_TrackerRole.WVR_TrackerRole_Thigh_Right,
-		Calf_Right      = WVR_TrackerRole.WVR_TrackerRole_Calf_Right,
-		Ankle_Right     = WVR_TrackerRole.WVR_TrackerRole_Ankle_Right,
+		Shoulder_Right = WVR_TrackerRole.WVR_TrackerRole_Shoulder_Right, // 32
+		Upper_Arm_Right = WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Right, // 33
+		Elbow_Right = WVR_TrackerRole.WVR_TrackerRole_Elbow_Right, // 34
+		Forearm_Right   = WVR_TrackerRole.WVR_TrackerRole_Forearm_Right, // 35
+		Wrist_Right     = WVR_TrackerRole.WVR_TrackerRole_Wrist_Right, // 36
+		Hand_Right = WVR_TrackerRole.WVR_TrackerRole_Hand_Right, // 37
+		Thigh_Right     = WVR_TrackerRole.WVR_TrackerRole_Thigh_Right, // 38
+		Knee_Right = WVR_TrackerRole.WVR_TrackerRole_Knee_Right, // 39
+		Calf_Right      = WVR_TrackerRole.WVR_TrackerRole_Calf_Right, // 40
+		Ankle_Right     = WVR_TrackerRole.WVR_TrackerRole_Ankle_Right, // 41
+		Foot_Right = WVR_TrackerRole.WVR_TrackerRole_Foot_Right, // 42
 
-		Upper_Arm_Left  = WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Left,
-		Forearm_Left    = WVR_TrackerRole.WVR_TrackerRole_Forearm_Left,
-		Wrist_Left      = WVR_TrackerRole.WVR_TrackerRole_Wrist_Left,
-		Thigh_Left      = WVR_TrackerRole.WVR_TrackerRole_Thigh_Left,
-		Calf_Left       = WVR_TrackerRole.WVR_TrackerRole_Calf_Left,
-		Ankle_Left      = WVR_TrackerRole.WVR_TrackerRole_Ankle_Left,
+		Shoulder_Left = WVR_TrackerRole.WVR_TrackerRole_Shoulder_Left, // 47
+		Upper_Arm_Left  = WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Left, // 48
+		Elbow_Left = WVR_TrackerRole.WVR_TrackerRole_Elbow_Left, // 49
+		Forearm_Left    = WVR_TrackerRole.WVR_TrackerRole_Forearm_Left, // 50
+		Wrist_Left      = WVR_TrackerRole.WVR_TrackerRole_Wrist_Left, // 51
+		Hand_Left = WVR_TrackerRole.WVR_TrackerRole_Hand_Left, // 52
+		Thigh_Left      = WVR_TrackerRole.WVR_TrackerRole_Thigh_Left, // 53
+		Knee_Left = WVR_TrackerRole.WVR_TrackerRole_Knee_Left, // 54
+		Calf_Left       = WVR_TrackerRole.WVR_TrackerRole_Calf_Left, // 55
+		Ankle_Left      = WVR_TrackerRole.WVR_TrackerRole_Ankle_Left, // 56
+		Foot_Left = WVR_TrackerRole.WVR_TrackerRole_Foot_Left, // 57
 
-		Chest = WVR_TrackerRole.WVR_TrackerRole_Chest,
-		Waist = WVR_TrackerRole.WVR_TrackerRole_Waist,
+		Chest = WVR_TrackerRole.WVR_TrackerRole_Chest, // 62
+		Waist = WVR_TrackerRole.WVR_TrackerRole_Waist, // 63
+
+		Camera = WVR_TrackerRole.WVR_TrackerRole_Camera, // 71
+		Keyboard = WVR_TrackerRole.WVR_TrackerRole_Keyboard, // 72
 	}
 
 	public enum TrackerButton
@@ -82,6 +102,13 @@ namespace Wave.Essence.Tracker
 			TrackerId.Tracker6,
 			TrackerId.Tracker7,
 			TrackerId.Tracker8,
+			TrackerId.Tracker9,
+			TrackerId.Tracker10,
+			TrackerId.Tracker11,
+			TrackerId.Tracker12,
+			TrackerId.Tracker13,
+			TrackerId.Tracker14,
+			TrackerId.Tracker15,
 		};
 
 		public static TrackerId Id(this WVR_TrackerId trackerId)
@@ -95,6 +122,13 @@ namespace Wave.Essence.Tracker
 			if (trackerId == WVR_TrackerId.WVR_TrackerId_6) { return TrackerId.Tracker6; }
 			if (trackerId == WVR_TrackerId.WVR_TrackerId_7) { return TrackerId.Tracker7; }
 			if (trackerId == WVR_TrackerId.WVR_TrackerId_8) { return TrackerId.Tracker8; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_9) { return TrackerId.Tracker9; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_10) { return TrackerId.Tracker10; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_11) { return TrackerId.Tracker11; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_12) { return TrackerId.Tracker12; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_13) { return TrackerId.Tracker13; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_14) { return TrackerId.Tracker14; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_15) { return TrackerId.Tracker15; }
 
 			return TrackerId.Tracker0;
 		}
@@ -114,6 +148,13 @@ namespace Wave.Essence.Tracker
 			if (trackerId == TrackerId.Tracker6) { return 6; }
 			if (trackerId == TrackerId.Tracker7) { return 7; }
 			if (trackerId == TrackerId.Tracker8) { return 8; }
+			if (trackerId == TrackerId.Tracker9) { return 9; }
+			if (trackerId == TrackerId.Tracker10) { return 10; }
+			if (trackerId == TrackerId.Tracker11) { return 11; }
+			if (trackerId == TrackerId.Tracker12) { return 12; }
+			if (trackerId == TrackerId.Tracker13) { return 13; }
+			if (trackerId == TrackerId.Tracker14) { return 14; }
+			if (trackerId == TrackerId.Tracker15) { return 15; }
 
 			return 0;
 		}
@@ -128,6 +169,13 @@ namespace Wave.Essence.Tracker
 			if (id == TrackerId.Tracker6) { return InputDeviceTracker.TrackerId.Tracker6; }
 			if (id == TrackerId.Tracker7) { return InputDeviceTracker.TrackerId.Tracker7; }
 			if (id == TrackerId.Tracker8) { return InputDeviceTracker.TrackerId.Tracker8; }
+			if (id == TrackerId.Tracker9) { return InputDeviceTracker.TrackerId.Tracker9; }
+			if (id == TrackerId.Tracker10) { return InputDeviceTracker.TrackerId.Tracker10; }
+			if (id == TrackerId.Tracker11) { return InputDeviceTracker.TrackerId.Tracker11; }
+			if (id == TrackerId.Tracker12) { return InputDeviceTracker.TrackerId.Tracker12; }
+			if (id == TrackerId.Tracker13) { return InputDeviceTracker.TrackerId.Tracker13; }
+			if (id == TrackerId.Tracker14) { return InputDeviceTracker.TrackerId.Tracker14; }
+			if (id == TrackerId.Tracker15) { return InputDeviceTracker.TrackerId.Tracker15; }
 
 			return InputDeviceTracker.TrackerId.Tracker0;
 		}
@@ -138,22 +186,35 @@ namespace Wave.Essence.Tracker
 			if (role == TrackerRole.Pair1_Left) { return InputDeviceTracker.TrackerRole.Pair1_Left; }
 			if (role == TrackerRole.Pair1_Right) { return InputDeviceTracker.TrackerRole.Pair1_Right; }
 
-			if (role == TrackerRole.Upper_Arm_Right) { return InputDeviceTracker.TrackerRole.Upper_Arm_Right; }
-			if (role == TrackerRole.Forearm_Right) { return InputDeviceTracker.TrackerRole.Forearm_Right; }
-			if (role == TrackerRole.Wrist_Right) { return InputDeviceTracker.TrackerRole.Wrist_Right; }
-			if (role == TrackerRole.Thigh_Right) { return InputDeviceTracker.TrackerRole.Thigh_Right; }
-			if (role == TrackerRole.Calf_Right) { return InputDeviceTracker.TrackerRole.Calf_Right; }
-			if (role == TrackerRole.Ankle_Right) { return InputDeviceTracker.TrackerRole.Ankle_Right; }
+			if (role == TrackerRole.Shoulder_Right) { return InputDeviceTracker.TrackerRole.Shoulder_Right; } // 32
+			if (role == TrackerRole.Upper_Arm_Right) { return InputDeviceTracker.TrackerRole.Upper_Arm_Right; } // 33
+			if (role == TrackerRole.Elbow_Right) { return InputDeviceTracker.TrackerRole.Elbow_Right; } // 34
+			if (role == TrackerRole.Forearm_Right) { return InputDeviceTracker.TrackerRole.Forearm_Right; } // 35
+			if (role == TrackerRole.Wrist_Right) { return InputDeviceTracker.TrackerRole.Wrist_Right; } // 36
+			if (role == TrackerRole.Hand_Right) { return InputDeviceTracker.TrackerRole.Hand_Right; } // 37
+			if (role == TrackerRole.Thigh_Right) { return InputDeviceTracker.TrackerRole.Thigh_Right; } // 38
+			if (role == TrackerRole.Knee_Right) { return InputDeviceTracker.TrackerRole.Knee_Right; } // 39
+			if (role == TrackerRole.Calf_Right) { return InputDeviceTracker.TrackerRole.Calf_Right; } // 40
+			if (role == TrackerRole.Ankle_Right) { return InputDeviceTracker.TrackerRole.Ankle_Right; } // 41
+			if (role == TrackerRole.Foot_Right) { return InputDeviceTracker.TrackerRole.Foot_Right; } // 42
 
-			if (role == TrackerRole.Upper_Arm_Left) { return InputDeviceTracker.TrackerRole.Upper_Arm_Left; }
-			if (role == TrackerRole.Forearm_Left) { return InputDeviceTracker.TrackerRole.Forearm_Left; }
-			if (role == TrackerRole.Wrist_Left) { return InputDeviceTracker.TrackerRole.Wrist_Left; }
-			if (role == TrackerRole.Thigh_Left) { return InputDeviceTracker.TrackerRole.Thigh_Left; }
-			if (role == TrackerRole.Calf_Left) { return InputDeviceTracker.TrackerRole.Calf_Left; }
-			if (role == TrackerRole.Ankle_Left) { return InputDeviceTracker.TrackerRole.Ankle_Left; }
+			if (role == TrackerRole.Shoulder_Left) { return InputDeviceTracker.TrackerRole.Shoulder_Left; } // 47
+			if (role == TrackerRole.Upper_Arm_Left) { return InputDeviceTracker.TrackerRole.Upper_Arm_Left; } // 48
+			if (role == TrackerRole.Elbow_Left) { return InputDeviceTracker.TrackerRole.Elbow_Left; } // 49
+			if (role == TrackerRole.Forearm_Left) { return InputDeviceTracker.TrackerRole.Forearm_Left; } // 50
+			if (role == TrackerRole.Wrist_Left) { return InputDeviceTracker.TrackerRole.Wrist_Left; } // 51
+			if (role == TrackerRole.Hand_Left) { return InputDeviceTracker.TrackerRole.Hand_Left; } // 52
+			if (role == TrackerRole.Thigh_Left) { return InputDeviceTracker.TrackerRole.Thigh_Left; } // 53
+			if (role == TrackerRole.Knee_Left) { return InputDeviceTracker.TrackerRole.Knee_Left; } // 54
+			if (role == TrackerRole.Calf_Left) { return InputDeviceTracker.TrackerRole.Calf_Left; } // 55
+			if (role == TrackerRole.Ankle_Left) { return InputDeviceTracker.TrackerRole.Ankle_Left; } // 56
+			if (role == TrackerRole.Foot_Left) { return InputDeviceTracker.TrackerRole.Foot_Left; } // 57
 
-			if (role == TrackerRole.Chest) { return InputDeviceTracker.TrackerRole.Chest; }
-			if (role == TrackerRole.Waist) { return InputDeviceTracker.TrackerRole.Waist; }
+			if (role == TrackerRole.Chest) { return InputDeviceTracker.TrackerRole.Chest; } // 62
+			if (role == TrackerRole.Waist) { return InputDeviceTracker.TrackerRole.Waist; } // 63
+
+			if (role == TrackerRole.Camera) { return InputDeviceTracker.TrackerRole.Camera; } // 71
+			if (role == TrackerRole.Keyboard) { return InputDeviceTracker.TrackerRole.Keyboard; } // 72
 
 			return InputDeviceTracker.TrackerRole.Undefined;
 		}
@@ -163,22 +224,35 @@ namespace Wave.Essence.Tracker
 			if (role == InputDeviceTracker.TrackerRole.Pair1_Left) { return TrackerRole.Pair1_Left; }
 			if (role == InputDeviceTracker.TrackerRole.Pair1_Right) { return TrackerRole.Pair1_Right; }
 
-			if (role == InputDeviceTracker.TrackerRole.Upper_Arm_Right) { return TrackerRole.Upper_Arm_Right; }
-			if (role == InputDeviceTracker.TrackerRole.Forearm_Right) { return TrackerRole.Forearm_Right; }
-			if (role == InputDeviceTracker.TrackerRole.Wrist_Right) { return TrackerRole.Wrist_Right; }
-			if (role == InputDeviceTracker.TrackerRole.Thigh_Right) { return TrackerRole.Thigh_Right; }
-			if (role == InputDeviceTracker.TrackerRole.Calf_Right) { return TrackerRole.Calf_Right; }
-			if (role == InputDeviceTracker.TrackerRole.Ankle_Right) { return TrackerRole.Ankle_Right; }
+			if (role == InputDeviceTracker.TrackerRole.Shoulder_Right) { return TrackerRole.Shoulder_Right; } // 32
+			if (role == InputDeviceTracker.TrackerRole.Upper_Arm_Right) { return TrackerRole.Upper_Arm_Right; } // 33
+			if (role == InputDeviceTracker.TrackerRole.Elbow_Right) { return TrackerRole.Elbow_Right; } // 34
+			if (role == InputDeviceTracker.TrackerRole.Forearm_Right) { return TrackerRole.Forearm_Right; } // 35
+			if (role == InputDeviceTracker.TrackerRole.Wrist_Right) { return TrackerRole.Wrist_Right; } // 36
+			if (role == InputDeviceTracker.TrackerRole.Hand_Right) { return TrackerRole.Hand_Right; } // 37
+			if (role == InputDeviceTracker.TrackerRole.Thigh_Right) { return TrackerRole.Thigh_Right; } // 38
+			if (role == InputDeviceTracker.TrackerRole.Knee_Right) { return TrackerRole.Knee_Right; } // 39
+			if (role == InputDeviceTracker.TrackerRole.Calf_Right) { return TrackerRole.Calf_Right; } // 40
+			if (role == InputDeviceTracker.TrackerRole.Ankle_Right) { return TrackerRole.Ankle_Right; } // 41
+			if (role == InputDeviceTracker.TrackerRole.Foot_Right) { return TrackerRole.Foot_Right; } // 42
 
-			if (role == InputDeviceTracker.TrackerRole.Upper_Arm_Left) { return TrackerRole.Upper_Arm_Left; }
-			if (role == InputDeviceTracker.TrackerRole.Forearm_Left) { return TrackerRole.Forearm_Left; }
-			if (role == InputDeviceTracker.TrackerRole.Wrist_Left) { return TrackerRole.Wrist_Left; }
-			if (role == InputDeviceTracker.TrackerRole.Thigh_Left) { return TrackerRole.Thigh_Left; }
-			if (role == InputDeviceTracker.TrackerRole.Calf_Left) { return TrackerRole.Calf_Left; }
-			if (role == InputDeviceTracker.TrackerRole.Ankle_Left) { return TrackerRole.Ankle_Left; }
+			if (role == InputDeviceTracker.TrackerRole.Shoulder_Left) { return TrackerRole.Shoulder_Left; } // 47
+			if (role == InputDeviceTracker.TrackerRole.Upper_Arm_Left) { return TrackerRole.Upper_Arm_Left; } // 48
+			if (role == InputDeviceTracker.TrackerRole.Elbow_Left) { return TrackerRole.Elbow_Left; } // 49
+			if (role == InputDeviceTracker.TrackerRole.Forearm_Left) { return TrackerRole.Forearm_Left; } // 50
+			if (role == InputDeviceTracker.TrackerRole.Wrist_Left) { return TrackerRole.Wrist_Left; } // 51
+			if (role == InputDeviceTracker.TrackerRole.Hand_Left) { return TrackerRole.Hand_Left; } // 52
+			if (role == InputDeviceTracker.TrackerRole.Thigh_Left) { return TrackerRole.Thigh_Left; } // 53
+			if (role == InputDeviceTracker.TrackerRole.Knee_Left) { return TrackerRole.Knee_Left; } // 54
+			if (role == InputDeviceTracker.TrackerRole.Calf_Left) { return TrackerRole.Calf_Left; } // 55
+			if (role == InputDeviceTracker.TrackerRole.Ankle_Left) { return TrackerRole.Ankle_Left; } // 56
+			if (role == InputDeviceTracker.TrackerRole.Foot_Left) { return TrackerRole.Foot_Left; } // 57
 
-			if (role == InputDeviceTracker.TrackerRole.Chest) { return TrackerRole.Chest; }
-			if (role == InputDeviceTracker.TrackerRole.Waist) { return TrackerRole.Waist; }
+			if (role == InputDeviceTracker.TrackerRole.Chest) { return TrackerRole.Chest; } // 62
+			if (role == InputDeviceTracker.TrackerRole.Waist) { return TrackerRole.Waist; } // 63
+
+			if (role == InputDeviceTracker.TrackerRole.Camera) { return TrackerRole.Camera; } // 71
+			if (role == InputDeviceTracker.TrackerRole.Keyboard) { return TrackerRole.Keyboard; } // 72
 
 			return TrackerRole.Undefined;
 		}
@@ -237,22 +311,35 @@ namespace Wave.Essence.Tracker
 			if (role == WVR_TrackerRole.WVR_TrackerRole_Pair1_Right) { return TrackerRole.Pair1_Right; }
 			if (role == WVR_TrackerRole.WVR_TrackerRole_Pair1_Left) { return TrackerRole.Pair1_Left; }
 
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Right) { return TrackerRole.Upper_Arm_Right; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Forearm_Right) { return TrackerRole.Forearm_Right; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Right) { return TrackerRole.Wrist_Right; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Thigh_Right) { return TrackerRole.Thigh_Right; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Calf_Right) { return TrackerRole.Calf_Right; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Right) { return TrackerRole.Ankle_Right; }
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Shoulder_Right) { return TrackerRole.Shoulder_Right; } // 32
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Right) { return TrackerRole.Upper_Arm_Right; } // 33
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Elbow_Right) { return TrackerRole.Elbow_Right; } // 34
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Forearm_Right) { return TrackerRole.Forearm_Right; } // 35
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Right) { return TrackerRole.Wrist_Right; } // 36
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Hand_Right) { return TrackerRole.Hand_Right; } // 37
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Thigh_Right) { return TrackerRole.Thigh_Right; } // 38
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Knee_Right) { return TrackerRole.Knee_Right; } // 39
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Calf_Right) { return TrackerRole.Calf_Right; } // 40
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Right) { return TrackerRole.Ankle_Right; } // 41
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Foot_Right) { return TrackerRole.Foot_Right; } // 42
 
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Left) { return TrackerRole.Upper_Arm_Left; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Forearm_Left) { return TrackerRole.Forearm_Left; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Left) { return TrackerRole.Wrist_Left; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Thigh_Left) { return TrackerRole.Thigh_Left; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Calf_Left) { return TrackerRole.Calf_Left; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Left) { return TrackerRole.Ankle_Left; }
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Shoulder_Left) { return TrackerRole.Shoulder_Left; } // 47
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Upper_Arm_Left) { return TrackerRole.Upper_Arm_Left; } // 48
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Elbow_Left) { return TrackerRole.Elbow_Left; } // 49
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Forearm_Left) { return TrackerRole.Forearm_Left; } // 50
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Left) { return TrackerRole.Wrist_Left; } // 51
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Hand_Left) { return TrackerRole.Hand_Left; } // 52
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Thigh_Left) { return TrackerRole.Thigh_Left; } // 53
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Knee_Left) { return TrackerRole.Knee_Left; } // 54
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Calf_Left) { return TrackerRole.Calf_Left; } // 55
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Left) { return TrackerRole.Ankle_Left; } // 56
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Foot_Left) { return TrackerRole.Foot_Left; } // 57
 
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Chest) { return TrackerRole.Chest; }
-			if (role == WVR_TrackerRole.WVR_TrackerRole_Waist) { return TrackerRole.Waist; }
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Chest) { return TrackerRole.Chest; } // 62
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Waist) { return TrackerRole.Waist; } // 63
+
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Camera) { return TrackerRole.Camera; } // 71
+			if (role == WVR_TrackerRole.WVR_TrackerRole_Keyboard) { return TrackerRole.Keyboard; } // 72
 
 			return TrackerRole.Undefined;
 		}

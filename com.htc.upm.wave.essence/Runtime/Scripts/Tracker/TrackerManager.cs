@@ -19,16 +19,33 @@ using System.Threading;
 using System.Diagnostics;
 using UnityEngine.XR;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Wave.Essence.Tracker
 {
 	public class TrackerManager : MonoBehaviour
 	{
 		private const string LOG_TAG = "Wave.Essence.Tracker.TrackerManager";
-		private static void DEBUG(string msg)
+		private void DEBUG(string msg)
 		{
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
+		}
+		private void DEBUG(StringBuilder sb)
+		{
+			if (Log.EnableDebugLog)
+				Log.d(LOG_TAG, sb, true);
+		}
+		bool printIntervalLog = false;
+		int logFrame = 0;
+		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
+
+		private StringBuilder m_TrackerManagerStringBuilder = null;
+		internal StringBuilder TrackerManagerStringBuilder {
+			get {
+				if (m_TrackerManagerStringBuilder == null) { m_TrackerManagerStringBuilder = new StringBuilder(); }
+				return m_TrackerManagerStringBuilder;
+			}
 		}
 
 		private bool m_UseXRDevice = true;
@@ -70,19 +87,6 @@ namespace Wave.Essence.Tracker
 		private bool m_InitialStartTracker = false;
 		public bool InitialStartTracker { get { return m_InitialStartTracker; } set { m_InitialStartTracker = value; } }
 
-		readonly TrackerId[] s_TrackerIds = new TrackerId[]
-		{
-			TrackerId.Tracker0,
-			TrackerId.Tracker1,
-			TrackerId.Tracker2,
-			TrackerId.Tracker3,
-			TrackerId.Tracker4,
-			TrackerId.Tracker5,
-			TrackerId.Tracker6,
-			TrackerId.Tracker7,
-			TrackerId.Tracker8,
-		};
-
 		#region Wave XR Constants
 		const string kTrackerComponentStatus = "TrackerComponentStatus";
 		#endregion
@@ -105,46 +109,47 @@ namespace Wave.Essence.Tracker
 			Log.i(LOG_TAG, "Awake() tracker status: " + m_TrackerStatus);
 
 			/// Initializes the tracker attributes.
-			s_TrackerCaps = new WVR_TrackerCapabilities[s_TrackerIds.Length];
-			for (int i = 0; i < s_TrackerIds.Length; i++)
+			s_TrackerCaps = new WVR_TrackerCapabilities[TrackerUtils.s_TrackerIds.Length];
+			for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 			{
-				s_TrackerConnection.Add(s_TrackerIds[i], false);
+				TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+				s_TrackerConnection.Add(tracker, false);
 
-				s_TrackerRole.Add(s_TrackerIds[i], TrackerRole.Undefined);
+				s_TrackerRole.Add(tracker, TrackerRole.Undefined);
 
-				ResetTrackerCapability(s_TrackerIds[i]);
+				ResetTrackerCapability(tracker);
 
-				s_TrackerPoses.Add(s_TrackerIds[i], new TrackerPose());
+				s_TrackerPoses.Add(tracker, new TrackerPose());
 
-				s_TrackerButtonBits.Add(s_TrackerIds[i], 0);
-				s_TrackerTouchBits.Add(s_TrackerIds[i], 0);
-				s_TrackerAnalogBits.Add(s_TrackerIds[i], 0);
+				s_TrackerButtonBits.Add(tracker, 0);
+				s_TrackerTouchBits.Add(tracker, 0);
+				s_TrackerAnalogBits.Add(tracker, 0);
 
-				s_TrackerButtonStates.Add(s_TrackerIds[i], new TrackerButtonStates());
+				s_TrackerButtonStates.Add(tracker, new TrackerButtonStates());
 
-				s_ButtonAxisType.Add(s_TrackerIds[i], new AxisType[kButtonCount]);
+				s_ButtonAxisType.Add(tracker, new AxisType[kButtonCount]);
 
-				ss_TrackerPress.Add(s_TrackerIds[i], new bool[kButtonCount]);
-				ss_TrackerPressEx.Add(s_TrackerIds[i], new bool[kButtonCount]);
-				ss_TrackerTouch.Add(s_TrackerIds[i], new bool[kButtonCount]);
-				ss_TrackerTouchEx.Add(s_TrackerIds[i], new bool[kButtonCount]);
+				ss_TrackerPress.Add(tracker, new bool[kButtonCount]);
+				ss_TrackerPressEx.Add(tracker, new bool[kButtonCount]);
+				ss_TrackerTouch.Add(tracker, new bool[kButtonCount]);
+				ss_TrackerTouchEx.Add(tracker, new bool[kButtonCount]);
 
 				for (int id = 0; id < kButtonCount; id++)
 				{
-					s_ButtonAxisType[s_TrackerIds[i]][id] = AxisType.None;
+					s_ButtonAxisType[tracker][id] = AxisType.None;
 
-					ss_TrackerPress[s_TrackerIds[i]][id] = false;
-					ss_TrackerPressEx[s_TrackerIds[i]][id] = false;
-					ss_TrackerTouch[s_TrackerIds[i]][id] = false;
-					ss_TrackerTouchEx[s_TrackerIds[i]][id] = false;
+					ss_TrackerPress[tracker][id] = false;
+					ss_TrackerPressEx[tracker][id] = false;
+					ss_TrackerTouch[tracker][id] = false;
+					ss_TrackerTouchEx[tracker][id] = false;
 				}
 
-				s_TrackerTimestamp.Add(s_TrackerIds[i], 0);
-				s_TrackerBattery.Add(s_TrackerIds[i], 0);
-				s_TrackerExtData.Add(s_TrackerIds[i], new Int32[12]);
+				s_TrackerTimestamp.Add(tracker, 0);
+				s_TrackerBattery.Add(tracker, 0);
+				s_TrackerExtData.Add(tracker, new Int32[12]);
 
-				s_HasTrackerDeviceName.Add(s_TrackerIds[i], false);
-				s_TrackerDeviceName.Add(s_TrackerIds[i], "");
+				s_HasTrackerDeviceName.Add(tracker, false);
+				s_TrackerDeviceName.Add(tracker, "");
 			}
 		}
 
@@ -174,8 +179,6 @@ namespace Wave.Essence.Tracker
 		}
 
 		static List<InputDevice> s_InputDevices = new List<InputDevice>();
-		int logFrame = 0;
-		bool printIntervalLog = false;
 		private void Update()
 		{
 			logFrame++;
@@ -186,17 +189,23 @@ namespace Wave.Essence.Tracker
 
 			if (printIntervalLog)
 			{
-				DEBUG("Update() " + "use xr device: " + m_UseXRDevice + ", use xr data: " + UseXRData());
-				for (int i = 0; i < s_TrackerIds.Length; i++)
+				var sb = TrackerManagerStringBuilder;
+				sb.Clear();
+				sb.Append("Update() ").Append("use xr device: ").Append(m_UseXRDevice).Append(", use xr data: ").Append(UseXRData());
+
+				for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 				{
-					DEBUG("Update() " + s_TrackerIds[i]
-						+ ", name: " + s_TrackerDeviceName[s_TrackerIds[i]]
-						+ ", connection: " + s_TrackerConnection[s_TrackerIds[i]]
-						+ ", valid: " + s_TrackerPoses[s_TrackerIds[i]].valid
-						+ ", role: " + s_TrackerRole[s_TrackerIds[i]]
-						+ ", battery: " + s_TrackerBattery[s_TrackerIds[i]]
-						);
+					TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+
+					sb.Clear();
+					sb.Append("Update() ").Append(tracker)
+					.Append(", name: ").Append(s_TrackerDeviceName[tracker])
+					.Append(", connection: ").Append(s_TrackerConnection[tracker])
+					.Append(", valid: ").Append(s_TrackerPoses[tracker].valid)
+					.Append(", role: ").Append(s_TrackerRole[tracker])
+					.Append(", battery: ").Append(s_TrackerBattery[tracker]);
 				}
+				DEBUG(sb);
 			}
 
 			if (UseXRData()) { return; }
@@ -210,31 +219,32 @@ namespace Wave.Essence.Tracker
 			if (GetTrackerStatus() != TrackerStatus.Available) { return; }
 			if (!pause)
 			{
-				for (int i = 0; i < s_TrackerIds.Length; i++)
+				for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 				{
-					DEBUG("Resume() 1.check " + s_TrackerIds[i] + " connection.");
-					CheckTrackerConnection(s_TrackerIds[i]);
+					TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+					DEBUG("Resume() 1.check " + tracker + " connection.");
+					CheckTrackerConnection(tracker);
 
-					DEBUG("Resume() 2.check " + s_TrackerIds[i] + " role.");
-					CheckTrackerRole(s_TrackerIds[i]);
+					DEBUG("Resume() 2.check " + tracker + " role.");
+					CheckTrackerRole(tracker);
 
-					DEBUG("Resume() 3.check " + s_TrackerIds[i] + " capability.");
-					CheckTrackerCapbility(s_TrackerIds[i]);
+					DEBUG("Resume() 3.check " + tracker + " capability.");
+					CheckTrackerCapbility(tracker);
 
-					DEBUG("Resume() 4. check " + s_TrackerIds[i] + " input capability.");
-					CheckTrackerInputs(s_TrackerIds[i]);
+					DEBUG("Resume() 4. check " + tracker + " input capability.");
+					CheckTrackerInputs(tracker);
 
-					DEBUG("Resume() 5. check " + s_TrackerIds[i] + " button analog type.");
-					CheckTrackerButtonAnalog(s_TrackerIds[i]);
+					DEBUG("Resume() 5. check " + tracker + " button analog type.");
+					CheckTrackerButtonAnalog(tracker);
 
-					DEBUG("Resume() 6. check " + s_TrackerIds[i] + " buttons.");
-					CheckAllTrackerButtons(s_TrackerIds[i]);
+					DEBUG("Resume() 6. check " + tracker + " buttons.");
+					CheckAllTrackerButtons(tracker);
 
-					DEBUG("Resume() 7.check " + s_TrackerIds[i] + " battery.");
-					CheckTrackerBattery(s_TrackerIds[i]);
+					DEBUG("Resume() 7.check " + tracker + " battery.");
+					CheckTrackerBattery(tracker);
 
-					DEBUG("Resume() 8.check " + s_TrackerIds[i] + " name.");
-					UpdateTrackerDeviceName(s_TrackerIds[i]);
+					DEBUG("Resume() 8.check " + tracker + " name.");
+					UpdateTrackerDeviceName(tracker);
 				}
 			}
 		}
@@ -242,35 +252,36 @@ namespace Wave.Essence.Tracker
 		private void Start()
 		{
 			if (GetTrackerStatus() != TrackerStatus.Available) { return; }
-			for (int i = 0; i < s_TrackerIds.Length; i++)
+			for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 			{
-				DEBUG("Start() 1.check " + s_TrackerIds[i] + " connection.");
-				CheckTrackerConnection(s_TrackerIds[i]);
+				TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+				DEBUG("Start() 1.check " + tracker + " connection.");
+				CheckTrackerConnection(tracker);
 
-				DEBUG("Start() 2.check " + s_TrackerIds[i] + " role.");
-				CheckTrackerRole(s_TrackerIds[i]);
+				DEBUG("Start() 2.check " + tracker + " role.");
+				CheckTrackerRole(tracker);
 
-				DEBUG("Start() 3.check " + s_TrackerIds[i] + " capability.");
-				CheckTrackerCapbility(s_TrackerIds[i]);
+				DEBUG("Start() 3.check " + tracker + " capability.");
+				CheckTrackerCapbility(tracker);
 
 				// For WVR_TrackerCapabilities.supportsInputDevice
-				DEBUG("Start() 4. check " + s_TrackerIds[i] + " input capability.");
-				CheckTrackerInputs(s_TrackerIds[i]);
+				DEBUG("Start() 4. check " + tracker + " input capability.");
+				CheckTrackerInputs(tracker);
 
 				// Depends on IsTrackerInputAvailable
-				DEBUG("Start() 5. check " + s_TrackerIds[i] + " button analog type.");
-				CheckTrackerButtonAnalog(s_TrackerIds[i]);
+				DEBUG("Start() 5. check " + tracker + " button analog type.");
+				CheckTrackerButtonAnalog(tracker);
 
 				// Depends on IsTrackerInputAvailable
-				DEBUG("Start() 6. check " + s_TrackerIds[i] + " buttons.");
-				CheckAllTrackerButtons(s_TrackerIds[i]);
+				DEBUG("Start() 6. check " + tracker + " buttons.");
+				CheckAllTrackerButtons(tracker);
 
 				// For WVR_TrackerCapabilities.supportsBatteryLevel
-				DEBUG("Start() 7.check " + s_TrackerIds[i] + " battery.");
-				CheckTrackerBattery(s_TrackerIds[i]);
+				DEBUG("Start() 7.check " + tracker + " battery.");
+				CheckTrackerBattery(tracker);
 
-				DEBUG("Start() 8.check " + s_TrackerIds[i] + " name.");
-				UpdateTrackerDeviceName(s_TrackerIds[i]);
+				DEBUG("Start() 8.check " + tracker + " name.");
+				UpdateTrackerDeviceName(tracker);
 			}
 		}
 		#endregion
@@ -348,8 +359,8 @@ namespace Wave.Essence.Tracker
 			{
 				// Check all states anyway when starting the tracker successfully
 				// because the tracker may be connected before starting the tracker.
-				for (int i = 0; i < s_TrackerIds.Length; i++)
-					CheckStatusWhenConnectionChanges(s_TrackerIds[i]);
+				for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
+					CheckStatusWhenConnectionChanges(TrackerUtils.s_TrackerIds[i]);
 			}
 
 			if (trackerResultCB != null)
@@ -423,15 +434,16 @@ namespace Wave.Essence.Tracker
 			SetTrackerStatus(TrackerStatus.NotStart);
 
 			// Reset all tracker status.
-			for (int i = 0; i < s_TrackerIds.Length; i++)
+			for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 			{
-				s_TrackerConnection[s_TrackerIds[i]] = false;
+				TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+				s_TrackerConnection[tracker] = false;
 
-				CheckTrackerRole(s_TrackerIds[i]);
-				CheckTrackerCapbility(s_TrackerIds[i]);
-				CheckTrackerInputs(s_TrackerIds[i]);
-				CheckTrackerButtonAnalog(s_TrackerIds[i]);
-				UpdateTrackerDeviceName(s_TrackerIds[i]);
+				CheckTrackerRole(tracker);
+				CheckTrackerCapbility(tracker);
+				CheckTrackerInputs(tracker);
+				CheckTrackerButtonAnalog(tracker);
+				UpdateTrackerDeviceName(tracker);
 			}
 		}
 		private void StopTrackerThread()
@@ -635,9 +647,9 @@ namespace Wave.Essence.Tracker
 		}
 		private void CheckAllTrackerPoseStates()
 		{
-			for (int i = 0; i < s_TrackerIds.Length; i++)
+			for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 			{
-				CheckTrackerPoseState(s_TrackerIds[i]);
+				CheckTrackerPoseState(TrackerUtils.s_TrackerIds[i]);
 			}
 		}
 		#endregion
@@ -933,21 +945,22 @@ namespace Wave.Essence.Tracker
 		private Dictionary<TrackerId, UInt64> s_TrackerTimestamp = new Dictionary<TrackerId, UInt64>();
 		private void UpdateTrackerExtData()
 		{
-			for (int i = 0; i < s_TrackerIds.Length; i++)
+			for (int i = 0; i < TrackerUtils.s_TrackerIds.Length; i++)
 			{
-				if (!IsTrackerConnected(s_TrackerIds[i])) { continue; }
+				TrackerId tracker = TrackerUtils.s_TrackerIds[i];
+				if (!IsTrackerConnected(tracker)) { continue; }
 
 				Int32 exDataSize = 0;
 				UInt64 timestamp = 0;
-				IntPtr exData = Interop.WVR_GetTrackerExtendedData(s_TrackerIds[i].Id(), ref exDataSize, ref timestamp);
+				IntPtr exData = Interop.WVR_GetTrackerExtendedData(tracker.Id(), ref exDataSize, ref timestamp);
 
-				s_TrackerTimestamp[s_TrackerIds[i]] = timestamp;
+				s_TrackerTimestamp[tracker] = timestamp;
 				if (exDataSize > 0)
 				{
-					s_TrackerExtData[s_TrackerIds[i]] = new Int32[exDataSize];
+					s_TrackerExtData[tracker] = new Int32[exDataSize];
 					for (int d = 0; d < exDataSize; d++)
 					{
-						s_TrackerExtData[s_TrackerIds[i]][d] = Marshal.ReadInt32(exData, d * kTrackerExtDataTypeSize);
+						s_TrackerExtData[tracker][d] = Marshal.ReadInt32(exData, d * kTrackerExtDataTypeSize);
 					}
 				}
 			}
@@ -1224,6 +1237,10 @@ namespace Wave.Essence.Tracker
 		}
 		public bool GetTrackerDeviceName(TrackerId trackerId, out string trackerName)
 		{
+			if (UseXRData())
+			{
+				return InputDeviceTracker.GetTrackerDeviceName(trackerId.InputDevice(), out trackerName);
+			}
 			trackerName = s_TrackerDeviceName[trackerId];
 			return s_HasTrackerDeviceName[trackerId];
 		}

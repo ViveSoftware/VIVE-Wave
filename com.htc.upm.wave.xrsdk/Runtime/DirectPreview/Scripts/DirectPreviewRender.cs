@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #if UNITY_EDITOR && UNITY_ANDROID
 namespace Wave.XR.DirectPreview
@@ -14,6 +15,9 @@ namespace Wave.XR.DirectPreview
 
 		[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetRenderImageHandles")]
 		public static extern bool WVR_SetRenderImageHandles(IntPtr[] ttPtr);
+
+		[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetRenderImageHandles2")]
+		public static extern bool WVR_SetRenderImageHandles2();
 
 		static bool leftCall = false;
 		static bool rightCall = false;
@@ -134,6 +138,31 @@ namespace Wave.XR.DirectPreview
 				}
 				UnityEngine.Debug.LogWarning("mFPS is changed to " + mFPS);
 			}
+			RenderPipelineManager.endFrameRendering += OnEndFrameRendering;
+		}
+
+		void OnEndFrameRendering(ScriptableRenderContext context, Camera[] cameras)
+		{
+			// Put the code that you want to execute after the camera renders here
+			// If you are using URP or HDRP, Unity calls this method automatically
+			// If you are writing a custom SRP, you must call RenderPipeline.EndCameraRendering
+			long currentTime = getCurrentTimeMillis();
+			if (currentTime - lastUpdateTime >= (1000 / mFPS))
+			{
+				if (WVR_SetRenderImageHandles2())
+				{
+					//Debug.LogWarning("callback successfully");
+				}
+				else
+				{
+					//UnityEngine.Debug.LogWarning("WVR_SetRenderImageHandles2 fail");
+				}
+			}
+		}
+
+		void OnDestroy()
+		{
+			RenderPipelineManager.endFrameRendering -= OnEndFrameRendering;
 		}
 
 		private void Update()
@@ -156,12 +185,12 @@ namespace Wave.XR.DirectPreview
 
 			Graphics.Blit(src, dest);
 
-			var height = src.height;
-			if ((height % 2) != 0)
-			{
-				UnityEngine.Debug.LogWarning("RenderTexture height is odd, skip.");
-				return;
-			}
+			//var height = src.height;
+			//if ((height % 2) != 0)
+			//{
+			//	UnityEngine.Debug.LogWarning("RenderTexture height is odd, skip.");
+			//	return;
+			//}
 
 			long currentTime = getCurrentTimeMillis();
 			if (currentTime - lastUpdateTime >= (1000 / mFPS))

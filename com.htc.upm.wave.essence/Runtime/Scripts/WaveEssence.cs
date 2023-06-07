@@ -92,12 +92,9 @@ namespace Wave.Essence
 			Log.i(LOG_TAG, "Start() 4.Update all button events");
 			UpdateAllEventStates();
 			*/
-			Log.i(LOG_TAG, "Start() 5.Update current pose mode.");
-			UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Right);
-			UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Left);
-			Log.i(LOG_TAG, "Start() 6.Get all controller pose offsets.");
+			Log.i(LOG_TAG, "Start() 4.Get all controller pose offsets.");
 			UpdateAllControllerPoseOffset();
-			Log.i(LOG_TAG, "Start() 7.Update the interaction mode.");
+			Log.i(LOG_TAG, "Start() 5.Update the interaction mode.");
 			UpdateInteractionMode();
 		}
 		void OnApplicationPause(bool pauseStatus)
@@ -115,12 +112,9 @@ namespace Wave.Essence
 				Log.i(LOG_TAG, "Resume - 4.Update all button events");
 				UpdateAllEventStates();
 				*/
-				Log.i(LOG_TAG, "Resume - 5.Update current pose mode.");
-				UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Right);
-				UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Left);
-				Log.i(LOG_TAG, "Resume - 6.Get all controller pose offsets.");
+				Log.i(LOG_TAG, "Resume - 5.Get all controller pose offsets.");
 				UpdateAllControllerPoseOffset();
-				Log.i(LOG_TAG, "Resume() 7.Update the interaction mode.");
+				Log.i(LOG_TAG, "Resume() 6.Update the interaction mode.");
 				UpdateInteractionMode();
 			}
 		}
@@ -252,6 +246,7 @@ namespace Wave.Essence
 			if (m_Connected[device] == connected)
 				return;
 
+			DEBUG("DeviceConnectionHandler() " + device + " is " + (connected ? "connected." : "disconnected."));
 			m_Connected[device] = connected;
 			if (m_Connected[device])
 			{
@@ -805,15 +800,15 @@ namespace Wave.Essence
 		internal class PoseModeSetting
 		{
 			public bool isValid = false;
-			public WVR_ControllerPoseMode mode = WVR_ControllerPoseMode.WVR_ControllerPoseMode_Raw;
+			public WVR_ControllerPoseMode mode = WVR_ControllerPoseMode.WVR_ControllerPoseMode_Panel;
 			public PoseModeSetting(bool in_isValid, WVR_ControllerPoseMode in_mode)
 			{
 				isValid = in_isValid;
 				mode = in_mode;
 			}
 		};
-		PoseModeSetting m_RightPoseMode = new PoseModeSetting(false, WVR_ControllerPoseMode.WVR_ControllerPoseMode_Raw);
-		PoseModeSetting m_LeftPoseMode = new PoseModeSetting(false, WVR_ControllerPoseMode.WVR_ControllerPoseMode_Raw);
+		PoseModeSetting m_RightPoseMode = new PoseModeSetting(false, WVR_ControllerPoseMode.WVR_ControllerPoseMode_Panel);
+		PoseModeSetting m_LeftPoseMode = new PoseModeSetting(false, WVR_ControllerPoseMode.WVR_ControllerPoseMode_Panel);
 		private bool UpdateCurrentPoseMode(WVR_DeviceType type)
 		{
 			WVR_ControllerPoseMode mode = WVR_ControllerPoseMode.WVR_ControllerPoseMode_Raw;
@@ -855,6 +850,7 @@ namespace Wave.Essence
 			WVR_Quatf_t rot_offset = new WVR_Quatf_t();
 			if (type == WVR_DeviceType.WVR_DeviceType_Controller_Left)
 			{
+				UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Left);
 				switch (mode)
 				{
 					case WVR_ControllerPoseMode.WVR_ControllerPoseMode_Trigger:
@@ -884,6 +880,7 @@ namespace Wave.Essence
 			}
 			if (type == WVR_DeviceType.WVR_DeviceType_Controller_Right)
 			{
+				UpdateCurrentPoseMode(WVR_DeviceType.WVR_DeviceType_Controller_Right);
 				switch (mode)
 				{
 					case WVR_ControllerPoseMode.WVR_ControllerPoseMode_Trigger:

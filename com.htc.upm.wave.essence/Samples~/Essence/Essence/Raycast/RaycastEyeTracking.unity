@@ -400,7 +400,9 @@ MonoBehaviour:
   m_Pointer: {fileID: 1625088994}
   m_Hand: 1
   m_UsePose: 1
-  m_PinchStrength: 0.5
+  m_UseDefaultPinch: 1
+  m_PinchStrength: 0.51
+  m_PinchRelease: 0.5
   m_AlwaysEnable: 0
 --- !u!20 &322257618
 Camera:
@@ -1854,7 +1856,6 @@ MonoBehaviour:
       Enable: 1
       InitialStart: 0
       Model: 1
-  m_UseXRDevice: 1
 --- !u!4 &780488678
 Transform:
   m_ObjectHideFlags: 0
@@ -2829,7 +2830,9 @@ MonoBehaviour:
   m_Pointer: {fileID: 372206070}
   m_Hand: 0
   m_UsePose: 1
-  m_PinchStrength: 0.5
+  m_UseDefaultPinch: 1
+  m_PinchStrength: 0.51
+  m_PinchRelease: 0.5
   m_AlwaysEnable: 0
 --- !u!20 &1022505881
 Camera:
@@ -6676,7 +6679,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 224225765845599858}
   m_Direction: 2
   m_Value: -0.00000011137802
-  m_Size: 0.541902
+  m_Size: 0.54333335
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7318,7 +7321,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000019073486, y: 137.00002}
+  m_AnchoredPosition: {x: -0.000019073486, y: 137}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!224 &224701558979040588

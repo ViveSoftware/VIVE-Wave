@@ -194,6 +194,8 @@ namespace Wave.Essence.Editor
 			"CompositorLayer",
 			"XR",
 			"Tracker",
+			"ScenePerception",
+			"TrackableMarker"
 		};
 
 		internal static UnityEditor.PackageManager.PackageInfo pi = null;
@@ -235,6 +237,8 @@ namespace Wave.Essence.Editor
 		internal const string kTrackerModelPackage = "wave_essence_tracker_model.unitypackage";
 		internal const string kScenePerceptionPath = "/ScenePerception";
 		internal const string kScenePerceptionPackage = "wave_essence_sceneperception.unitypackage";
+		internal const string kTrackableMarkerPath = "/TrackableMarker";
+		internal const string kTrackableMarkerPackage = "wave_essence_trackablemarker.unitypackage";
 
 		internal static bool featureControllerModelImported = false;
 		internal static bool featureInputModuleImported = false;
@@ -247,6 +251,7 @@ namespace Wave.Essence.Editor
 		internal static bool featureRenderDocImported = false;
 		internal static bool featureTrackerModelImported = false;
 		internal static bool featureScenePerceptionImported = false;
+		internal static bool featureTrackableMarkerImported = false;
 
 		internal static bool featureControllerModelNeedUpdate = false;
 		internal static bool featureInputModuleNeedUpdate = false;
@@ -259,6 +264,7 @@ namespace Wave.Essence.Editor
 		internal static bool featureRenderDocNeedUpdate = false;
 		internal static bool featureTrackerModelNeedUpdate = false;
 		internal static bool featureScenePerceptionNeedUpdate = false;
+		internal static bool featureTrackableMarkerNeedUpdate = false;
 
 		internal static bool hasFeatureNeedUpdate = false;
 
@@ -275,6 +281,7 @@ namespace Wave.Essence.Editor
 			featureRenderDocImported = Directory.Exists(WaveEssencePath + kRenderDocPath);
 			featureTrackerModelImported = Directory.Exists(WaveEssencePath + kTrackerModelPath);
 			featureScenePerceptionImported = Directory.Exists(WaveEssencePath + kScenePerceptionPath);
+			featureTrackableMarkerImported = Directory.Exists(WaveEssencePath + kTrackableMarkerPath);
 
 			if (pi == null)
 				return false;
@@ -301,9 +308,11 @@ namespace Wave.Essence.Editor
 				!Directory.Exists(WaveEssencePath + kTrackerModelPath + "/" + FAKE_VERSION);
 			featureScenePerceptionNeedUpdate = featureScenePerceptionImported && !Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION);
+			featureTrackableMarkerNeedUpdate = featureTrackableMarkerImported && !Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + pi.version) &&
+				!Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + FAKE_VERSION);
 
 			hasFeatureNeedUpdate = featureControllerModelNeedUpdate || featureInputModuleNeedUpdate || featureHandModelNeedUpdate || featureInteractionModeNeedUpdate || featureInteractionToolkitNeedUpdate ||
-				featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate || featureScenePerceptionNeedUpdate;
+				featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate || featureScenePerceptionNeedUpdate || featureTrackableMarkerNeedUpdate;
 
 			return hasFeatureNeedUpdate;
 		}
@@ -333,6 +342,8 @@ namespace Wave.Essence.Editor
 				UpdateModule(WaveEssencePath + kTrackerModelPath, kTrackerModelPackage);
 			if (featureScenePerceptionNeedUpdate)
 				UpdateModule(WaveEssencePath + kScenePerceptionPath, kScenePerceptionPackage);
+			if (featureTrackableMarkerNeedUpdate)
+				UpdateModule(WaveEssencePath + kTrackableMarkerPath, kTrackableMarkerPackage);
 		}
 
 		public override void OnGUI(string searchContext)
@@ -343,12 +354,13 @@ namespace Wave.Essence.Editor
 			bool showHandModel = searchContext.Contains("Hand");
 			bool showInteractionMode = searchContext.Contains("Interaction");
 			bool showCameraTexture = searchContext.Contains("CameraTexture");
-			bool showCompositorLayer = false;
-			bool showBundlePreview = false;
+			bool showCompositorLayer = searchContext.Contains("CompositorLayer");
+			bool showBundlePreview = searchContext.Contains("BundlePreview");
 			bool showRenderDoc = searchContext.Contains("RenderDoc");
 			bool showInteractionToolkit = searchContext.Contains("Interaction");
 			bool showTrackerModel = searchContext.Contains("Tracker");
-			bool showScenePerception = false;
+			bool showScenePerception = searchContext.Contains("ScenePerception");
+			bool showTrackableMarker = searchContext.Contains("TrackableMarker");
 
 			if (showControllerModel ||
 				showInputModule ||
@@ -360,7 +372,8 @@ namespace Wave.Essence.Editor
 				showRenderDoc ||
 				showInteractionToolkit ||
 				showTrackerModel ||
-				showScenePerception)
+				showScenePerception ||
+				showTrackableMarker)
 			{
 				hasKeyword = true;
 			}
@@ -378,6 +391,7 @@ namespace Wave.Essence.Editor
              * 9. Interaction Toolkit
              * 10. Tracker Model
              * 11. Scene Perception
+             * 12. Trackable Marker
             **/
 
 			checkFeaturePackages();
@@ -693,7 +707,7 @@ namespace Wave.Essence.Editor
 					GUILayout.Label("Scene Perception", EditorStyles.boldLabel);
 					GUILayout.Label("Note: This feature is currenty in Beta.\n" +
 									"Scene Perception is feature which facilitates Mixed Reality development by bringing in spatial information from the users' surroundings into the virtual environment.\n" +
-									"The aspects of this feature that are currently supported are Scene Planes and Spatial Anchors.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+									"The aspects of this feature that are currently supported are Scene Planes, Scene Mesh and Spatial Anchors.", new GUIStyle(EditorStyles.label) { wordWrap = true });
 					GUILayout.Label("The feature will be imported at " + WaveEssencePath + kScenePerceptionPath, EditorStyles.label);
 					GUILayout.Space(5f);
 					GUI.enabled = !featureScenePerceptionImported || featureScenePerceptionNeedUpdate;
@@ -706,6 +720,33 @@ namespace Wave.Essence.Editor
 					{
 						if (GUILayout.Button("Import Feature - Scene Perception", GUILayout.ExpandWidth(false)))
 							ImportModule(kScenePerceptionPackage);
+					}
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+
+			if (showTrackableMarker || !hasKeyword)
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("Trackable Marker", EditorStyles.boldLabel);
+					GUILayout.Label("Note: This feature is currenty in Beta.\n" +
+									"Trackable Marker is feature which enables you to track markers detected by the device."
+									, new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("The feature will be imported at " + WaveEssencePath + kTrackableMarkerPath, EditorStyles.label);
+					GUILayout.Space(5f);
+					GUI.enabled = !featureTrackableMarkerImported || featureTrackableMarkerNeedUpdate;
+					if (featureTrackableMarkerNeedUpdate)
+					{
+						if (GUILayout.Button("Update Feature - Trackable Marker", GUILayout.ExpandWidth(false)))
+							UpdateModule(WaveEssencePath + kTrackableMarkerPath, kTrackableMarkerPackage);
+					}
+					else
+					{
+						if (GUILayout.Button("Import Feature - Trackable Marker", GUILayout.ExpandWidth(false)))
+							ImportModule(kTrackableMarkerPackage);
 					}
 					GUILayout.Space(5f);
 					GUI.enabled = true;
@@ -1045,6 +1086,13 @@ namespace Wave.Essence.Editor
 				GetCurrent = () => { return EssenceSettingsProvider.featureCompositorLayerNeedUpdate.ToString(); },
 			};
 
+			var TrackableMarker = new Item("Trackable Marker")
+			{
+				IsShow = () => { return EssenceSettingsProvider.featureTrackableMarkerImported; },
+				IsReady = () => { return !EssenceSettingsProvider.featureTrackableMarkerNeedUpdate; },
+				GetCurrent = () => { return EssenceSettingsProvider.featureTrackableMarkerNeedUpdate.ToString(); },
+			};
+
 			return new List<Item>()
 			{
 				ControllerModel,
@@ -1055,7 +1103,9 @@ namespace Wave.Essence.Editor
 				CompositorLayer,
 				BundlePreview,
 				RenderDoc,
-				InteractionToolkit
+				InteractionToolkit,
+				ScenePerception,
+				TrackableMarker
 			};
 		}
 

@@ -230,6 +230,33 @@ namespace Wave.XR.BuildCheck
 			}
 		}
 
+		internal static void AddMarkerAndroidManifest()
+		{
+			WaveXRSettings settings;
+			EditorBuildSettings.TryGetConfigObject(Constants.k_SettingsKey, out settings);
+			if (settings != null)
+				WaveXRPath = settings.waveXRFolder;
+
+			if (File.Exists(AndroidManifestPathDest))
+			{
+				if (!checkMarkerFeature(AndroidManifestPathDest))
+				{
+					appendFile(
+						filename: AndroidManifestPathDest,
+						marker: true);
+				}
+			}
+			if (File.Exists(WaveXRPath + CustomAndroidManifestPathSrc))
+			{
+				if (!checkMarkerFeature(WaveXRPath + CustomAndroidManifestPathSrc))
+				{
+					appendFile(
+						filename: WaveXRPath + CustomAndroidManifestPathSrc,
+						marker: true);
+				}
+			}
+		}
+
 		static void RemoveCreatedAndroidManifest()
 		{
 			bool isAndroidManifestCreatedByScript = File.Exists(AndroidManifestScriptCreatedPath);
@@ -301,6 +328,7 @@ namespace Wave.XR.BuildCheck
 			bool addLipExpression = false;
 			bool addScenePerception = false;
 			bool addSceneMesh = false;
+			bool addMarker = false;
 			bool addSimultaneousInteraction = (EditorPrefs.GetBool(CheckIfSimultaneousInteractionEnabled.MENU_NAME, false) && !checkSimultaneousInteractionFeature(AndroidManifestPathDest));
 
 			if (settings != null)
@@ -310,6 +338,7 @@ namespace Wave.XR.BuildCheck
 				addEyeTracking = settings.EnableEyeTracking && !checkEyeTrackingFeature(AndroidManifestPathDest);
 				addLipExpression = settings.EnableLipExpression && !checkLipExpressionFeature(AndroidManifestPathDest);
 				addScenePerception = settings.EnableScenePerception && !checkScenePerceptionFeature(AndroidManifestPathDest);
+				addMarker = settings.EnableMarker && !checkMarkerFeature(AndroidManifestPathDest);
 				addSceneMesh = settings.EnableSceneMesh && !checkSceneMeshPermission(AndroidManifestPathDest);
 
 				appendFile(
@@ -321,7 +350,8 @@ namespace Wave.XR.BuildCheck
 					eyetracking: addEyeTracking,
 					lipexpression: addLipExpression,
 					scenePerception: addScenePerception,
-					sceneMesh: addSceneMesh);
+					sceneMesh: addSceneMesh,
+					marker: addMarker);
 			}
 			else
 			{
@@ -333,7 +363,8 @@ namespace Wave.XR.BuildCheck
 					eyetracking: addEyeTracking,
 					lipexpression: addLipExpression,
 					scenePerception: addScenePerception,
-					sceneMesh: addSceneMesh);
+					sceneMesh: addSceneMesh,
+					marker: addMarker);
 			}
 		}
 
@@ -372,7 +403,8 @@ namespace Wave.XR.BuildCheck
 			, bool eyetracking = false
 			, bool lipexpression = false
 			, bool scenePerception = false
-			, bool sceneMesh = false)
+			, bool sceneMesh = false
+			, bool marker = false)
 		{
 			string line;
 
@@ -413,6 +445,10 @@ namespace Wave.XR.BuildCheck
 				if (line.Contains("</manifest>") && sceneMesh)
 				{
 					file2.WriteLine("	<uses-permission android:name=\"wave.permission.GET_SCENE_MESH\" />");
+				}
+				if (line.Contains("</manifest>") && marker)
+				{
+					file2.WriteLine("	<uses-feature android:name=\"wave.feature.marker\" android:required=\"true\" />");
 				}
 				file2.WriteLine(line);
 			}
@@ -556,6 +592,26 @@ namespace Wave.XR.BuildCheck
 					string name = metadataNode.Attributes["android:name"].Value;
 
 					if (name != null && name.Equals("wave.permission.GET_SCENE_MESH"))
+						return true;
+				}
+			}
+			return false;
+		}
+
+		static bool checkMarkerFeature(string filename)
+		{
+			XmlDocument doc = new XmlDocument();
+			doc.Load(filename);
+			XmlNodeList metadataNodeList = doc.SelectNodes("/manifest/uses-feature");
+
+			if (metadataNodeList != null)
+			{
+				foreach (XmlNode metadataNode in metadataNodeList)
+				{
+					string name = metadataNode.Attributes["android:name"].Value;
+					string required = metadataNode.Attributes["android:required"].Value;
+
+					if (name != null && name.Equals("wave.feature.marker"))
 						return true;
 				}
 			}
@@ -764,6 +820,7 @@ namespace Wave.XR.BuildCheck
 					AddLipExpressionAndroidManifest();
 					AddScenePerceptionAndroidManifest();
 					AddSceneMeshAndroidManifest();
+					AddMarkerAndroidManifest();
 					CopyAndroidManifest();
 					CopyWaveAARs();
 					return;

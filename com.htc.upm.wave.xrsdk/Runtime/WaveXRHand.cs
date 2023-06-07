@@ -180,6 +180,35 @@ namespace Wave.OpenXR
 		}
 
 		internal static List<InputDevice> s_InputDevices = new List<InputDevice>();
+		internal static int inputDeviceFrame = -1;
+		private static void UpdateInputDevices()
+		{
+			if (inputDeviceFrame != Time.frameCount)
+			{
+				inputDeviceFrame = Time.frameCount;
+				InputDevices.GetDevices(s_InputDevices);
+			}
+		}
+
+		private static Dictionary<bool, bool> s_IsConnected = new Dictionary<bool, bool>()
+		{
+			{ false, false }, // right
+			{ true, false }, // left
+		};
+		private static Dictionary<bool, int> isConnectedFrame = new Dictionary<bool, int>()
+		{
+			{ false, -1 }, // right
+			{ true, -1 }, // left
+		};
+		private static bool UpdateConnectedDevice(bool isLeft)
+		{
+			if (isConnectedFrame[isLeft] != Time.frameCount)
+			{
+				isConnectedFrame[isLeft] = Time.frameCount;
+				return true;
+			}
+			return false;
+		}
 		private static bool IsHandDeviceConnected(InputDevice input, bool isLeft)
 		{
 			if (IsHandDevice(input, isLeft))
@@ -194,15 +223,41 @@ namespace Wave.OpenXR
 		/// <returns>True for conencted.</returns>
 		public static bool IsHandDeviceConnected(bool isLeft)
 		{
-			InputDevices.GetDevices(s_InputDevices);
+			if (!UpdateConnectedDevice(isLeft)) { return s_IsConnected[isLeft]; }
+
+			UpdateInputDevices();
 			for (int i = 0; i < s_InputDevices.Count; i++)
 			{
 				if (IsHandDeviceConnected(s_InputDevices[i], isLeft))
+				{
+					s_IsConnected[isLeft] = true;
 					return true;
+				}
 			}
+
+			s_IsConnected[isLeft] = false;
 			return false;
 		}
 
+		private static Dictionary<bool, bool> s_IsTracked = new Dictionary<bool, bool>()
+		{
+			{ false, false }, // right
+			{ true, false }, // left
+		};
+		private static Dictionary<bool, int> isTrackedFrame = new Dictionary<bool, int>()
+		{
+			{ false, -1 }, // right
+			{ true, -1 }, // left
+		};
+		private static bool UpdateTrackedDevice(bool isLeft)
+		{
+			if (isTrackedFrame[isLeft] != Time.frameCount)
+			{
+				isTrackedFrame[isLeft] = Time.frameCount;
+				return true;
+			}
+			return false;
+		}
 		private static bool IsTracked(InputDevice input, bool isLeft)
 		{
 			if (IsHandDeviceConnected(input, isLeft))
@@ -219,16 +274,41 @@ namespace Wave.OpenXR
 		/// <returns>Tracked for valid pose.</returns>
 		public static bool IsTracked(bool isLeft)
 		{
-			InputDevices.GetDevices(s_InputDevices);
+			if (!UpdateTrackedDevice(isLeft)) { return s_IsTracked[isLeft]; }
+
+			UpdateInputDevices();
 			for (int i = 0; i < s_InputDevices.Count; i++)
 			{
 				if (IsTracked(s_InputDevices[i], isLeft))
+				{
+					s_IsTracked[isLeft] = true;
 					return true;
+				}
 			}
+
+			s_IsTracked[isLeft] = false;
 			return false;
 		}
 
-		internal static Bone m_Palm, m_Wrist;
+		internal static Dictionary<bool, Bone> m_Palm = new Dictionary<bool, Bone>()
+		{
+			{ false, new Bone() },
+			{ true, new Bone() },
+		};
+		private static Dictionary<bool, int> palmFrame = new Dictionary<bool, int>()
+		{
+			{ false, -1 }, // right
+			{ true, -1 }, // left
+		};
+		private static bool UpdatePalm(bool isLeft)
+		{
+			if (palmFrame[isLeft] != Time.frameCount)
+			{
+				palmFrame[isLeft] = Time.frameCount;
+				return true;
+			}
+			return false;
+		}
 		/// <summary>
 		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Palm.
 		/// </summary>
@@ -236,7 +316,9 @@ namespace Wave.OpenXR
 		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Palm.</returns>
 		public static Bone GetPalm(bool isLeft)
 		{
-			InputDevices.GetDevices(s_InputDevices);
+			if (!UpdatePalm(isLeft)) { return m_Palm[isLeft]; }
+
+			UpdateInputDevices();
 			for (int i = 0; i < s_InputDevices.Count; i++)
 			{
 				if (!IsTracked(s_InputDevices[i], isLeft)) { continue; }
@@ -245,11 +327,31 @@ namespace Wave.OpenXR
 				{
 					if (value.TryGetRootBone(out Bone bone))
 					{
-						m_Palm = bone;
+						m_Palm[isLeft] = bone;
 					}
 				}
 			}
-			return m_Palm;
+			return m_Palm[isLeft];
+		}
+
+		internal static Dictionary<bool, Bone> m_Wrist = new Dictionary<bool, Bone>()
+		{
+			{ false, new Bone() },
+			{ true, new Bone() },
+		};
+		private static Dictionary<bool, int> wristFrame = new Dictionary<bool, int>()
+		{
+			{ false, -1 }, // right
+			{ true, -1 }, // left
+		};
+		private static bool UpdateWrist(bool isLeft)
+		{
+			if (wristFrame[isLeft] != Time.frameCount)
+			{
+				wristFrame[isLeft] = Time.frameCount;
+				return true;
+			}
+			return false;
 		}
 		/// <summary>
 		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Wrist.
@@ -258,20 +360,61 @@ namespace Wave.OpenXR
 		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Wrist.</returns>
 		public static Bone GetWrist(bool isLeft)
 		{
-			if (GetPalm(isLeft).TryGetParentBone(out Bone value))
-				m_Wrist = value;
+			if (!UpdateWrist(isLeft)) { return m_Wrist[isLeft]; }
 
-			return m_Wrist;
+			if (GetPalm(isLeft).TryGetParentBone(out Bone value))
+				m_Wrist[isLeft] = value;
+
+			return m_Wrist[isLeft];
 		}
 
-		internal static Dictionary<HandFinger, List<Bone>> s_FingerBones = new Dictionary<HandFinger, List<Bone>>()
+		internal static Dictionary<bool, Dictionary<HandFinger, List<Bone>>> s_FingerBones = new Dictionary<bool, Dictionary<HandFinger, List<Bone>>>()
 		{
-			{ HandFinger.Thumb, new List<Bone>() },
-			{ HandFinger.Index, new List<Bone>() },
-			{ HandFinger.Middle, new List<Bone>() },
-			{ HandFinger.Ring, new List<Bone>() },
-			{ HandFinger.Pinky, new List<Bone>() }
+			{ false, new Dictionary<HandFinger, List<Bone>>() {
+					{ HandFinger.Thumb, new List<Bone>() },
+					{ HandFinger.Index, new List<Bone>() },
+					{ HandFinger.Middle, new List<Bone>() },
+					{ HandFinger.Ring, new List<Bone>() },
+					{ HandFinger.Pinky, new List<Bone>() }
+				}
+			},
+			{ true, new Dictionary<HandFinger, List<Bone>>() {
+					{ HandFinger.Thumb, new List<Bone>() },
+					{ HandFinger.Index, new List<Bone>() },
+					{ HandFinger.Middle, new List<Bone>() },
+					{ HandFinger.Ring, new List<Bone>() },
+					{ HandFinger.Pinky, new List<Bone>() }
+				}
+			}
 		};
+		private static Dictionary<bool, Dictionary<HandFinger, int>> fingerBonesFrame = new Dictionary<bool, Dictionary<HandFinger, int>>()
+		{
+			{ false, new Dictionary<HandFinger, int>() {
+					{ HandFinger.Thumb, -1 },
+					{ HandFinger.Index, -1 },
+					{ HandFinger.Middle, -1 },
+					{ HandFinger.Ring, -1 },
+					{ HandFinger.Pinky, -1 }
+				}
+			},
+			{ true, new Dictionary<HandFinger, int>() {
+					{ HandFinger.Thumb, -1 },
+					{ HandFinger.Index, -1 },
+					{ HandFinger.Middle, -1 },
+					{ HandFinger.Ring, -1 },
+					{ HandFinger.Pinky, -1 }
+				}
+			}
+		};
+		private static bool UpdateFingerBones(bool isLeft, HandFinger finger)
+		{
+			if (fingerBonesFrame[isLeft][finger] != Time.frameCount)
+			{
+				fingerBonesFrame[isLeft][finger] = Time.frameCount;
+				return true;
+			}
+			return false;
+		}
 		/// <summary>
 		/// Retrieves the bone list of a finger.
 		/// The list length will be zero if cannot find a finger's bone list.
@@ -281,20 +424,22 @@ namespace Wave.OpenXR
 		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone</see> list of a finger.</returns>
 		public static List<Bone> GetFingerBones(bool isLeft, HandFinger finger)
 		{
-			InputDevices.GetDevices(s_InputDevices);
+			if (!UpdateFingerBones(isLeft, finger)) { return s_FingerBones[isLeft][finger]; }
+
+			UpdateInputDevices();
 			for (int i = 0; i < s_InputDevices.Count; i++)
 			{
 				if (!IsTracked(s_InputDevices[i], isLeft)) { continue; }
 
 				if (s_InputDevices[i].TryGetFeatureValue(CommonUsages.handData, out Hand handData))
 				{
-					if (!handData.TryGetFingerBones(finger, s_FingerBones[finger]))
+					if (!handData.TryGetFingerBones(finger, s_FingerBones[isLeft][finger]))
 					{
-						s_FingerBones[finger].Clear();
+						s_FingerBones[isLeft][finger].Clear();
 					}
 				}
 			}
-			return s_FingerBones[finger];
+			return s_FingerBones[isLeft][finger];
 		}
 	}
 }

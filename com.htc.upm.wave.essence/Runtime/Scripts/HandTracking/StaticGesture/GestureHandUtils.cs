@@ -11,7 +11,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Wave.Native;
 
 namespace Wave.Essence.Hand.StaticGesture
 {
@@ -139,17 +138,16 @@ namespace Wave.Essence.Hand.StaticGesture
 			return GestureType.Unknown;
 		}
 
-		static int pointFrameLeft = 0, pointFrameRight = 0;
+		static Dictionary<bool, int> pointFrame = new Dictionary<bool, int>()
+		{
+			{ false, -1 }, // right
+			{ true, -1 }, // left
+		};
 		private static bool AllowUpdatePoints(bool isLeft)
 		{
-			if (isLeft && (pointFrameLeft != Time.frameCount))
+			if (pointFrame[isLeft] != Time.frameCount)
 			{
-				pointFrameLeft = Time.frameCount;
-				return true;
-			}
-			if (!isLeft && (pointFrameRight != Time.frameCount))
-			{
-				pointFrameRight = Time.frameCount;
+				pointFrame[isLeft] = Time.frameCount;
 				return true;
 			}
 			return false;
@@ -170,6 +168,7 @@ namespace Wave.Essence.Hand.StaticGesture
 		public static void UpdatePoints(ref GestureHandData hand)
 		{
 			if (!AllowUpdatePoints(hand.isLeft)) { return; }
+
 			ValidatePoints(ref hand);
 
 			if (hand.valid)

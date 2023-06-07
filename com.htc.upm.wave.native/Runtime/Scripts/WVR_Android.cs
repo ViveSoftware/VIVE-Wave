@@ -720,6 +720,114 @@ namespace Wave.Native
 
 		#endregion
 
+		#region wvr_marker.h
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartMarker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StartMarker();
+		public override WVR_Result StartMarker()
+		{
+			return WVR_StartMarker();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StopMarker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StopMarker();
+		public override void StopMarker()
+		{
+			WVR_StopMarker();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartMarkerObserver", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StartMarkerObserver(WVR_MarkerObserverTarget target);
+		public override WVR_Result StartMarkerObserver(WVR_MarkerObserverTarget target)
+		{
+			return WVR_StartMarkerObserver(target);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StopMarkerObserver", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StopMarkerObserver(WVR_MarkerObserverTarget target);
+		public override WVR_Result StopMarkerObserver(WVR_MarkerObserverTarget target)
+		{
+			return WVR_StopMarkerObserver(target);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetMarkerObserverState", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetMarkerObserverState(WVR_MarkerObserverTarget target, out WVR_MarkerObserverState state);
+		public override WVR_Result GetMarkerObserverState(WVR_MarkerObserverTarget target, out WVR_MarkerObserverState state)
+		{
+			return WVR_GetMarkerObserverState(target, out state);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartMarkerDetection", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StartMarkerDetection(WVR_MarkerObserverTarget target);
+		public override WVR_Result StartMarkerDetection(WVR_MarkerObserverTarget target)
+		{
+			return WVR_StartMarkerDetection(target);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StopMarkerDetection", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StopMarkerDetection(WVR_MarkerObserverTarget target);
+		public override WVR_Result StopMarkerDetection(WVR_MarkerObserverTarget target)
+		{
+			return WVR_StopMarkerDetection(target);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetArucoMarkers", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetArucoMarkers(UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, WVR_PoseOriginModel originModel, IntPtr markers /* WVR_ArucoMarker* */);
+		public override WVR_Result GetArucoMarkers(UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, WVR_PoseOriginModel originModel, IntPtr markers /* WVR_ArucoMarker* */)
+		{
+			return WVR_GetArucoMarkers(markerCapacityInput, out markerCountOutput, originModel, markers);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_EnumerateTrackableMarkers", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_EnumerateTrackableMarkers(WVR_MarkerObserverTarget target, UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, IntPtr markerIds /* WVR_Uuid* */);
+		public override WVR_Result EnumerateTrackableMarkers(WVR_MarkerObserverTarget target, UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, IntPtr markerIds /* WVR_Uuid* */)
+		{
+			return WVR_EnumerateTrackableMarkers(target, markerCapacityInput, out markerCountOutput, markerIds);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_CreateTrackableMarker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_CreateTrackableMarker([In, Out] WVR_TrackableMarkerCreateInfo[] createInfo /* WVR_TrackableMarkerCreateInfo* */);
+		public override WVR_Result CreateTrackableMarker([In, Out] WVR_TrackableMarkerCreateInfo[] createInfo /* WVR_TrackableMarkerCreateInfo* */)
+		{
+			return WVR_CreateTrackableMarker(createInfo);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_DestroyTrackableMarker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_DestroyTrackableMarker(WVR_Uuid markerId);
+		public override WVR_Result DestroyTrackableMarker(WVR_Uuid markerId)
+		{
+			return WVR_DestroyTrackableMarker(markerId);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartTrackableMarkerTracking", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StartTrackableMarkerTracking(WVR_Uuid markerId);
+		public override WVR_Result StartTrackableMarkerTracking(WVR_Uuid markerId)
+		{
+			return WVR_StartTrackableMarkerTracking(markerId);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StopTrackableMarkerTracking", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_StopTrackableMarkerTracking(WVR_Uuid markerId);
+		public override WVR_Result StopTrackableMarkerTracking(WVR_Uuid markerId)
+		{
+			return WVR_StopTrackableMarkerTracking(markerId);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetTrackableMarkerState", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetTrackableMarkerState(WVR_Uuid markerId, WVR_PoseOriginModel originModel, out WVR_TrackableMarkerState state /* WVR_TrackableMarkerState* */);
+		public override WVR_Result GetTrackableMarkerState(WVR_Uuid markerId, WVR_PoseOriginModel originModel, out WVR_TrackableMarkerState state /* WVR_TrackableMarkerState* */)
+		{
+			return WVR_GetTrackableMarkerState(markerId, originModel, out state);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetArucoMarkerData", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetArucoMarkerData(WVR_Uuid markerId, out WVR_ArucoMarkerData data /* WVR_ArucoMarkerData* */);
+		public override WVR_Result GetArucoMarkerData(WVR_Uuid markerId, out WVR_ArucoMarkerData data /* WVR_ArucoMarkerData* */)
+		{
+			return WVR_GetArucoMarkerData(markerId, out data);
+		}
+
+		#endregion
 
 		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetSupportedFeatures", CallingConvention = CallingConvention.Cdecl)]
 		public static extern ulong WVR_GetSupportedFeatures();

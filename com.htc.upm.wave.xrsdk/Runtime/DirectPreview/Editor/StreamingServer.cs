@@ -56,10 +56,11 @@ namespace Wave.XR.DirectPreview.Editor
 					var driveStr = absolutePath.Substring(0, 2);
 
 					UnityEngine.Debug.Log("StreamingServer in " + absolutePath);
-                    UnityEngine.Debug.Log("driveStr " + driveStr);
-                    //Get the path of the Game data folder
-                    myProcess.StartInfo.FileName = "C:\\Windows\\system32\\cmd.exe";
-					myProcess.StartInfo.Arguments = "/c " + driveStr + " && cd " + absolutePath + " && RRserver";
+					UnityEngine.Debug.Log("driveStr " + driveStr);
+
+					//Get the path of the Game data folder
+					myProcess.StartInfo.FileName = "C:\\Windows\\system32\\cmd.exe";
+					myProcess.StartInfo.Arguments = "/c taskkill /F /IM RRServer.exe & taskkill /T /F /IM VHConsole.exe & taskkill /T /F /IM RRConsole.exe & " + driveStr + " && cd " + absolutePath + " && RRserver";
 					myProcess.Start();
 				}
 				catch (Exception e)

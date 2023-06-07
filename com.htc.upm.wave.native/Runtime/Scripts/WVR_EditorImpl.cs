@@ -2452,7 +2452,7 @@ namespace Wave.Native
 		private bool isNaturalHandEnabled = false, isElectronicHandEnabled = false;
 		public WVR_Result StartHandTracking(WVR_HandTrackerType tracker)
 		{
-			if (interactionMode != WVR_InteractionMode.WVR_InteractionMode_Hand) { return WVR_Result.WVR_Error_FeatureNotSupport; }
+			//if (interactionMode != WVR_InteractionMode.WVR_InteractionMode_Hand) { return WVR_Result.WVR_Error_FeatureNotSupport; }
 
 			if (tracker == WVR_HandTrackerType.WVR_HandTrackerType_Natural) { isNaturalHandEnabled = true; }
 			if (tracker == WVR_HandTrackerType.WVR_HandTrackerType_Electronic) { isElectronicHandEnabled = true; }

@@ -28,7 +28,7 @@ namespace Wave.Essence.Raycast
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
 		}
-		private void INTERVAL(string msg) { if (Log.gpl.Print) { DEBUG(msg); } }
+		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 
 		[Serializable]
 		public class ButtonOption
@@ -158,14 +158,11 @@ namespace Wave.Essence.Raycast
 
 			m_KeyDown = ButtonPressed();
 
-			if (Log.gpl.Print)
-			{
-				DEBUG("Update() m_InputEvent: " + m_InputEvent
-					+ ", m_AlwaysEnable: " + m_AlwaysEnable
-					+ ", m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
-					+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
-					);
-			}
+			INTERVAL("Update() m_InputEvent: " + m_InputEvent
+				+ ", m_AlwaysEnable: " + m_AlwaysEnable
+				+ ", m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
+				+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
+				);
 		}
 		#endregion
 
@@ -176,10 +173,7 @@ namespace Wave.Essence.Raycast
 
 			m_Interactable = (m_AlwaysEnable || enabled) && hasFocus;
 
-			if (Log.gpl.Print)
-			{
-				DEBUG("IsInteractable() enabled: " + enabled + ", hasFocus: " + hasFocus + ", m_AlwaysEnable: " + m_AlwaysEnable);
-			}
+			INTERVAL("IsInteractable() enabled: " + enabled + ", hasFocus: " + hasFocus + ", m_AlwaysEnable: " + m_AlwaysEnable);
 
 			return m_Interactable;
 		}

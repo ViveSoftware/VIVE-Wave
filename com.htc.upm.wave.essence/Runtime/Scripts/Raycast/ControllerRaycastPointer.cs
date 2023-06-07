@@ -25,6 +25,7 @@ namespace Wave.Essence.Raycast
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, m_Controller + " " + msg, true);
 		}
+		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 
 		[Serializable]
 		public class ButtonOption
@@ -136,12 +137,9 @@ namespace Wave.Essence.Raycast
 
 			UpdateButtonStates();
 
-			if (Log.gpl.Print)
-			{
-				DEBUG("Update() m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
-					+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
-					);
-			}
+			INTERVAL("Update() m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
+				+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
+				);
 		}
 		protected override void Start()
 		{
@@ -208,17 +206,14 @@ namespace Wave.Essence.Raycast
 
 			m_Interactable = (m_AlwaysEnable || enabled) && validPose && hasFocus && (!hideWhenIdle);
 
-			if (Log.gpl.Print)
-			{
-				DEBUG("IsInteractable() enabled: " + enabled
-					+ ", validPose: " + validPose
-					+ ", hasFocus: " + hasFocus
-					+ ", m_HideWhenIdle: " + m_HideWhenIdle
-					+ ", m_TableStatic: " + m_TableStatic
-					+ ", hideWhenIdle: " + hideWhenIdle
-					+ ", m_AlwaysEnable: " + m_AlwaysEnable
-					+ ", m_Interactable: " + m_Interactable);
-			}
+			INTERVAL("IsInteractable() enabled: " + enabled
+				+ ", validPose: " + validPose
+				+ ", hasFocus: " + hasFocus
+				+ ", m_HideWhenIdle: " + m_HideWhenIdle
+				+ ", m_TableStatic: " + m_TableStatic
+				+ ", hideWhenIdle: " + hideWhenIdle
+				+ ", m_AlwaysEnable: " + m_AlwaysEnable
+				+ ", m_Interactable: " + m_Interactable);
 
 			return m_Interactable;
 		}

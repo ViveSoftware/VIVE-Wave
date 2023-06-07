@@ -29,6 +29,8 @@ namespace Wave.Essence.Raycast
 				Log.d(LOG_TAG, msg, true);
 		}
 		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+		int logFrame = 0;
+		protected bool printIntervalLog = false;
 
 		#region Inspector
 		[SerializeField]
@@ -76,6 +78,10 @@ namespace Wave.Essence.Raycast
 		protected bool m_Interactable = true;
 		protected virtual void Update()
 		{
+			logFrame++;
+			logFrame %= 300;
+			printIntervalLog = (logFrame == 0);
+
 			if (!m_Interactable) return;
 
 			/// Use the event camera and EventSystem to reset PointerEventData.

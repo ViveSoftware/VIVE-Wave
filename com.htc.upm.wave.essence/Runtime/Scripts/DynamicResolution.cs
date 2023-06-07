@@ -144,6 +144,7 @@ namespace Wave.Essence.Render
 		{
 			WaveXRSettings waveXRSettings = WaveXRSettings.GetInstance();
 			currentAdaptiveQualityMode = waveXRSettings.adaptiveQualityMode;
+
 			Log.d(LOG_TAG, "currentAdaptiveQualityMode: " + currentAdaptiveQualityMode.ToString());
 			if (currentAdaptiveQualityMode == WaveXRSettings.AdaptiveQualityMode.Disabled)
 			{
@@ -176,10 +177,13 @@ namespace Wave.Essence.Render
 			CurrentAQEvent = AQEvent.None;
 
 			FormatResolutionScaleList();
+
 			DefineUpperBound();
 			DefineLowerBound();
+
 			SetListUpperBound();
 			SetListLowerBound();
+
 			isInitialized = true;
 			Log.d(LOG_TAG, "Finalilzed Resolution Scale List: " + string.Join(",", resolutionScaleList.ToArray()));
 		}
@@ -255,12 +259,14 @@ namespace Wave.Essence.Render
 
 		private void SetListUpperBound()
 		{
-			while (resolutionScaleList[0] > currentUpperBound)
+			//Remove values that are higher than the defined upper bound
+			while (resolutionScaleList.Count > 0 && resolutionScaleList[0] > currentUpperBound)
 			{
 				resolutionScaleList.RemoveAt(0);
 			}
 			resolutionScaleList.Insert(0, currentUpperBound);
 
+			//Sort and reset index
 			FormatResolutionScaleList();
 			if (index > resolutionScaleList.Count - 1)
 			{
@@ -272,15 +278,18 @@ namespace Wave.Essence.Render
 
 		private void SetListLowerBound()
 		{
-			int counter = resolutionScaleList.Count - 1;
-			while (resolutionScaleList[counter] < currentLowerBound)
+			//Remove values that are lower than the defined lower bound
+			int counter = Math.Max(0, resolutionScaleList.Count - 1);
+			while (counter > -1 && resolutionScaleList[counter] < currentLowerBound)
 			{
 				resolutionScaleList.RemoveAt(counter);
 				counter--;
 			}
 			resolutionScaleList.Add(currentLowerBound);
 
+			//Sort and reset index
 			FormatResolutionScaleList();
+			counter = Math.Max(0, counter);
 			if (index > counter)
 			{
 				index = defaultIndex = counter;
@@ -291,6 +300,10 @@ namespace Wave.Essence.Render
 
 		private float GetResScaleFromDMM()
 		{
+#if UNITY_EDITOR
+			return 0.1f;
+#endif
+
 			float P60D = 178.15f * (textSize * textSize) - 14419f * textSize + 356704f;
 
 			Log.d(LOG_TAG, "Get P60D from DMM: " + P60D);
@@ -311,26 +324,36 @@ namespace Wave.Essence.Render
 
 		private void DefineUpperBound()
 		{
-			if (currentAdaptiveQualityMode == WaveXRSettings.AdaptiveQualityMode.QualityOrientedMode || currentAdaptiveQualityMode == WaveXRSettings.AdaptiveQualityMode.CustomizationMode)
+			switch (currentAdaptiveQualityMode)
 			{
-				currentUpperBound = Mathf.Min(Interop.WVR_GetResolutionMaxScale(), resolutionScaleList[0]);
-			}
-			else
-			{
-				currentUpperBound = Mathf.Min(performanceOrientedModeUpperBound, resolutionScaleList[0]);
+				case WaveXRSettings.AdaptiveQualityMode.QualityOrientedMode:
+				case WaveXRSettings.AdaptiveQualityMode.CustomizationMode:
+					currentUpperBound = Mathf.Min(Interop.WVR_GetResolutionMaxScale(), resolutionScaleList[0]);
+					break;
+				case WaveXRSettings.AdaptiveQualityMode.PerformanceOrientedMode:
+					currentUpperBound = Mathf.Min(performanceOrientedModeUpperBound, resolutionScaleList[0]);
+					break;
+				case WaveXRSettings.AdaptiveQualityMode.Disabled:
+				default:
+					break;
 			}
 		}
 
 		private void DefineLowerBound()
 		{
-			if (currentAdaptiveQualityMode == WaveXRSettings.AdaptiveQualityMode.QualityOrientedMode)
+			switch (currentAdaptiveQualityMode)
 			{
-				currentLowerBound = Mathf.Max(qualityOrientedModeLowerBound, resolutionScaleList[resolutionScaleList.Count - 1]);
+				case WaveXRSettings.AdaptiveQualityMode.QualityOrientedMode:
+					currentLowerBound = Mathf.Max(qualityOrientedModeLowerBound, resolutionScaleList[resolutionScaleList.Count - 1]);
+					break;
+				case WaveXRSettings.AdaptiveQualityMode.CustomizationMode:
+				case WaveXRSettings.AdaptiveQualityMode.PerformanceOrientedMode:
+					currentLowerBound = Mathf.Max(GetResScaleFromDMM(), resolutionScaleList[resolutionScaleList.Count - 1]);
+					break;
+				case WaveXRSettings.AdaptiveQualityMode.Disabled:
+				default:
+					break;
 			}
-			else
-			{
-				currentLowerBound = Mathf.Max(GetResScaleFromDMM(), resolutionScaleList[resolutionScaleList.Count - 1]);
-			}	
 		}
 
 		private void FormatResolutionScaleList()
@@ -385,17 +408,18 @@ namespace Wave.Essence.Render
 
 		void OnValidate()
 		{
+			ResetResolutionScaleListToValidState();
+		}
+
+		private void ResetResolutionScaleListToValidState()
+		{
 			if (resolutionScaleList.Count < 2)
 			{
 				resolutionScaleList.Add(0.1f);
 				resolutionScaleList.Add(1);
 			}
-				
-			if (defaultIndex >= resolutionScaleList.Count)
-				defaultIndex = resolutionScaleList.Count - 1;
 
-			if (defaultIndex < 0)
-				defaultIndex = 0;
+			defaultIndex = Mathf.Clamp(defaultIndex, 0, resolutionScaleList.Count - 1);
 		}
 
 		public float GetCurrentUpperBound()

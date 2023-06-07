@@ -126,6 +126,29 @@ namespace Wave.Native
 #endif
 		}
 
+		// StringBuilders
+		public static void v(string tag, StringBuilder sb, bool logInEditor = false)
+		{
+			v(tag, sb.ToString(), logInEditor);
+		}
+		public static void d(string tag, StringBuilder sb, bool logInEditor = false)
+		{
+			d(tag, sb.ToString(), logInEditor);
+		}
+		public static void i(string tag, StringBuilder sb, bool logInEditor = false)
+		{
+			i(tag, sb.ToString(), logInEditor);
+		}
+		public static void w(string tag, StringBuilder sb, bool logInEditor = false)
+		{
+			w(tag, sb.ToString(), logInEditor);
+		}
+		public static void e(string tag, StringBuilder sb, bool logInEditor = false)
+		{
+			e(tag, sb.ToString(), logInEditor);
+		}
+
+
 		public static EnterAndExit ee(string message)
 		{
 			return new EnterAndExit("Unity", message, "+", "-");
@@ -205,9 +228,16 @@ namespace Wave.Native
 				}
 			}
 
+			// Only debug log need print periodically.  Other type please just print it out.
 			public void d(string tag, string message, bool logInEditor = false)
 			{
 				if (Print) Log.d(tag, message);
+			}
+
+			// This is better the string version.  Only Print will trigger the ToString().  Save more GC.Alloc().
+			public void d(string tag, StringBuilder sb, bool logInEditor = false)
+			{
+				if (Print) Log.d(tag, sb.ToString(), logInEditor);
 			}
 
 			// If not print, the delegate will not be processed.  Save performance waste of string concat.
@@ -219,5 +249,31 @@ namespace Wave.Native
 		}
 
 		public static PeriodLog gpl = new PeriodLog();
+	}
+	public static class StringBuilderExtensions
+	{
+		public static StringBuilder AppendMatrix(this StringBuilder sb, string name, Matrix4x4 m)
+		{
+			return sb.AppendFormat("{0,-16}=", name).AppendLine()
+				.AppendFormat(" / {0:F6} {1:F6} {2:F6} {3:F6} \\", m.m00, m.m01, m.m02, m.m03).AppendLine()
+				.AppendFormat(" | {0:F6} {1:F6} {2:F6} {3:F6} |", m.m10, m.m11, m.m12, m.m13).AppendLine()
+				.AppendFormat(" | {0:F6} {1:F6} {2:F6} {3:F6} |", m.m20, m.m21, m.m22, m.m23).AppendLine()
+				.AppendFormat(" \\ {0:F6} {1:F6} {2:F6} {3:F6} /", m.m30, m.m31, m.m32, m.m33);
+		}
+
+		public static StringBuilder AppendVector3(this StringBuilder sb, string name, Vector3 v)
+		{
+			return sb.AppendFormat("{0,-16}=({1:F6}, {2:F6}, {3:F6})", name, v.x, v.y, v.z);
+		}
+
+		public static StringBuilder AppendVector4(this StringBuilder sb, string name, Vector4 v)
+		{
+			return sb.AppendFormat("{0,-16}=({1:F6}, {2:F6}, {3:F6}, {4:F6})", name, v.x, v.y, v.z, v.w);
+		}
+
+		public static StringBuilder AppendQuaternion(this StringBuilder sb, string name, Quaternion q)
+		{
+			return sb.AppendFormat("{0,-16}=({1:F6}, {2:F6}, {3:F6}, {4:F6})", name, q.x, q.y, q.z, q.w);
+		}
 	}
 }

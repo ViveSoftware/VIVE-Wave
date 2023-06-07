@@ -1458,8 +1458,21 @@ namespace Wave.Native
 		WVR_TrackerId_6 = 6,
 		WVR_TrackerId_7 = 7,
 		WVR_TrackerId_8 = 8,
+		WVR_TrackerId_9 = 9,
+		WVR_TrackerId_10 = 10,
+		WVR_TrackerId_11 = 11,
+		WVR_TrackerId_12 = 12,
+		WVR_TrackerId_13 = 13,
+		WVR_TrackerId_14 = 14,
+		WVR_TrackerId_15 = 15,
 	}
 
+	/**
+	 * @brief The tracker role
+	 * Describes the role of the tracker device.
+	 * API Level 8 : 0 ~ 3, API Level 12 : 32~63, API Level 13 : 32~72
+	 * @version API Level 12
+	 **/
 	public enum WVR_TrackerRole
 	{
 		WVR_TrackerRole_Undefined   = 0,
@@ -1467,22 +1480,35 @@ namespace Wave.Native
 		WVR_TrackerRole_Pair1_Right = 2,
 		WVR_TrackerRole_Pair1_Left  = 3,
 
-		WVR_TrackerRole_Upper_Arm_Right = 32,
-		WVR_TrackerRole_Forearm_Right   = 33,
-		WVR_TrackerRole_Wrist_Right     = 34,
-		WVR_TrackerRole_Thigh_Right     = 35,
-		WVR_TrackerRole_Calf_Right      = 36,
-		WVR_TrackerRole_Ankle_Right     = 37,
+		WVR_TrackerRole_Shoulder_Right = 32,
+		WVR_TrackerRole_Upper_Arm_Right = 33,
+		WVR_TrackerRole_Elbow_Right = 34,
+		WVR_TrackerRole_Forearm_Right   = 35,
+		WVR_TrackerRole_Wrist_Right     = 36,
+		WVR_TrackerRole_Hand_Right = 37,
+		WVR_TrackerRole_Thigh_Right     = 38,
+		WVR_TrackerRole_Knee_Right = 39,
+		WVR_TrackerRole_Calf_Right      = 40,
+		WVR_TrackerRole_Ankle_Right     = 41,
+		WVR_TrackerRole_Foot_Right = 42,
 
-		WVR_TrackerRole_Upper_Arm_Left  = 47,
-		WVR_TrackerRole_Forearm_Left    = 48,
-		WVR_TrackerRole_Wrist_Left      = 49,
-		WVR_TrackerRole_Thigh_Left      = 50,
-		WVR_TrackerRole_Calf_Left       = 51,
-		WVR_TrackerRole_Ankle_Left      = 52,
+		WVR_TrackerRole_Shoulder_Left = 47,
+		WVR_TrackerRole_Upper_Arm_Left  = 48,
+		WVR_TrackerRole_Elbow_Left = 49,
+		WVR_TrackerRole_Forearm_Left    = 50,
+		WVR_TrackerRole_Wrist_Left      = 51,
+		WVR_TrackerRole_Hand_Left = 52,
+		WVR_TrackerRole_Thigh_Left      = 53,
+		WVR_TrackerRole_Knee_Left = 54,
+		WVR_TrackerRole_Calf_Left       = 55,
+		WVR_TrackerRole_Ankle_Left      = 56,
+		WVR_TrackerRole_Foot_Left = 57,
 
 		WVR_TrackerRole_Chest = 62,
-		WVR_TrackerRole_Waist = 63
+		WVR_TrackerRole_Waist = 63,
+
+		WVR_TrackerRole_Camera = 71,
+		WVR_TrackerRole_Keyboard = 72,
 	}
 
 	/**
@@ -1551,6 +1577,13 @@ namespace Wave.Native
 	}
 	#endregion
 
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_Uuid
+	{
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+		public Byte[] data; //WVR_UUID_SIZE 16
+	}
+
 	#region Scene Perception
 	//Scene Perception enums
 	public enum WVR_ScenePerceptionTarget
@@ -1616,13 +1649,6 @@ namespace Wave.Native
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct WVR_Uuid
-	{
-		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-		public Byte[] data; //WVR_UUID_SIZE 16
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
 	public struct WVR_SceneMesh
 	{
 		public UInt64 meshBufferId;
@@ -1683,6 +1709,71 @@ namespace Wave.Native
 
 	#endregion
 
+	#region Trackable Marker
+
+	public enum WVR_MarkerObserverTarget
+	{
+		WVR_MarkerObserverTarget_Aruco = 0,
+		WVR_MarkerObserverTarget_Max = 0x7FFFFFFF
+	}
+
+	public enum WVR_MarkerObserverState
+	{
+		WVR_MarkerObserverState_Idle = 0,			/**< indicates that marker observer is idle */
+		WVR_MarkerObserverState_Detecting = 1,		/**< indicates that the surrounding markers are detected */ // detecting the surrounding markers
+		WVR_MarkerObserverState_Tracking = 2,		/**< indicates that the indicated markers are tracked */ // tracking the indicated markers
+		WVR_MarkerObserverState_Max = 0x7FFFFFFF
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_MarkerName
+	{
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+		public char[] name;   //WVR_MAX_MARKER_NAME_SIZE 256
+	}
+
+	public enum WVR_MarkerTrackingState
+	{
+		WVR_MarkerTrackingState_Detected,       /**< Detected state */
+		WVR_MarkerTrackingState_Tracked,        /**< Tracked state */
+		WVR_MarkerTrackingState_Paused,         /**< Paused state */
+		WVR_MarkerTrackingState_Stopped         /**< Stopped state */
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_ArucoMarker
+	{
+		public WVR_Uuid uuid;					/**< indicates the uuid of the aruco marker */
+		public UInt64 trackerId;				/**< indicates the tracker id of the aruco marker */
+		public float size;						/**< indicates the size */
+		public WVR_MarkerTrackingState state;	/**< indicates the state */
+		public WVR_Pose_t pose;					/**< indicates the pose of the aruco marker */
+		public WVR_MarkerName markerName;		/**< indicates the name */
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_TrackableMarkerCreateInfo
+	{
+		public WVR_Uuid uuid;
+		public WVR_MarkerName markerName;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_ArucoMarkerData
+	{
+		public UInt64 trackerId;     /**< indicates the tracker id of the aruco marker */
+		public float size;          /**< indicates the size */
+	}
+
+	public struct WVR_TrackableMarkerState
+	{ 
+		public WVR_MarkerObserverTarget target;        /**< indicates the assignment observer target specific data */
+		public WVR_MarkerTrackingState state;			/**< indicates the state */
+		public WVR_Pose_t pose;							/**< indicates the pose of the trackable marker */
+		public WVR_MarkerName markerName;				/**< indicates the name */
+	}
+	#endregion
+
 	public enum WVR_SupportedFeature {
 		WVR_SupportedFeature_PassthroughImage   = 1 << 0,    /**< Passthrough image feature type */
 		WVR_SupportedFeature_PassthroughOverlay = 1 << 1,    /**< Passthrough overlay feature type */
@@ -1697,6 +1788,7 @@ namespace Wave.Native
 		WVR_SupportedFeature_LipExp             = 1 << 11,   /**< Expression of Lip; Jaw, Mouth, Cheek, Tongue*/
 		WVR_SupportedFeature_Tracker            = 1 << 16,   /**< Tracker feature type */
 		WVR_SupportedFeature_ScenePerception	= 1 << 17,   /**< Scene Perception feature type */
+		WVR_SupportedFeature_Marker				= 1 << 18,   /**< Marker feature type */
 	}
 
 	#region Controller Pose Mode
@@ -2299,6 +2391,85 @@ namespace Wave.Native
 		public static WVR_Result WVR_GetSpatialAnchorState(UInt64 anchor /* WVR_SpatialAnchor */, WVR_PoseOriginModel originModel, out WVR_SpatialAnchorState anchorState /* WVR_SpatialAnchorState* */)
 		{
 			return WVR_Base.Instance.GetSpatialAnchorState(anchor, originModel, out anchorState);
+		}
+
+		#endregion
+
+		#region Trackable Marker
+
+		public static WVR_Result WVR_StartMarker()
+		{
+			return WVR_Base.Instance.StartMarker();
+		}
+
+		public static void WVR_StopMarker()
+		{
+			WVR_Base.Instance.StopMarker();
+		}
+
+		public static WVR_Result WVR_StartMarkerObserver(WVR_MarkerObserverTarget target)
+		{
+			return WVR_Base.Instance.StartMarkerObserver(target);
+		}
+
+		public static WVR_Result WVR_StopMarkerObserver(WVR_MarkerObserverTarget target)
+		{
+			return WVR_Base.Instance.StopMarkerObserver(target);
+		}
+
+		public static WVR_Result WVR_GetMarkerObserverState(WVR_MarkerObserverTarget target, out WVR_MarkerObserverState state)
+		{
+			return WVR_Base.Instance.GetMarkerObserverState(target, out state);
+		}
+
+		public static WVR_Result WVR_StartMarkerDetection(WVR_MarkerObserverTarget target)
+		{
+			return WVR_Base.Instance.StartMarkerDetection(target);
+		}
+
+		public static WVR_Result WVR_StopMarkerDetection(WVR_MarkerObserverTarget target)
+		{
+			return WVR_Base.Instance.StopMarkerDetection(target);
+		}
+
+		public static WVR_Result WVR_GetArucoMarkers(UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, WVR_PoseOriginModel originModel, IntPtr markers /* WVR_ArucoMarker* */)
+		{
+			return WVR_Base.Instance.GetArucoMarkers(markerCapacityInput, out markerCountOutput, originModel, markers);
+		}
+
+		public static WVR_Result WVR_EnumerateTrackableMarkers(WVR_MarkerObserverTarget target, UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, IntPtr markerIds /* WVR_Uuid* */)
+		{
+			return WVR_Base.Instance.EnumerateTrackableMarkers(target, markerCapacityInput, out markerCountOutput, markerIds);
+		}
+
+		public static WVR_Result WVR_CreateTrackableMarker([In, Out] WVR_TrackableMarkerCreateInfo[] createInfo /* WVR_TrackableMarkerCreateInfo* */)
+		{
+			return WVR_Base.Instance.CreateTrackableMarker(createInfo);
+		}
+
+		public static WVR_Result WVR_DestroyTrackableMarker(WVR_Uuid markerId)
+		{
+			return WVR_Base.Instance.DestroyTrackableMarker(markerId);
+		}
+
+		public static WVR_Result WVR_StartTrackableMarkerTracking(WVR_Uuid markerId)
+		{
+			return WVR_Base.Instance.StartTrackableMarkerTracking(markerId);
+		}
+
+		public static WVR_Result WVR_StopTrackableMarkerTracking(WVR_Uuid markerId)
+		{
+			return WVR_Base.Instance.StopTrackableMarkerTracking(markerId);
+		}
+
+		public static WVR_Result WVR_GetTrackableMarkerState(WVR_Uuid markerId, WVR_PoseOriginModel originModel, out WVR_TrackableMarkerState state /* WVR_TrackableMarkerState* */)
+		{
+			return WVR_Base.Instance.GetTrackableMarkerState(markerId, originModel, out state);
+		}
+
+		public static WVR_Result WVR_GetArucoMarkerData(WVR_Uuid markerId, out WVR_ArucoMarkerData data /* WVR_ArucoMarkerData* */)
+		{
+			return WVR_Base.Instance.GetArucoMarkerData(markerId, out data);
 		}
 
 		#endregion
@@ -3391,6 +3562,89 @@ namespace Wave.Native
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
 
+			#endregion
+
+			#region Trackable Marker
+
+			public virtual WVR_Result StartMarker()
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual void StopMarker()
+			{
+				return;
+			}
+
+			public virtual WVR_Result StartMarkerObserver(WVR_MarkerObserverTarget target)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result StopMarkerObserver(WVR_MarkerObserverTarget target)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result GetMarkerObserverState(WVR_MarkerObserverTarget target, out WVR_MarkerObserverState state)
+			{
+				state = WVR_MarkerObserverState.WVR_MarkerObserverState_Max;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result StartMarkerDetection(WVR_MarkerObserverTarget target)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result StopMarkerDetection(WVR_MarkerObserverTarget target)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result GetArucoMarkers(UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, WVR_PoseOriginModel originModel, IntPtr markers /* WVR_ArucoMarker* */)
+			{
+				markerCountOutput = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result EnumerateTrackableMarkers(WVR_MarkerObserverTarget target, UInt32 markerCapacityInput, out UInt32 markerCountOutput /* uint32_t* */, IntPtr markerIds /* WVR_Uuid* */)
+			{
+				markerCountOutput = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result CreateTrackableMarker([In, Out] WVR_TrackableMarkerCreateInfo[] createInfo /* WVR_TrackableMarkerCreateInfo* */)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result DestroyTrackableMarker(WVR_Uuid markerId)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result StartTrackableMarkerTracking(WVR_Uuid markerId)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result StopTrackableMarkerTracking(WVR_Uuid markerId)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result GetTrackableMarkerState(WVR_Uuid markerId, WVR_PoseOriginModel originModel, out WVR_TrackableMarkerState state /* WVR_TrackableMarkerState* */)
+			{
+				state = default(WVR_TrackableMarkerState);
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result GetArucoMarkerData(WVR_Uuid markerId, out WVR_ArucoMarkerData data)
+			{
+				data = default(WVR_ArucoMarkerData);
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
 
 			#endregion
 
@@ -3803,12 +4057,11 @@ namespace Wave.Native
 
 			public virtual void GetSpectatorClippingPlaneBoundary(ref float l, ref float r, ref float t, ref float b)
 			{
-				l = -1;
+				l = -16.0f / 9.0f;
 				r = 1;
 				t = 1;
-				b = -1;
+				b = -16.0f / 9.0f;
 			}
-
 
 			public virtual bool PreSpectatorRender(ref WVR_SpectatorState state)
 			{

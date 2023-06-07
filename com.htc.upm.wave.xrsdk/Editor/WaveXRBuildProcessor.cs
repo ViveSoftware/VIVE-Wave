@@ -13,25 +13,6 @@ using Wave.XR.Settings;
 
 namespace Wave.XR
 {
-    /// <summary>
-    /// Simple build processor that makes sure that any custom configuration that the user creates is
-    /// correctly passed on to the provider implementation at runtime.
-    ///
-    /// Custom configuration instances that are stored in EditorBuildSettings are not copied to the target build
-    /// as they are considered unreferenced assets. In order to get them to the runtime side of things, they need
-    /// to be serialized to the build app and deserialized at runtime. Previously this would be a manual process
-    /// requiring the implementor to manually serialize to some location that can then be read from to deserialize
-    /// at runtime. With the new PlayerSettings Preloaded Assets API we can now just add our asset to the preloaded
-    /// list and have it be instantiated at app launch.
-    ///
-    /// Note that the preloaded assets are only notified with Awake, so anything you want or need to do with the
-    /// asset after launch needs to be handled there.
-    ///
-    /// More info on APIs used here:
-    /// * &lt;a href="https://docs.unity3d.com/ScriptReference/EditorBuildSettings.html"&gt;EditorBuildSettings&lt;/a&gt;
-    /// * &lt;a href="https://docs.unity3d.com/ScriptReference/PlayerSettings.GetPreloadedAssets.html&gt;PlayerSettings.GetPreloadedAssets&lt;/a&gt;
-    /// * &lt;a href="https://docs.unity3d.com/ScriptReference/PlayerSettings.SetPreloadedAssets.html"&gt;PlayerSettings.SetPreloadedAssets&lt;/a&gt;
-    /// </summary>
     public class WaveXRBuildProcessor : IPostGenerateGradleAndroidProject, IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
 		private const string FAKE_VERSION = "0.0.0";
@@ -119,6 +100,7 @@ namespace Wave.XR
                 public static readonly string EyeTracking              = "wave.feature.eyetracking";
                 public static readonly string LipExpression            = "wave.feature.lipexpression";
                 public static readonly string ScenePerception          = "wave.feature.sceneperception";
+                public static readonly string Marker                   = "wave.feature.marker";
                 public static readonly string SimultaneousInteraction  = "wave.feature.simultaneous_interaction";
             }
 
@@ -143,6 +125,7 @@ namespace Wave.XR
             bool addLipExpression = false;
             bool addScenePerception = false;
             bool addSceneMesh = false;
+            bool addMarker = false;
             bool addSupportedFPS = false;
             bool addSimultaneousInteraction = (EditorPrefs.GetBool(BuildCheck.CheckIfSimultaneousInteractionEnabled.MENU_NAME, false) && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.SimultaneousInteraction));
 
@@ -161,6 +144,7 @@ namespace Wave.XR
                 addEyeTracking = waveXRSettings.EnableEyeTracking && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.EyeTracking);
                 addLipExpression = waveXRSettings.EnableLipExpression && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.LipExpression);
                 addScenePerception = waveXRSettings.EnableScenePerception && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.ScenePerception);
+                addMarker = waveXRSettings.EnableMarker && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.Marker);
 
                 androidManifest.AddWaveFeatures(
                     appendHandTracking: addHandTracking,
@@ -168,7 +152,8 @@ namespace Wave.XR
                     appendSimultaneousInteraction: addSimultaneousInteraction,
                     appendEyeTracking: addEyeTracking,
                     appendLipExpression: addLipExpression,
-                    appendScenePerception: addScenePerception);
+                    appendScenePerception: addScenePerception,
+                    appendMarker: addMarker);
 
                 androidManifest.Save();
             }
@@ -184,7 +169,8 @@ namespace Wave.XR
                     appendSimultaneousInteraction: addSimultaneousInteraction,
                     appendEyeTracking: addEyeTracking,
                     appendLipExpression: addLipExpression,
-                    appendScenePerception: addScenePerception);
+                    appendScenePerception: addScenePerception,
+                    appendMarker: addMarker);
             }
         }
 
@@ -393,12 +379,13 @@ namespace Wave.XR
 
             }
 
-            internal void AddWaveFeatures(bool appendHandTracking = false
-                                        , bool appendTracker = false
-                                        , bool appendSimultaneousInteraction = false
-                                        , bool appendEyeTracking = false
-                                        , bool appendLipExpression = false
-                                        , bool appendScenePerception = false)
+            internal void AddWaveFeatures(bool appendHandTracking = false,
+                                          bool appendTracker = false,
+                                          bool appendSimultaneousInteraction = false,
+                                          bool appendEyeTracking = false,
+                                          bool appendLipExpression = false,
+                                          bool appendScenePerception = false,
+                                          bool appendMarker = false)
             {
                 if (appendHandTracking)
                 {
@@ -439,6 +426,13 @@ namespace Wave.XR
                 {
                     var newUsesFeature = CreateElement("uses-feature");
                     newUsesFeature.Attributes.Append(CreateAndroidAttribute("name", ManifestAttributeStringDefinition.FeatureName.ScenePerception));
+                    newUsesFeature.Attributes.Append(CreateAndroidAttribute("required", "true"));
+                    ManifestElement.AppendChild(newUsesFeature);
+                }
+                if (appendMarker)
+                {
+                    var newUsesFeature = CreateElement("uses-feature");
+                    newUsesFeature.Attributes.Append(CreateAndroidAttribute("name", ManifestAttributeStringDefinition.FeatureName.Marker));
                     newUsesFeature.Attributes.Append(CreateAndroidAttribute("required", "true"));
                     ManifestElement.AppendChild(newUsesFeature);
                 }

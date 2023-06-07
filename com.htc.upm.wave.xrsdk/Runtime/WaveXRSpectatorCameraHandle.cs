@@ -12,8 +12,8 @@ namespace Wave.XR
         static readonly string TAG = "WXRSpecCamH";
         static WaveXRSpectatorCameraHandle instance;
         uint frameCount = 0;
-        bool changedST = false;
-        bool changedSR = false;
+        bool changedST = false;  // change start
+        bool changedSR = false;  // change should render
         bool run = false;
         bool shouldRenderFrame = false;
         Camera spectatorCamera;
@@ -30,6 +30,16 @@ namespace Wave.XR
         public bool debugRenderFrame = false;
         public float debugAccTime = 0;
         public int debugFPS = 30;
+
+        private bool hasOverridePose = false;
+        private Vector3 overridePosition;
+        private Quaternion overrideRotation;
+
+        private bool hasOverrideFov = false;
+        private float overrideFov = 90.0f;
+
+        private bool hasOverrideCullingMask = false;
+        private int overrideCullingMask = 0x0;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RenderParametersNative
@@ -155,8 +165,16 @@ namespace Wave.XR
         private void CopyMainCameraParameters()
         {
             Camera main = Camera.main;
-            spectatorCamera.transform.position = main.transform.position;
-            spectatorCamera.transform.rotation = main.transform.rotation;
+            if (hasOverridePose)
+            {
+                spectatorCamera.transform.position = overridePosition;
+                spectatorCamera.transform.rotation = overrideRotation;
+            }
+            else
+            {
+                spectatorCamera.transform.position = main.transform.position;
+                spectatorCamera.transform.rotation = main.transform.rotation;
+            }
             spectatorCamera.farClipPlane = main.farClipPlane;
             spectatorCamera.nearClipPlane = main.nearClipPlane;
             spectatorCamera.allowHDR = false;
@@ -164,7 +182,7 @@ namespace Wave.XR
             spectatorCamera.allowMSAA = main.allowMSAA;
             spectatorCamera.backgroundColor = main.backgroundColor;
             spectatorCamera.clearFlags = main.clearFlags;
-            spectatorCamera.cullingMask = main.cullingMask;
+            spectatorCamera.cullingMask = hasOverrideCullingMask ? overrideCullingMask : main.cullingMask;
             // No matter what depth we set, the mono camera always run before stereo camera.  See Profiler to check.
             spectatorCamera.depth = Camera.main.depth += 99;
             spectatorCamera.depthTextureMode = main.depthTextureMode;
@@ -281,6 +299,15 @@ namespace Wave.XR
             run = isStarted;
             if (changedST)
             {
+                try
+                {
+                    if (isStarted)
+                        onSpectatorStart();
+                    else
+                        onSpectatorStop();
+                }
+                catch (System.Exception e) { }
+
                 shouldRenderFrame = false;
                 frameCount = 0;
             }
@@ -337,6 +364,46 @@ namespace Wave.XR
             return m;
         }
 
+        // Set pose in world space
+        public void SetFixedPose(Vector3 position, Quaternion rotation)
+        {
+            hasOverridePose = true;
+            overridePosition = position;
+            overrideRotation = rotation;
+        }
+
+        public void ClearFixedPose()
+        {
+            hasOverridePose = false;
+        }
+
+        public void SetFixedFOV(float fov)
+        {
+            hasOverrideFov = true;
+            overrideFov = Mathf.Clamp(fov, 5, 130);
+        }
+
+        public void ClearFixedFOV()
+        {
+            hasOverrideFov = false;
+        }
+
+        public void SetCullingMask(int cullingMask)
+        {
+            hasOverrideCullingMask = true;
+            overrideCullingMask = cullingMask;
+        }
+
+        public void ClearCullingMask()
+        {
+            hasOverrideCullingMask = false;
+        }
+
+        public RenderParameters GetRenderParameters()
+        {
+            return renderParameters;
+        }
+
         private void UpdateRenderParameters()
         {
             RenderParametersNative n = new RenderParametersNative();
@@ -376,8 +443,16 @@ namespace Wave.XR
             {
                 CheckTexture();
                 CopyMainCameraParameters();
-                renderParameters.CalculateProj(spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
-                spectatorCamera.projectionMatrix = renderParameters.proj;
+                if (hasOverrideFov)
+                {
+                    float aspect = renderParameters.width / (float)renderParameters.height;
+                    spectatorCamera.projectionMatrix = Matrix4x4.Perspective(overrideFov, aspect, spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
+                }
+                else
+                {
+                    renderParameters.CalculateProj(spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
+                    spectatorCamera.projectionMatrix = renderParameters.proj;
+                }
                 spectatorCamera.targetTexture = renderTexture;
                 spectatorCamera.enabled = true;
             }
@@ -393,6 +468,11 @@ namespace Wave.XR
                 Profiler.EndSample();
             }
             SubmitInRenderThread();
+        }
+
+        public Camera GetCamera()
+        {
+            return spectatorCamera;
         }
 
 
@@ -445,6 +525,14 @@ namespace Wave.XR
             }
         );
 #endregion render_thread_submit
+
+#region callback
+        public delegate void OnSpectatorStartDelegate();
+        public delegate void OnSpectatorStopDelegate();
+
+        public OnSpectatorStartDelegate onSpectatorStart;
+        public OnSpectatorStopDelegate onSpectatorStop;
+#endregion
 
 
 #region functions
