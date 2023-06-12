@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using UnityEngine;
 using UnityEngine.XR;
 using Wave.XR.Settings;
@@ -19,8 +20,19 @@ namespace Wave.OpenXR
 {
 	public static class InputDeviceTracker
 	{
-		const string LOG_TAG = "Wave.OpenXR.InputDeviceTracker";
-		static void DEBUG(string msg) { UnityEngine.Debug.Log(LOG_TAG + " " + msg); }
+		const string LOG_TAG = "Wave.OpenXR.InputDeviceTracker ";
+		private static StringBuilder m_sb = null;
+		private static StringBuilder sb {
+			get {
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		static void DEBUG(StringBuilder msg)
+		{
+			msg.Insert(0, LOG_TAG);
+			UnityEngine.Debug.Log(msg);
+		}
 
 		#region Wave XR Interface
 		public static void ActivateTracker(bool active)
@@ -39,13 +51,15 @@ namespace Wave.OpenXR
 					else
 						caller = "No method.";
 				}
-				DEBUG("ActivateTracker() " + (settings.EnableTracker ? "Activate." : "Deactivate.") + " from " + caller);
+
+				sb.Clear(); sb.Append("ActivateTracker() ").Append((settings.EnableTracker ? "Activate." : "Deactivate.")).Append(" from ").Append(caller);
+				DEBUG(sb);
 				SettingsHelper.SetBool(WaveXRSettings.EnableTrackerText, settings.EnableTracker);
 			}
 		}
 		#endregion
 
-		#region Unity XR Tracker definitions
+		#region Wave XR Constants
 		const string kTracker0Name = "Wave Tracker0";
 		const string kTracker1Name = "Wave Tracker1";
 		const string kTracker2Name = "Wave Tracker2";
@@ -135,7 +149,7 @@ namespace Wave.OpenXR
 			Tracker14 = 14,
 			Tracker15 = 15,
 		}
-		internal static TrackerId[] s_TrackerIds = new TrackerId[]
+		internal readonly static TrackerId[] s_TrackerIds = new TrackerId[]
 		{
 			TrackerId.Tracker0,
 			TrackerId.Tracker1,
@@ -155,9 +169,25 @@ namespace Wave.OpenXR
 			TrackerId.Tracker15,
 		};
 
-		[Obsolete("This function is deprecated. Please use InputDevice.name instead.")]
 		public static string Name(this TrackerId trackerId)
 		{
+			if (trackerId == TrackerId.Tracker0) { return kTracker0Name; }
+			if (trackerId == TrackerId.Tracker1) { return kTracker1Name; }
+			if (trackerId == TrackerId.Tracker2) { return kTracker2Name; }
+			if (trackerId == TrackerId.Tracker3) { return kTracker3Name; }
+			if (trackerId == TrackerId.Tracker4) { return kTracker4Name; }
+			if (trackerId == TrackerId.Tracker5) { return kTracker5Name; }
+			if (trackerId == TrackerId.Tracker6) { return kTracker6Name; }
+			if (trackerId == TrackerId.Tracker7) { return kTracker7Name; }
+			if (trackerId == TrackerId.Tracker8) { return kTracker8Name; }
+			if (trackerId == TrackerId.Tracker9) { return kTracker9Name; }
+			if (trackerId == TrackerId.Tracker10) { return kTracker10Name; }
+			if (trackerId == TrackerId.Tracker11) { return kTracker11Name; }
+			if (trackerId == TrackerId.Tracker12) { return kTracker12Name; }
+			if (trackerId == TrackerId.Tracker13) { return kTracker13Name; }
+			if (trackerId == TrackerId.Tracker14) { return kTracker14Name; }
+			if (trackerId == TrackerId.Tracker15) { return kTracker15Name; }
+
 			return "";
 		}
 		public static string SerialNumber(this TrackerId trackerId)
@@ -289,11 +319,11 @@ namespace Wave.OpenXR
 		public static bool IsAvailable()
 		{
 			InputDevices.GetDevices(s_InputDevices);
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			for (int i = 0; s_InputDevices != null && i < s_InputDevices.Count; i++)
 			{
 				if (!s_InputDevices[i].isValid) { continue; }
 
-				for (int id = 0; id < s_TrackerIds.Length; i++)
+				for (int id = 0; id < s_TrackerIds.Length; id++)
 				{
 					if (IsTrackerDevice(s_InputDevices[i], s_TrackerIds[id]))
 						return true;
@@ -520,11 +550,14 @@ namespace Wave.OpenXR
 					else
 						caller = "No method.";
 				}
-				DEBUG("HapticPulse() " + trackerId
-					+ "[" + s_InputDevices[i].name + "]"
-					+ "[" + s_InputDevices[i].serialNumber + "]"
-					+ ": " + durationSec.ToString() + ", " + amplitude
-					+ " from " + caller);
+
+				sb.Clear();
+				sb.Append("HapticPulse() ").Append(trackerId.Name())
+					.Append("[").Append(s_InputDevices[i].name).Append("]")
+					.Append("[").Append(s_InputDevices[i].serialNumber).Append("]")
+					.Append(" durationSec: ").Append(durationSec).Append(", amplitude: ").Append(amplitude)
+					.Append(" from ").Append(caller);
+				DEBUG(sb);
 				return s_InputDevices[i].SendHapticImpulse(0, amplitude, durationSec);
 			}
 

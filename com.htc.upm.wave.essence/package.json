@@ -1,9 +1,9 @@
 {
   "name": "com.htc.upm.wave.essence",
   "displayName": "VIVE Wave XR Plugin - Essence",
-  "version": "5.3.0-r.26",
+  "version": "5.3.0-r.26.1",
   "unity": "2019.4",
-  "description": "The \"VIVE Wave XR Plugin - Essence\" package built on top of the \"VIVE Wave XR Plugin - Native\" package.The package provides rich features that make your developerment easier.\n\nYou can view the documentation for additional information.\n\n",
+  "description": "The \"VIVE Wave XR Plugin - Essence\" package built on top of the \"VIVE Wave XR Plugin - Native\" package.The package provides rich features that make your developerment easier.\n\nYou can view the documentation for additional information.",
   "keywords": [
     "vr",
     "xr",
@@ -15,8 +15,8 @@
     "url": "https://www.htc.com"
   },
   "dependencies": {
-    "com.htc.upm.wave.xrsdk": "5.3.0-r.26",
-    "com.htc.upm.wave.native": "5.3.0-r.26"
+    "com.htc.upm.wave.xrsdk": "5.3.0-r.26.1",
+    "com.htc.upm.wave.native": "5.3.0-r.26.1"
   },
   "samples": [
     {

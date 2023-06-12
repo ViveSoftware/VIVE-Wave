@@ -1,4 +1,4 @@
-﻿// "WaveVR SDK 
+// "WaveVR SDK 
 // © 2020 HTC Corporation. All Rights Reserved.
 //
 // Unless otherwise required by copyright law and practice,
@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using System.Text;
 
 namespace Wave.XR
 {
@@ -55,10 +56,23 @@ namespace Wave.XR
     [InputControlLayout(displayName = "Vive Wrist Tracker (Wave)", commonUsages = new[] { "LeftHand", "RightHand" }, stateType = typeof(ViveWaveWristTrackerState), isGenericTypeOfDevice = true)]
     public class ViveWaveWristTracker : InputDevice, IInputUpdateCallbackReceiver
     {
-        const string LOG_TAG = "Wave.XR.ViveWaveWristTracker";
-        static void DEBUG(string msg) { Debug.Log(LOG_TAG + " " + msg); }
+        const string LOG_TAG = "Wave.XR.ViveWaveWristTracker ";
+        private static StringBuilder m_sb = null;
+        private static StringBuilder sb
+        {
+            get
+            {
+                if (m_sb == null) { m_sb = new StringBuilder(); }
+                return m_sb;
+            }
+        }
+        static void DEBUG(StringBuilder msg)
+        {
+            msg.Insert(0, LOG_TAG);
+            Debug.Log(msg);
+        }
+        uint logFrame = 0;
         static bool printIntervalLog = false;
-        static void INTERVAL(string msg) { if (printIntervalLog) DEBUG(msg); }
 
         const string kInterfaceName = "Wrist Tracker";
         const string kProductNameRight = "Wave Tracker0";
@@ -79,7 +93,8 @@ namespace Wave.XR
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize()
 		{
-            DEBUG("Initialize() RegisterLayout with interface " + kInterfaceName);
+            sb.Clear(); sb.Append("Initialize() RegisterLayout with interface ").Append(kInterfaceName);
+            DEBUG(sb);
             InputSystem.RegisterLayout(
                 typeof(ViveWaveWristTracker),
                 matches: new InputDeviceMatcher()
@@ -89,16 +104,19 @@ namespace Wave.XR
             var device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             while (device != null)
             {
-                DEBUG("Initialize() Removes a ViveWaveWristTracker device.");
+                sb.Clear(); sb.Append("Initialize() Removes a ViveWaveWristTracker device.");
+                DEBUG(sb);
                 InputSystem.RemoveDevice(device);
                 device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             }
 
-            DEBUG("Initialize() Adds right ViveWaveWristTracker device " + kProductNameRight);
+            sb.Clear(); sb.Append("Initialize() Adds right ViveWaveWristTracker device ").Append(kProductNameRight);
+            DEBUG(sb);
             InputSystem.AddDevice(
                 new InputDeviceDescription { interfaceName = kInterfaceName, product = kProductNameRight, serial = kSerialNumberRight }
             );
-            DEBUG("Initialize() Adds left ViveWaveWristTracker device " + kProductNameLeft);
+            sb.Clear(); sb.Append("Initialize() Adds left ViveWaveWristTracker device ").Append(kProductNameLeft);
+            DEBUG(sb);
             InputSystem.AddDevice(
                 new InputDeviceDescription { interfaceName = kInterfaceName, product = kProductNameLeft, serial = kSerialNumberLeft }
             );
@@ -130,14 +148,15 @@ namespace Wave.XR
 
             InputSystem.SetDeviceUsage(this, (IsLeft ? CommonUsages.LeftHand : CommonUsages.RightHand));
 
-            DEBUG("FinishSetup() deviceId: " + deviceId
-                + ", IsLeft: " + IsLeft
-                + ", interfaceName: " + description.interfaceName
-                + ", product: " + description.product
-                + ", serial: " + description.serial);
+            sb.Clear();
+            sb.Append("FinishSetup() deviceId: ").Append(deviceId)
+                .Append(", IsLeft: ").Append(IsLeft)
+                .Append(", interfaceName: ").Append(description.interfaceName)
+                .Append(", product: ").Append(description.product)
+                .Append(", serial: ").Append(description.serial);
+            DEBUG(sb);
         }
 
-        uint logFrame = 0;
         public void OnUpdate()
 		{
             if (Application.isEditor || !Application.isPlaying) { return; }
@@ -148,7 +167,11 @@ namespace Wave.XR
 
             if (!InputDeviceTracker.IsAvailable())
             {
-                INTERVAL("OnUpdate() No tracker connected.");
+                if (printIntervalLog)
+                {
+                    sb.Clear(); sb.Append("OnUpdate() No tracker connected.");
+                    DEBUG(sb);
+                }
                 return;
             }
 
@@ -181,11 +204,15 @@ namespace Wave.XR
                     state.pressed |= 1 << 2;
             }
 
-            INTERVAL("OnUpdate() " + m_TrackerId
-                + ", product: " + description.product
-                + ", isTracked: " + state.isTracked
-                + ", trackingState: " + state.trackingState
-                + ", position (" + pos.x.ToString() + ", " + pos.y.ToString() + ", " + pos.z.ToString() + ")");
+            if (printIntervalLog)
+            {
+                sb.Clear(); sb.Append("OnUpdate() ").Append(m_TrackerId)
+                    .Append(", product: ").Append(description.product)
+                    .Append(", isTracked: ").Append(state.isTracked)
+                    .Append(", trackingState: ").Append(state.trackingState)
+                    .Append(", position (").Append(pos.x).Append(", ").Append(pos.y).Append(", ").Append(pos.z).Append(")");
+                DEBUG(sb);
+            }
 
             InputSystem.QueueStateEvent(this, state);
         }
