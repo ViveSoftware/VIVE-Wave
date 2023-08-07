@@ -137,6 +137,27 @@ namespace Wave.Essence.Tracker
 			return (WVR_TrackerId)trackerId;
 		}
 
+		public static string Name(this TrackerId trackerId)
+		{
+			if (trackerId == TrackerId.Tracker0) { return "Tracker0"; }
+			if (trackerId == TrackerId.Tracker1) { return "Tracker1"; }
+			if (trackerId == TrackerId.Tracker2) { return "Tracker2"; }
+			if (trackerId == TrackerId.Tracker3) { return "Tracker3"; }
+			if (trackerId == TrackerId.Tracker4) { return "Tracker4"; }
+			if (trackerId == TrackerId.Tracker5) { return "Tracker5"; }
+			if (trackerId == TrackerId.Tracker6) { return "Tracker6"; }
+			if (trackerId == TrackerId.Tracker7) { return "Tracker7"; }
+			if (trackerId == TrackerId.Tracker8) { return "Tracker8"; }
+			if (trackerId == TrackerId.Tracker9) { return "Tracker9"; }
+			if (trackerId == TrackerId.Tracker10) { return "Tracker10"; }
+			if (trackerId == TrackerId.Tracker11) { return "Tracker11"; }
+			if (trackerId == TrackerId.Tracker12) { return "Tracker12"; }
+			if (trackerId == TrackerId.Tracker13) { return "Tracker13"; }
+			if (trackerId == TrackerId.Tracker14) { return "Tracker14"; }
+			if (trackerId == TrackerId.Tracker15) { return "Tracker15"; }
+
+			return "";
+		}
 		public static int Num(this TrackerId trackerId)
 		{
 			if (trackerId == TrackerId.Tracker0) { return 0; }
@@ -180,6 +201,41 @@ namespace Wave.Essence.Tracker
 			return InputDeviceTracker.TrackerId.Tracker0;
 		}
 
+		public static string Name(this TrackerRole role)
+		{
+			if (role == TrackerRole.Ankle_Left) { return "Ankle_Left"; }
+			if (role == TrackerRole.Ankle_Right) { return "Ankle_Right"; }
+			if (role == TrackerRole.Calf_Left) { return "Calf_Left"; }
+			if (role == TrackerRole.Calf_Right) { return "Calf_Right"; }
+			if (role == TrackerRole.Camera) { return "Camera"; }
+			if (role == TrackerRole.Chest) { return "Chest"; }
+			if (role == TrackerRole.Elbow_Left) { return "Elbow_Left"; }
+			if (role == TrackerRole.Elbow_Right) { return "Elbow_Right"; }
+			if (role == TrackerRole.Foot_Left) { return "Foot_Left"; }
+			if (role == TrackerRole.Foot_Right) { return "Foot_Right"; }
+			if (role == TrackerRole.Forearm_Left) { return "Forearm_Left"; }
+			if (role == TrackerRole.Forearm_Right) { return "Forearm_Right"; }
+			if (role == TrackerRole.Hand_Left) { return "Hand_Left"; }
+			if (role == TrackerRole.Hand_Right) { return "Hand_Right"; }
+			if (role == TrackerRole.Keyboard) { return "Keyboard"; }
+			if (role == TrackerRole.Knee_Left) { return "Knee_Left"; }
+			if (role == TrackerRole.Knee_Right) { return "Knee_Right"; }
+			if (role == TrackerRole.Pair1_Left) { return "Pair1_Left"; }
+			if (role == TrackerRole.Pair1_Right) { return "Pair1_Right"; }
+			if (role == TrackerRole.Shoulder_Left) { return "Shoulder_Left"; }
+			if (role == TrackerRole.Shoulder_Right) { return "Shoulder_Right"; }
+			if (role == TrackerRole.Standalone) { return "Standalone"; }
+			if (role == TrackerRole.Thigh_Left) { return "Thigh_Left"; }
+			if (role == TrackerRole.Thigh_Right) { return "Thigh_Right"; }
+			if (role == TrackerRole.Undefined) { return "Undefined"; }
+			if (role == TrackerRole.Upper_Arm_Left) { return "Upper_Arm_Left"; }
+			if (role == TrackerRole.Upper_Arm_Right) { return "Upper_Arm_Right"; }
+			if (role == TrackerRole.Waist) { return "Waist"; }
+			if (role == TrackerRole.Wrist_Left) { return "Wrist_Left"; }
+			if (role == TrackerRole.Wrist_Right) { return "Wrist_Right"; }
+
+			return "";
+		}
 		public static InputDeviceTracker.TrackerRole InputDevice(this TrackerRole role)
 		{
 			if (role == TrackerRole.Standalone) { return InputDeviceTracker.TrackerRole.Standalone; }

@@ -2216,7 +2216,6 @@ namespace Wave.Native
 		{
 			return WVR_Base.Instance.StartTracker();
 		}
-
 		public static void WVR_StopTracker()
 		{
 			WVR_Base.Instance.StopTracker();
@@ -2256,12 +2255,10 @@ namespace Wave.Native
 		{
 			return WVR_Base.Instance.GetTrackerInputButtonState(trackerId, id);
 		}
-
 		public static bool WVR_GetTrackerInputTouchState(WVR_TrackerId trackerId, WVR_InputId id)
 		{
 			return WVR_Base.Instance.GetTrackerInputTouchState(trackerId, id);
 		}
-
 		public static WVR_Axis_t WVR_GetTrackerInputAnalogAxis(WVR_TrackerId trackerId, WVR_InputId id)
 		{
 			return WVR_Base.Instance.GetTrackerInputAnalogAxis(trackerId, id);
@@ -2298,6 +2295,15 @@ namespace Wave.Native
 		public static WVR_Result WVR_UnregisterTrackerInfoCallback()
 		{
 			return WVR_Base.Instance.UnregisterTrackerInfoCallback();
+		}
+
+		public static void WVR_SetFocusedTracker(int focusedTracker)
+		{
+			WVR_Base.Instance.SetFocusedTracker(focusedTracker);
+		}
+		public static int WVR_GetFocusedTracker()
+		{
+			return WVR_Base.Instance.GetFocusedTracker();
 		}
 		#endregion
 
@@ -3465,6 +3471,8 @@ namespace Wave.Native
 			{
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
+			public virtual void SetFocusedTracker(int focusedTracker) { }
+			public virtual int GetFocusedTracker() { return -1; }
 			#endregion
 
 			#region wvr_notifydeviceinfo.h

@@ -248,7 +248,7 @@ namespace Wave.Native
 		}
 
 		#region wvr_tracker.h
-			[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartTracker", CallingConvention = CallingConvention.Cdecl)]
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_StartTracker", CallingConvention = CallingConvention.Cdecl)]
 		public static extern WVR_Result WVR_StartTracker();
 		public override WVR_Result StartTracker()
 		{
@@ -365,6 +365,20 @@ namespace Wave.Native
 		public override WVR_Result UnregisterTrackerInfoCallback()
 		{
 			return WVR_UnregisterTrackerInfoCallback();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_SetFocusedTracker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern void WVR_SetFocusedTracker(int focusedTracker);
+		public override void SetFocusedTracker(int focusedTracker)
+		{
+			WVR_SetFocusedTracker(focusedTracker);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetFocusedTracker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern int WVR_GetFocusedTracker();
+		public override int GetFocusedTracker()
+		{
+			return WVR_GetFocusedTracker();
 		}
 		#endregion
 

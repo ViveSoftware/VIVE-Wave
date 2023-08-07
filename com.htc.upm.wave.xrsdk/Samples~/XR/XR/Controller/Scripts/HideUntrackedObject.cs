@@ -11,6 +11,7 @@
 using System;
 using UnityEngine;
 using Wave.OpenXR;
+using System.Text;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -20,9 +21,19 @@ namespace Wave.XR.Sample.Controller
 {
 	public class HideUntrackedObject : MonoBehaviour
 	{
-		const string LOG_TAG = "Wave.XR.Sample.Controller.HideUntrackedObject";
-		void DEBUG(string msg) { Debug.Log(LOG_TAG + msg); }
-		void INTERVAL(string msg) { if (printIntervalLog && !Application.isEditor) { DEBUG(msg); } }
+		const string LOG_TAG = "Wave.XR.Sample.Controller.HideUntrackedObject ";
+		StringBuilder m_sb = null;
+		StringBuilder sb {
+			get {
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		void DEBUG(StringBuilder msg)
+		{
+			msg.Insert(0, LOG_TAG);
+			Debug.Log(msg);
+		}
 
 #if ENABLE_INPUT_SYSTEM
 		[SerializeField]
@@ -57,11 +68,18 @@ namespace Wave.XR.Sample.Controller
 				if (Utils.GetButton(m_IsTracked, out bool value, out string msg))
 				{
 					isTracked = value;
-					INTERVAL("Update() " + m_IsTracked.action.name + ", isTracked: " + isTracked);
+					if (printIntervalLog)
+					{
+						sb.Clear().Append("Update() ").Append(m_ObjectType).Append(", name: ").Append(m_IsTracked.action.name).Append(", isTracked: ").Append(isTracked);
+						DEBUG(sb);
+					}
 				}
 				else
 				{
-					INTERVAL("Update() " + msg);
+					if (printIntervalLog)
+					{
+						sb.Clear().Append("Update() ").Append(msg); DEBUG(sb);
+					}
 				}
 			}
 			else

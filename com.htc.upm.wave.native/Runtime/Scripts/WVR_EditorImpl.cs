@@ -111,7 +111,7 @@ namespace Wave.Native
 
 			InitializeBonesAndHandTrackingData();
 			InitHandGesture();
-			InitBracelet();
+			InitTracker();
 
 #if ENABLE_INPUT_SYSTEM
 			wvrInput.Enable();
@@ -179,7 +179,7 @@ namespace Wave.Native
 			UpdateHandGesture();
 
 			// Tracker
-			UpdateBracelet();
+			UpdateTracker();
 			BraceletPressed(WVR_TrackerId.WVR_TrackerId_0);
 			BraceletUnpressed(WVR_TrackerId.WVR_TrackerId_0);
 			BraceletPressed(WVR_TrackerId.WVR_TrackerId_1);
@@ -3022,13 +3022,12 @@ namespace Wave.Native
 		#region Bracelet
 		private WVR_TrackerCapabilities m_BraceletCaps;
 		private WVR_PoseState_t m_BraceletPoseLeft, m_BraceletPoseRight;
-		private Int32 m_BraceletInputButton = (Int32)(
+		private Int32 m_TrackerInputButton0 = (Int32)(
+			WVR_InputId.WVR_InputId_Alias1_System |
+			WVR_InputId.WVR_InputId_Alias1_A);
+		private Int32 m_TrackerInputButton1 = (Int32)(
 			WVR_InputId.WVR_InputId_Alias1_Menu |
-			WVR_InputId.WVR_InputId_Alias1_A |
-			WVR_InputId.WVR_InputId_Alias1_B |
-			WVR_InputId.WVR_InputId_Alias1_X |
-			WVR_InputId.WVR_InputId_Alias1_Y |
-			WVR_InputId.WVR_InputId_Alias1_Trigger);
+			WVR_InputId.WVR_InputId_Alias1_X);
 		private Dictionary<WVR_InputId, WVR_AnalogType> s_BraceletAnalogTypes = new Dictionary<WVR_InputId, WVR_AnalogType>()
 		{
 			{ WVR_InputId.WVR_InputId_Alias1_Grip, WVR_AnalogType.WVR_AnalogType_1D },
@@ -3036,7 +3035,7 @@ namespace Wave.Native
 			{ WVR_InputId.WVR_InputId_Alias1_Trigger, WVR_AnalogType.WVR_AnalogType_1D },
 			{ WVR_InputId.WVR_InputId_Alias1_Thumbstick, WVR_AnalogType.WVR_AnalogType_2D },
 		};
-		private void InitBracelet()
+		private void InitTracker()
 		{
 			/// Bracelet
 			m_BraceletCaps.supportsBatteryLevel = true;
@@ -3045,7 +3044,7 @@ namespace Wave.Native
 			m_BraceletCaps.supportsOrientationTracking = true;
 			m_BraceletCaps.supportsPositionTracking = true;
 		}
-		private void UpdateBracelet()
+		private void UpdateTracker()
 		{
 			m_BraceletPoseRight.IsValidPose = true;
 			m_BraceletPoseRight.PoseMatrix = rightPoseMatrix;
@@ -3134,15 +3133,14 @@ namespace Wave.Native
 		}
 		public Int32 GetTrackerInputDeviceCapability(WVR_TrackerId trackerId, WVR_InputType inputType)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_0 || trackerId == WVR_TrackerId.WVR_TrackerId_1)
 			{
 				if (m_TrackerEnabled)
 				{
 					switch (inputType)
 					{
 						case WVR_InputType.WVR_InputType_Button:
-							return m_BraceletInputButton;
+							return trackerId == WVR_TrackerId.WVR_TrackerId_0 ? m_TrackerInputButton0 : m_TrackerInputButton1;
 						case WVR_InputType.WVR_InputType_Touch:
 						case WVR_InputType.WVR_InputType_Analog:
 						default:
@@ -3388,6 +3386,10 @@ namespace Wave.Native
 
 			return WVR_Result.WVR_Success;
 		}
+
+		private int m_focusedTracker = 2;
+		public void SetFocusedTracker(int focusedTracker) { m_focusedTracker = focusedTracker; }
+		public int GetFocusedTracker() { return m_focusedTracker; }
 		#endregion
 
 		#region wvr_notifydeviceinfo.h

@@ -79,7 +79,7 @@ namespace Wave.XR.Settings
         public TimeWarpStabilizedMode enableTimeWarpStabilizedMode = TimeWarpStabilizedMode.Auto;
 
         [SerializeField, Tooltip("Adaptive Quality Mode.")]
-        public AdaptiveQualityMode adaptiveQualityMode = AdaptiveQualityMode.PerformanceOrientedMode;
+        public AdaptiveQualityMode adaptiveQualityMode = AdaptiveQualityMode.QualityOrientedMode;
 
         [SerializeField, Tooltip("Allow set quality strategy is send quality event. SendQualityEvent = false if quality strategy use default.")]
         public bool AQ_SendQualityEvent = true;
@@ -130,6 +130,21 @@ namespace Wave.XR.Settings
         [SerializeField, Tooltip("ResolutionScale is a scale to the default eye buffer size which is decided by PixelDensity.  Default is 1.  You can also use XRSettings.eyeTextureResolutionScale to configure it in the runtime.  The final eye buffer size will be calculated by (eye buffer w, eye buffer h) * resolutionScale.")]
         [Range(0.1f, 1)]
         public float resolutionScale = 1;
+
+        [SerializeField, Tooltip("Override Unity's thread priority.  WARNING: This setting is experimental and may not have good effect.  Use it at your own risk.")]
+        public bool overrideThreadPriority = false;
+
+        [SerializeField, Tooltip("Game thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.")]
+        [Range(-20, 19)]
+        public int gameThreadPriority = 0;
+
+        [SerializeField, Tooltip("Render thread priority default is -2.  Its range is from -20 to 19, and the lower number the higher priority.")]
+        [Range(-20, 19)]
+        public int renderThreadPriority = -2;
+
+        [SerializeField, Tooltip("Job Worker thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.")]
+        [Range(-20, 19)]
+        public int jobWorkerThreadPriority = 0;
 
         [SerializeField, Tooltip("Debug log flag which native XR plugin should follow.")]
         public uint debugLogFlagForNative = (uint)(DebugLogFlag.BasicMask | DebugLogFlag.LifecycleMask | DebugLogFlag.RenderMask | DebugLogFlag.InputMask);

@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using System.Text;
 
 namespace Wave.XR
 {
@@ -51,10 +52,20 @@ namespace Wave.XR
     [InputControlLayout(displayName = "Vive Eye Gaze (Wave)", stateType = typeof(ViveWaveEyeGazeState), isGenericTypeOfDevice = true)]
     public class ViveWaveEyeGaze : InputDevice, IInputUpdateCallbackReceiver
     {
-        const string LOG_TAG = "Wave.XR.ViveWaveEyeGaze";
-        static void DEBUG(string msg) { Debug.Log(LOG_TAG + " " + msg); }
+        const string LOG_TAG = "Wave.XR.ViveWaveEyeGaze ";
+        private static StringBuilder m_sb = null;
+        private static StringBuilder sb {
+            get {
+                if (m_sb == null) { m_sb = new StringBuilder(); }
+                return m_sb;
+            }
+        }
+        static void DEBUG(StringBuilder msg)
+        {
+            msg.Insert(0, LOG_TAG);
+            Debug.Log(msg);
+        }
         static bool printIntervalLog = false;
-        static void INTERVAL(string msg) { if (printIntervalLog) DEBUG(msg); }
 
         const string kInterfaceName = "Eye Gaze";
         const string kProductName = "WVR_EYE_GAZE";
@@ -62,7 +73,7 @@ namespace Wave.XR
 #if UNITY_EDITOR
         static ViveWaveEyeGaze()
         {
-            DEBUG("ctor()");
+            sb.Clear().Append("ctor()"); DEBUG(sb);
             Initialize();
         }
 #endif
@@ -70,7 +81,7 @@ namespace Wave.XR
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize( )
 		{
-            DEBUG("Initialize() RegisterLayout with interface " + kInterfaceName);
+            sb.Clear().Append("Initialize() RegisterLayout with interface ").Append(kInterfaceName); DEBUG(sb);
             InputSystem.RegisterLayout(
                 typeof(ViveWaveEyeGaze),
                 matches: new InputDeviceMatcher()
@@ -80,12 +91,12 @@ namespace Wave.XR
             var device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveEyeGaze);
             while (device != null)
             {
-                DEBUG("Initialize() Removes a ViveWaveEyeGaze device.");
+                sb.Clear().Append("Initialize() Removes a ViveWaveEyeGaze device."); DEBUG(sb);
                 InputSystem.RemoveDevice(device);
                 device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveEyeGaze);
             }
 
-            DEBUG("Initialize() Adds a ViveWaveEyeGaze device.");
+            sb.Clear().Append("Initialize() Adds a ViveWaveEyeGaze device."); DEBUG(sb);
             InputSystem.AddDevice(
                 new InputDeviceDescription { interfaceName = kInterfaceName, product = kProductName }
             );
@@ -122,7 +133,7 @@ namespace Wave.XR
             var status = InputDeviceEye.GetEyeTrackingStatus();
             if (status != InputDeviceEye.TrackingStatus.AVAILABLE)
 			{
-                INTERVAL("OnUpdate() Eye Tracking status is " + status);
+                //if (printIntervalLog) { sb.Clear().Append("OnUpdate() Eye Tracking status is ").Append(status.ToString()); DEBUG(sb); }
                 return;
 			}
 
@@ -144,10 +155,14 @@ namespace Wave.XR
                 state.trackingState |= (0x0001 | 0x0004);
                 state.rotation = Quaternion.LookRotation(direction);
             }
-            INTERVAL("OnUpdate() isTracked: " + state.isTracked
-                + ", trackingState: " + state.trackingState
-                + ", origin (" + origin.x.ToString() + ", " + origin.y.ToString() + ", " + origin.z.ToString() + ")"
-                + ", direction (" + direction.x.ToString() + ", " + direction.y.ToString() + ", " + direction.z.ToString() + ")");
+            if (printIntervalLog)
+            {
+                sb.Clear().Append("OnUpdate() isTracked: ").Append(state.isTracked)
+                    .Append(", trackingState: ").Append(state.trackingState)
+                    .Append(", origin (").Append(origin.x).Append(", ").Append(origin.y).Append(", ").Append(origin.z).Append(")")
+                    .Append(", direction (").Append(direction.x).Append(", ").Append(direction.y).Append(", ").Append(direction.z).Append(")");
+                DEBUG(sb);
+            }
             InputSystem.QueueStateEvent(this, state);
         }
 	}

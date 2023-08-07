@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,6 +92,7 @@ namespace Wave.XR
             public static class MetaDataName
             {
                 public static readonly string SupportedFPS             = "com.htc.vr.content.SupportedFPS";
+                public static readonly string WaveCmdLine              = "com.htc.vr.content.WaveCmdLine";
             }
 
             public static class FeatureName
@@ -114,7 +116,11 @@ namespace Wave.XR
         {
             if (!BuildCheck.CheckIfWaveEnabled.ViveWaveXRAndroidAssigned) return; //Do not modify android manifest if the XR Loader is not Wave
 
-            var androidManifest = new AndroidManifest(GetManifestPath(path));
+            GetManifestPath(path);
+            XmlDocument doc = new XmlDocument();
+            doc.Load(_manifestFilePath);
+
+            var androidManifest = new AndroidManifest(_manifestFilePath);
 
             WaveXRSettings waveXRSettings;
             EditorBuildSettings.TryGetConfigObject(Constants.k_SettingsKey, out waveXRSettings);
@@ -127,24 +133,26 @@ namespace Wave.XR
             bool addSceneMesh = false;
             bool addMarker = false;
             bool addSupportedFPS = false;
-            bool addSimultaneousInteraction = (EditorPrefs.GetBool(BuildCheck.CheckIfSimultaneousInteractionEnabled.MENU_NAME, false) && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.SimultaneousInteraction));
+            bool addSimultaneousInteraction = (EditorPrefs.GetBool(BuildCheck.CheckIfSimultaneousInteractionEnabled.MENU_NAME, false) && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.SimultaneousInteraction));
 
             if (waveXRSettings != null)
             {
-                addSupportedFPS = waveXRSettings.supportedFPS != WaveXRSettings.SupportedFPS.HMD_Default && !checkWaveMetaData(_manifestFilePath, ManifestAttributeStringDefinition.MetaDataName.SupportedFPS);
+                addSupportedFPS = waveXRSettings.supportedFPS != WaveXRSettings.SupportedFPS.HMD_Default && !CheckWaveMetaData(doc, ManifestAttributeStringDefinition.MetaDataName.SupportedFPS);
                 androidManifest.AddWaveMetaData(appendSupportedFPS: addSupportedFPS);
 
-                addSceneMesh = waveXRSettings.EnableScenePerception && waveXRSettings.EnableSceneMesh && !checkWavePermission(_manifestFilePath, ManifestAttributeStringDefinition.PermissionName.SceneMesh);
+                addSceneMesh = waveXRSettings.EnableScenePerception && waveXRSettings.EnableSceneMesh && !CheckWavePermission(doc, ManifestAttributeStringDefinition.PermissionName.SceneMesh);
                 androidManifest.AddWavePermissions(appendSceneMeshPermission: addSceneMesh);
 				androidManifest.AddViveSDKVersion();
 				androidManifest.AddUnityVersion();
 
-				addHandTracking = waveXRSettings.EnableNaturalHand && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.HandTracking);
-                addTracker = waveXRSettings.EnableTracker && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.Tracker);
-                addEyeTracking = waveXRSettings.EnableEyeTracking && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.EyeTracking);
-                addLipExpression = waveXRSettings.EnableLipExpression && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.LipExpression);
-                addScenePerception = waveXRSettings.EnableScenePerception && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.ScenePerception);
-                addMarker = waveXRSettings.EnableMarker && !checkWaveFeature(_manifestFilePath, ManifestAttributeStringDefinition.FeatureName.Marker);
+				addHandTracking = waveXRSettings.EnableNaturalHand && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.HandTracking);
+                addTracker = waveXRSettings.EnableTracker && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.Tracker);
+                addEyeTracking = waveXRSettings.EnableEyeTracking && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.EyeTracking);
+                addLipExpression = waveXRSettings.EnableLipExpression && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.LipExpression);
+                addScenePerception = waveXRSettings.EnableScenePerception && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.ScenePerception);
+                addMarker = waveXRSettings.EnableMarker && !CheckWaveFeature(doc, ManifestAttributeStringDefinition.FeatureName.Marker);
+
+                androidManifest.AddWaveCmdLineMetaData(waveXRSettings);
 
                 androidManifest.AddWaveFeatures(
                     appendHandTracking: addHandTracking,
@@ -154,6 +162,8 @@ namespace Wave.XR
                     appendLipExpression: addLipExpression,
                     appendScenePerception: addScenePerception,
                     appendMarker: addMarker);
+
+                androidManifest.AddSkipPermissionDialogMetaData();
 
                 androidManifest.Save();
             }
@@ -171,6 +181,9 @@ namespace Wave.XR
                     appendLipExpression: addLipExpression,
                     appendScenePerception: addScenePerception,
                     appendMarker: addMarker);
+
+                androidManifest.AddSkipPermissionDialogMetaData();
+                //androidManifest.Save();  // TODO why not save it?
             }
         }
 
@@ -188,71 +201,59 @@ namespace Wave.XR
             return _manifestFilePath;
         }
 
-        static bool checkWaveFeature(string filename, string featureName)
+        static bool CheckWaveFeature(XmlDocument doc, string featureName)
 		{
-            XmlDocument doc = new XmlDocument();
-            doc.Load(filename);
             XmlNodeList featureNodeList = doc.SelectNodes("/manifest/uses-feature");
 
-            if (featureNodeList != null)
+            if (featureNodeList == null) return false;
+            foreach (XmlNode featureNode in featureNodeList)
             {
-                foreach (XmlNode featureNode in featureNodeList)
-                {
-                    var androidNameAttribute = featureNode.Attributes["android:name"];
-                    var androidRequiredAttribute = featureNode.Attributes["android:required"];
+                var androidNameAttribute = featureNode.Attributes["android:name"];
+                var androidRequiredAttribute = featureNode.Attributes["android:required"];
 
-                    string name = null, required = null;
+                string name = null, required = null;
 
-                    if (androidNameAttribute != null ) name = androidNameAttribute.Value;
-                    if (androidRequiredAttribute != null) required = androidRequiredAttribute.Value;
+                if (androidNameAttribute != null ) name = androidNameAttribute.Value;
+                if (androidRequiredAttribute != null) required = androidRequiredAttribute.Value;
 
-                    if (name != null && name.Equals(featureName))
-                        return true;
-                }
+                if (name != null && name.Equals(featureName))
+                    return true;
             }
             return false;
         }
 
-        static bool checkWavePermission(string filename, string permissionName)
+        static bool CheckWavePermission(XmlDocument doc, string permissionName)
         {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(filename);
             XmlNodeList permissionNodeList = doc.SelectNodes("/manifest/uses-permission");
 
-            if (permissionNodeList != null)
+            if (permissionNodeList == null) return false;
+            foreach (XmlNode permissionNode in permissionNodeList)
             {
-                foreach (XmlNode permissionNode in permissionNodeList)
-                {
-                    var androidNameAttribute = permissionNode.Attributes["android:name"];
-                    string name = null;
+                var androidNameAttribute = permissionNode.Attributes["android:name"];
+                string name = null;
 
-                    if (androidNameAttribute != null) name = androidNameAttribute.Value;
+                if (androidNameAttribute != null) name = androidNameAttribute.Value;
 
-                    if (name != null && name.Equals(permissionName))
-                        return true;
-                }
+                if (name != null && name.Equals(permissionName))
+                    return true;
             }
             return false;
         }
 
-        static bool checkWaveMetaData(string filename, string metaDataName)
+        static bool CheckWaveMetaData(XmlDocument doc, string metaDataName)
         {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(filename);
             XmlNodeList metadataNodeList = doc.SelectNodes("/manifest/application/meta-data");
 
-            if (metadataNodeList != null)
+            if (metadataNodeList == null) return false;
+            foreach (XmlNode metadataNode in metadataNodeList)
             {
-                foreach (XmlNode metadataNode in metadataNodeList)
-                {
-                    var androidNameAttribute = metadataNode.Attributes["android:name"];
-                    string name = null;
+                var androidNameAttribute = metadataNode.Attributes["android:name"];
+                string name = null;
 
-                    if (androidNameAttribute != null) name = androidNameAttribute.Value;
+                if (androidNameAttribute != null) name = androidNameAttribute.Value;
 
-                    if (name != null && name.Equals(metaDataName))
-                        return true;
-                }
+                if (name != null && name.Equals(metaDataName))
+                    return true;
             }
             return false;
         }
@@ -293,6 +294,7 @@ namespace Wave.XR
             }
         }
 
+        // You can check the the result in <project>\Temp\gradleOut\unityLibrary\src\main\AndroidManifest.xml
         private class AndroidManifest : AndroidXmlDocument
         {
             private readonly XmlElement ManifestElement;
@@ -436,6 +438,112 @@ namespace Wave.XR
                     newUsesFeature.Attributes.Append(CreateAndroidAttribute("required", "true"));
                     ManifestElement.AppendChild(newUsesFeature);
                 }
+            }
+
+            // The function add commands into AndroidManifest.xml.  In Activity, the value will be added into command line.
+            // Here is a command line example:
+            //     adb shell am start -e unity "-platform-android-gfxdeviceworker-priority\ -20\ -platform-android-unitymain-priority\ -20" com.your.package/com.htc.vr.unity.WVRUnityVRActivity
+            // See more information at these place
+            //     https://docs.unity3d.com/Manual/PlayerCommandLineArguments.html
+            //     https://docs.unity3d.com/Manual/android-custom-activity-command-line.html
+            //     https://docs.unity3d.com/Manual/android-thread-configuration.html
+            internal void AddWaveCmdLineMetaData(WaveXRSettings settings)
+            {
+                StringBuilder sb = new StringBuilder();
+                // Override Thread Priority
+                if (settings.overrideThreadPriority)
+                {
+                    if (settings.gameThreadPriority != 0)
+                    {
+                        sb.Append(" -platform-android-unitymain-priority ");
+                        sb.Append(settings.gameThreadPriority);
+                    }
+                    if (settings.renderThreadPriority != -2)
+                    {
+                        sb.Append(" -platform-android-gfxdeviceworker-priority ");
+                        sb.Append(settings.renderThreadPriority);
+                    }
+                    if (settings.jobWorkerThreadPriority != 0)
+                    {
+                        sb.Append(" -platform-android-jobworker-priority ");
+                        sb.Append(settings.jobWorkerThreadPriority);
+                    }
+                }
+
+                var cmdLine = sb.ToString();
+                cmdLine = cmdLine.Trim();
+                if (string.IsNullOrEmpty(cmdLine)) return;
+
+                var waveCmdLineElm = CreateElement("meta-data");
+                waveCmdLineElm.Attributes.Append(CreateAndroidAttribute("name",
+                    ManifestAttributeStringDefinition.MetaDataName.WaveCmdLine));
+                waveCmdLineElm.Attributes.Append(CreateAndroidAttribute("value",
+                    cmdLine));
+                ApplicationElement.AppendChild(waveCmdLineElm);
+            }
+
+            // Add SkipPermissionDialog into the activity with meta-data "unityplayer.UnityActivity"
+            //  <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+            //  <meta-data android:name="unityplayer.SkipPermissionsDialog" android:value="true" />
+            // Generate the meta-data if it doesn't exist
+            internal bool AddSkipPermissionDialogMetaData()
+            {
+                XmlNodeList activityNodes = SelectNodes("/manifest/application/activity");
+                if (activityNodes == null) return false;
+
+                bool foundUnityActivityMetaData = false;
+                foreach (XmlNode activityNode in activityNodes)
+                {
+                    XmlNodeList childNodes = activityNode.ChildNodes;
+
+                    foreach (XmlNode childNode in childNodes)
+                    {
+                        // Check Activity element if exist unityplayer.UnityActivity meta-data
+                        if (childNode.Name == "meta-data" &&
+                            childNode.Attributes["android:name"].Value == "unityplayer.UnityActivity" &&
+                            childNode.Attributes["android:value"].Value == "true")
+                        {
+                            foundUnityActivityMetaData = true;
+
+                            bool hasSkipPermissionsDialogMetaData = false;
+                            foreach (XmlNode metaNode in childNodes)
+                            {
+                                if (metaNode.Name == "meta-data" &&
+                                    metaNode.Attributes["android:name"].Value == "unityplayer.SkipPermissionsDialog" &&
+                                    metaNode.Attributes["android:value"].Value == "true")
+                                {
+                                    hasSkipPermissionsDialogMetaData = true;
+                                    break;
+                                }
+                            }
+
+                            if (!hasSkipPermissionsDialogMetaData)
+                            {
+                                // Add unityplayer.SkipPermissionsDialog meta-data into the Activity element
+                                XmlElement skipPermissionsDialogMetaDataElement = CreateElement("meta-data");
+                                skipPermissionsDialogMetaDataElement.Attributes.Append(CreateAndroidAttribute("name", "unityplayer.SkipPermissionsDialog"));
+                                skipPermissionsDialogMetaDataElement.Attributes.Append(CreateAndroidAttribute("value", "true"));
+                                activityNode.AppendChild(skipPermissionsDialogMetaDataElement);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                // If not found unityplayer.UnityActivity meta-data?add unityplayer.SkipPermissionsDialog meta-data to all Activity element
+                if (!foundUnityActivityMetaData)
+                {
+                    foreach (XmlNode activityNode in activityNodes)
+                    {
+                        XmlElement skipPermissionsDialogMetaDataElement = CreateElement("meta-data");
+                        skipPermissionsDialogMetaDataElement.Attributes.Append(CreateAndroidAttribute("name", "unityplayer.SkipPermissionsDialog"));
+                        skipPermissionsDialogMetaDataElement.Attributes.Append(CreateAndroidAttribute("value", "true"));
+                        activityNode.AppendChild(skipPermissionsDialogMetaDataElement);
+                    }
+                }
+
+                return true;
             }
         }
 		#endregion

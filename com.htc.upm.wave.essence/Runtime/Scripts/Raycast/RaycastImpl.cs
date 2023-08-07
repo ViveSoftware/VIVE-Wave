@@ -15,6 +15,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Wave.Native;
 using Wave.Essence.Eye;
+using System.Text;
 
 namespace Wave.Essence.Raycast
 {
@@ -23,12 +24,19 @@ namespace Wave.Essence.Raycast
 	public class RaycastImpl : BaseRaycaster
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastImpl";
-		void DEBUG(string msg)
+		static StringBuilder m_sb = null;
+		static StringBuilder sb {
+			get {
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		static void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
 		}
-		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 		int logFrame = 0;
 		protected bool printIntervalLog = false;
 
@@ -54,7 +62,7 @@ namespace Wave.Essence.Raycast
 		#region MonoBehaviour overrides
 		protected override void OnEnable()
 		{
-			INFO("OnEnable()");
+			sb.Clear().Append("OnEnable()"); INFO(sb);
 			base.OnEnable();
 
 			/// 1. Set up the event camera.
@@ -71,7 +79,7 @@ namespace Wave.Essence.Raycast
 		}
 		protected override void OnDisable()
 		{
-			INFO("OnDisable()");
+			sb.Clear().Append("OnDisable()"); INFO(sb);
 			base.OnDisable();
 		}
 
@@ -396,7 +404,7 @@ namespace Wave.Essence.Raycast
 					if (exitObjects[i] != null && !enterObjects.Contains(exitObjects[i]))
 					{
 						ExecuteEvents.Execute(exitObjects[i], pointerData, ExecuteEvents.pointerExitHandler);
-						DEBUG("ExitEnterHandler() Exit: " + exitObjects[i]);
+						sb.Clear().Append("ExitEnterHandler() Exit: ").Append(exitObjects[i].name); DEBUG(sb);
 					}
 				}
 			}
@@ -408,7 +416,9 @@ namespace Wave.Essence.Raycast
 					if (enterObjects[i] != null && !exitObjects.Contains(enterObjects[i]))
 					{
 						ExecuteEvents.Execute(enterObjects[i], pointerData, ExecuteEvents.pointerEnterHandler);
-						DEBUG("ExitEnterHandler() Enter: " + enterObjects[i] + ", camera: " + pointerData.enterEventCamera);
+						sb.Clear().Append("ExitEnterHandler() Enter: ").Append(enterObjects[i])
+							.Append(", camera: ").Append(pointerData.enterEventCamera != null ? pointerData.enterEventCamera.name : "null");
+						DEBUG(sb);
 					}
 				}
 			}
@@ -419,13 +429,13 @@ namespace Wave.Essence.Raycast
 		{
 			if (raycastObject != null && (raycastObject == raycastObjectEx))
 			{
-				if (Log.gpl.Print) { DEBUG("HoverHandler() Hover: " + raycastObject.name); }
+				if (printIntervalLog) { sb.Clear().Append("HoverHandler() Hover: ").Append(raycastObject.name); DEBUG(sb); }
 				ExecuteEvents.ExecuteHierarchy(raycastObject, pointerData, RaycastEvents.pointerHoverHandler);
 			}
 		}
 		private void DownHandler()
 		{
-			DEBUG("DownHandler()");
+			sb.Clear().Append("DownHandler()"); DEBUG(sb);
 			if (raycastObject == null) { return; }
 
 			pointerData.pressPosition = pointerData.position;
@@ -434,13 +444,15 @@ namespace Wave.Essence.Raycast
 				ExecuteEvents.ExecuteHierarchy(raycastObject, pointerData, ExecuteEvents.pointerDownHandler)
 				?? ExecuteEvents.GetEventHandler<IPointerClickHandler>(raycastObject);
 
-			DEBUG("DownHandler() Down: " + pointerData.pointerPress + ", raycastObject: " + raycastObject.name);
+			sb.Clear().Append("DownHandler() Down: ").Append(pointerData.pointerPress != null ? pointerData.pointerPress.name : "null")
+				.Append(", raycastObject: ").Append(raycastObject.name);
+			DEBUG(sb);
 
 			// If Drag Handler exists, send initializePotentialDrag event.
 			pointerData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(raycastObject);
 			if (pointerData.pointerDrag != null)
 			{
-				DEBUG("DownHandler() Send initializePotentialDrag to " + pointerData.pointerDrag + ", current GameObject is " + raycastObject);
+				sb.Clear().Append("DownHandler() Send initializePotentialDrag to ").Append(pointerData.pointerDrag.name).Append(", current GameObject is ").Append(raycastObject.name); DEBUG(sb);
 				ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.initializePotentialDrag);
 			}
 
@@ -474,7 +486,7 @@ namespace Wave.Essence.Raycast
 			if (pointerData.pointerPress != null)
 			{
 				// In the frame of button is pressed -> unpressed, send Pointer Up
-				DEBUG("UpHandler() Send Pointer Up to " + pointerData.pointerPress);
+				sb.Clear().Append("UpHandler() Send Pointer Up to ").Append(pointerData.pointerPress.name); DEBUG(sb);
 				ExecuteEvents.Execute(pointerData.pointerPress, pointerData, ExecuteEvents.pointerUpHandler);
 			}
 
@@ -486,12 +498,12 @@ namespace Wave.Essence.Raycast
 					if (objectToClick == pointerData.pointerPress)
 					{
 						// In the frame of button from being pressed to unpressed, send Pointer Click if Click is pending.
-						DEBUG("UpHandler() Send Pointer Click to " + pointerData.pointerPress);
+						sb.Clear().Append("UpHandler() Send Pointer Click to ").Append(pointerData.pointerPress != null ? pointerData.pointerPress.name : "null"); DEBUG(sb);
 						ExecuteEvents.Execute(pointerData.pointerPress, pointerData, ExecuteEvents.pointerClickHandler);
 					}
 					else
 					{
-						DEBUG("UpHandler() pointer down object " + pointerData.pointerPress + " is different with click object " + objectToClick);
+						sb.Clear().Append("UpHandler() pointer down object ").Append(pointerData.pointerPress != null ? pointerData.pointerPress.name : "null").Append(" is different with click object ").Append(objectToClick.name); DEBUG(sb);
 					}
 				}
 				else
@@ -502,10 +514,10 @@ namespace Wave.Essence.Raycast
 						if (_pointerDrop == pointerData.pointerDrag)
 						{
 							// In next frame of button from being pressed to unpressed, send Drop and EndDrag if dragging.
-							DEBUG("UpHandler() Send Pointer Drop to " + pointerData.pointerDrag);
+							sb.Clear().Append("UpHandler() Send Pointer Drop to ").Append(pointerData.pointerDrag != null ? pointerData.pointerDrag.name : "null"); DEBUG(sb);
 							ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.dropHandler);
 						}
-						DEBUG("UpHandler() Send Pointer endDrag to " + pointerData.pointerDrag);
+						sb.Clear().Append("UpHandler() Send Pointer endDrag to ").Append(pointerData.pointerDrag != null ? pointerData.pointerDrag.name : "null"); DEBUG(sb);
 						ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.endDragHandler);
 
 						pointerData.dragging = false;
@@ -536,7 +548,7 @@ namespace Wave.Essence.Raycast
 
 			if (!pointerData.dragging)
 			{
-				DEBUG("DragHandler() Send BeginDrag to " + pointerData.pointerDrag);
+				sb.Clear().Append("DragHandler() Send BeginDrag to ").Append(pointerData.pointerDrag.name); DEBUG(sb);
 				ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.beginDragHandler);
 				pointerData.dragging = true;
 			}
@@ -550,7 +562,7 @@ namespace Wave.Essence.Raycast
 		{
 			if (raycastObject == null) { return; }
 
-			DEBUG("SubmitHandler() Submit: " + raycastObject.name);
+			sb.Clear().Append("SubmitHandler() Submit: ").Append(raycastObject.name); DEBUG(sb);
 			ExecuteEvents.ExecuteHierarchy(raycastObject, pointerData, ExecuteEvents.submitHandler);
 		}
 

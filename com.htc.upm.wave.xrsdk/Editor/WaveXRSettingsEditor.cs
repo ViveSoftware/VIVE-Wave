@@ -151,6 +151,23 @@ namespace Wave.XR.Settings
         static GUIContent Label_ResolutionScale = new GUIContent("ResolutionScale");
         SerializedProperty Property_ResolutionScale;
 
+        static string PropertyName_ThreadPriority = "overrideThreadPriority";
+        static string Warning_ThreadPriority = "WARNING: This setting is experimental and may not have good effect.  Use it at your own risk.";
+        static GUIContent Label_ThreadPriority = new GUIContent("Override Thread Priority", Warning_ThreadPriority);
+        SerializedProperty Property_ThreadPriority;
+
+        static string PropertyName_GameThreadPriority = "gameThreadPriority";
+        static GUIContent Label_GameThreadPriority = new GUIContent("Game thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
+        SerializedProperty Property_GameThreadPriority;
+
+        static string PropertyName_RenderThreadPriority = "renderThreadPriority";
+        static GUIContent Label_RenderThreadPriority = new GUIContent("Render thread priority default is -2.  Its range is from -20 to 19, and the lower number the higher priority.");
+        SerializedProperty Property_RenderThreadPriority;
+
+        static string PropertyName_JobWorkerThreadPriority = "jobWorkerThreadPriority";
+        static GUIContent Label_JobWorkerThreadPriority = new GUIContent("Job Worker thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
+        SerializedProperty Property_JobWorkerThreadPriority;
+
         static string PropertyName_AMCMode = "amcMode";
         static GUIContent Label_AMCMode = new GUIContent("AMC mode");
         SerializedProperty Property_AMCMode;
@@ -311,6 +328,11 @@ namespace Wave.XR.Settings
             if (Property_PixelDensity == null) Property_PixelDensity = serializedObject.FindProperty(PropertyName_PixelDensity);
             if (Property_ResolutionScale == null) Property_ResolutionScale = serializedObject.FindProperty(PropertyName_ResolutionScale);
 
+            if (Property_ThreadPriority == null) Property_ThreadPriority = serializedObject.FindProperty(PropertyName_ThreadPriority);
+            if (Property_GameThreadPriority == null) Property_GameThreadPriority = serializedObject.FindProperty(PropertyName_GameThreadPriority);
+            if (Property_RenderThreadPriority == null) Property_RenderThreadPriority = serializedObject.FindProperty(PropertyName_RenderThreadPriority);
+            if (Property_JobWorkerThreadPriority == null) Property_JobWorkerThreadPriority = serializedObject.FindProperty(PropertyName_JobWorkerThreadPriority);
+
             if (Property_AMCMode == null) Property_AMCMode = serializedObject.FindProperty(PropertyName_AMCMode);
             if (Property_AMCModeConfirm == null) Property_AMCModeConfirm = serializedObject.FindProperty(PropertyName_AMCModeConfirm);
 
@@ -428,6 +450,9 @@ namespace Wave.XR.Settings
 
                 EditorGUILayout.PropertyField(Property_AllowSpectatorCamera, Label_AllowSpectatorCamera);
 
+                ThreadPriorityGUI();
+
+                // Put this at final
                 EditorGUI.indentLevel--;
             }
 
@@ -644,6 +669,20 @@ namespace Wave.XR.Settings
                         Property_AMCModeConfirm.intValue = 2; // Accept and don't ask again
                         break;
                 }
+            }
+        }
+
+        void ThreadPriorityGUI()
+        {
+            EditorGUILayout.PropertyField(Property_ThreadPriority, Label_ThreadPriority);
+            if (Property_ThreadPriority.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                //EditorUtility.DisplayDialog("Override Thread Priority", Warning_ThreadPriority, "OK");
+                EditorGUILayout.PropertyField(Property_GameThreadPriority, Label_GameThreadPriority);
+                EditorGUILayout.PropertyField(Property_RenderThreadPriority, Label_RenderThreadPriority);
+                EditorGUILayout.PropertyField(Property_JobWorkerThreadPriority, Label_JobWorkerThreadPriority);
+                EditorGUI.indentLevel--;
             }
         }
 

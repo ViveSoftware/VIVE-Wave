@@ -58,10 +58,8 @@ namespace Wave.XR
     {
         const string LOG_TAG = "Wave.XR.ViveWaveWristTracker ";
         private static StringBuilder m_sb = null;
-        private static StringBuilder sb
-        {
-            get
-            {
+        private static StringBuilder sb {
+            get {
                 if (m_sb == null) { m_sb = new StringBuilder(); }
                 return m_sb;
             }
@@ -104,8 +102,7 @@ namespace Wave.XR
             var device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             while (device != null)
             {
-                sb.Clear(); sb.Append("Initialize() Removes a ViveWaveWristTracker device.");
-                DEBUG(sb);
+                sb.Clear().Append("Initialize() Removes a ViveWaveWristTracker device."); DEBUG(sb);
                 InputSystem.RemoveDevice(device);
                 device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             }
@@ -167,11 +164,7 @@ namespace Wave.XR
 
             if (!InputDeviceTracker.IsAvailable())
             {
-                if (printIntervalLog)
-                {
-                    sb.Clear(); sb.Append("OnUpdate() No tracker connected.");
-                    DEBUG(sb);
-                }
+                //if (printIntervalLog) { sb.Clear(); sb.Append("OnUpdate() No tracker connected."); DEBUG(sb); }
                 return;
             }
 

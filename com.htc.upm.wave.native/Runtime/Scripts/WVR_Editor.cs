@@ -248,7 +248,7 @@ namespace Wave.Native
 		}
 		#endregion
 
-		#region Bracelet
+		#region Tracker
 		public override WVR_Result StartTracker()
 		{
 			return system.StartTracker();
@@ -308,6 +308,14 @@ namespace Wave.Native
 		public override WVR_Result GetTrackerDeviceName(WVR_TrackerId trackerId, ref UInt32 nameSize, ref IntPtr deviceName)
 		{
 			return system.GetTrackerDeviceName(trackerId, ref nameSize, ref deviceName);
+		}
+		public override void SetFocusedTracker(int focusedTracker)
+		{
+			system.SetFocusedTracker(focusedTracker);
+		}
+		public override int GetFocusedTracker()
+		{
+			return system.GetFocusedTracker();
 		}
 		#endregion
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
@@ -84,6 +85,18 @@ namespace Wave.XR
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
+        static RenderThreadTask renderThreadRenameTask;
+        private static void RenameRenderThreadReceiver(PreAllocatedQueue _)
+        {
+            try
+            {
+                Thread thread = Thread.CurrentThread;
+                thread.Name = "UnityGfx";
+                renderThreadRenameTask = null;
+            }
+            catch (System.Exception) { /* Thread name can only set once.  Avoid exception if set by others. */}
+        }
+
         private void Start()
         {
             Debug.Log(TAG + ": Start");
@@ -91,6 +104,14 @@ namespace Wave.XR
             {
                 SceneLoadActions(SceneManager.GetActiveScene(), LoadSceneMode.Single);
                 isFirstScene = false;
+            }
+
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
+            if (!Application.isEditor || !Application.isMobilePlatform)
+#endif
+            {
+                renderThreadRenameTask = new RenderThreadTask(RenameRenderThreadReceiver);
+                renderThreadRenameTask.IssueEvent();
             }
         }
 

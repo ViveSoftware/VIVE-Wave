@@ -297,7 +297,19 @@ namespace Wave.XR.DirectPreview.Editor
 
             ShowButtons();
 
-            this.Repaint();
+			EditorGUILayout.LabelField("List Direct Preview supported features as below:");
+			EditorGUILayout.LabelField("1. Controller Model.");
+			EditorGUILayout.LabelField("2. Hand Tracking.");
+			EditorGUILayout.LabelField("List Direct Preview not supported features as below:");
+			EditorGUILayout.LabelField("1. Hand Gesture.");
+			EditorGUILayout.LabelField("2. Passthrough.");
+			EditorGUILayout.LabelField("3. Compositor Layer.");
+			EditorGUILayout.LabelField("4. Facial Tracking.");
+			EditorGUILayout.LabelField("5. Lip Expression.");
+			EditorGUILayout.LabelField("6. Scene Perception.");
+			EditorGUILayout.LabelField("7. Trackable Marker.");
+
+			this.Repaint();
 		}
 
 		void OnInspectorUpdate()

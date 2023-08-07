@@ -128,6 +128,12 @@ namespace Wave.XR.Settings
                 SetInt("displayGamutPreference" + i, (uint)gamut);
             }
 
+            SetBool(NameThreadPriority, appSettings.overrideThreadPriority);
+            // Only RenderThread need set in C.  RenderThread is unable to use command line to set a custom value.
+            //SetInt(NameGameThreadPriority, (uint)appSettings.gameThreadPriority);
+            SetInt(NameRenderThreadPriority, (uint)appSettings.renderThreadPriority);
+            //SetInt(NameJobWorkerThreadPriority, (uint)appSettings.jobWorkerThreadPriority);
+
             #endregion rendering
 
             #region Tracker
@@ -170,6 +176,11 @@ namespace Wave.XR.Settings
         public const string NameDebugLogFlagForNative = "debugLogFlagForNative";
         public const string NameDebugLogFlagForUnity = "debugLogFlagForUnity";
         public const string NameUseCMPChecker = "useCMPChecker";
+
+        public const string NameThreadPriority = "overrideThreadPriority";
+        public const string NameGameThreadPriority = "gameThreadPriority";
+        public const string NameRenderThreadPriority = "renderThreadPriority";
+        public const string NameJobWorkerThreadPriority = "jobWorkerThreadPriority";
 
         // Set
         [DllImport("wvrunityxr", EntryPoint = "SettingsSetBool")]

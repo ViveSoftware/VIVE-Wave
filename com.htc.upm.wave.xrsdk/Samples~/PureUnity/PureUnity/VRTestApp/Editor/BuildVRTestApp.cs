@@ -638,6 +638,9 @@ namespace Wave.Generic.Sample.Editor
 			}
 
 			PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
+#if UNITY_2022_1_OR_NEWER
+			PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+#else
 #if UNITY_2019_4_OR_NEWER
 #if UNITY_2019_4_0 || UNITY_2019_4_1 || UNITY_2019_4_2 || UNITY_2019_4_3 || UNITY_2019_4_4 || UNITY_2019_4_5 || UNITY_2019_4_6 || UNITY_2019_4_7 || UNITY_2019_4_8 || UNITY_2019_4_9 || UNITY_2019_4_10 || UNITY_2019_4_11 || UNITY_2019_4_12 || UNITY_2019_4_13
 			PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
@@ -646,6 +649,7 @@ namespace Wave.Generic.Sample.Editor
 #endif
 #else
 			PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+#endif
 #endif
 			AssetDatabase.SaveAssets();
 		}

@@ -20,6 +20,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
+using System.Text;
 
 namespace Wave.XR
 {
@@ -29,8 +30,19 @@ namespace Wave.XR
     [Preserve, InputControlLayout(displayName = "VIVE HMD (Wave)", canRunInBackground = true)]
     public class ViveWaveHMD : XRHMD
     {
-        const string LOG_TAG = "Wave.XR.ViveWaveHMD";
-        static void DEBUG(string msg) { Debug.Log(LOG_TAG + " " + msg); }
+        const string LOG_TAG = "Wave.XR.ViveWaveHMD ";
+        private static StringBuilder m_sb = null;
+        private static StringBuilder sb {
+            get {
+                if (m_sb == null) { m_sb = new StringBuilder(); }
+                return m_sb;
+            }
+        }
+        static void DEBUG(StringBuilder msg)
+        {
+            msg.Insert(0, LOG_TAG);
+            Debug.Log(msg);
+        }
 
         const string kInterfaceName = XRUtilities.InterfaceMatchAnyVersion;
         const string kManufacturer = "NA";
@@ -52,7 +64,7 @@ namespace Wave.XR
         [RuntimeInitializeOnLoadMethod]
         private static void InitializeInPlayer()
         {
-            DEBUG("InitializeInPlayer()");
+            sb.Clear().Append("InitializeInPlayer()"); DEBUG(sb);
             InputSystem.RegisterLayout(
                 typeof(ViveWaveHMD),
                 matches: new InputDeviceMatcher()
@@ -84,13 +96,13 @@ namespace Wave.XR
         /// </summary>
         protected override void FinishSetup()
         {
-            DEBUG("FinishSetup() description "
-                + "deviceClass: " + description.deviceClass
-                + ", interfaceName: " + description.interfaceName
-                + ", manufacturer: " + description.manufacturer
-                + ", product: " + description.product
-                + ", serial: " + description.serial
-                + ", version: " + description.version);
+            sb.Clear().Append("FinishSetup() description deviceClass: ").Append(description.deviceClass)
+                .Append(", interfaceName: ").Append(description.interfaceName)
+                .Append(", manufacturer: ").Append(description.manufacturer)
+                .Append(", product: ").Append(description.product)
+                .Append(", serial: ").Append(description.serial)
+                .Append(", version: ").Append(description.version);
+            DEBUG(sb);
 
             base.FinishSetup();
 
