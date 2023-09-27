@@ -23,7 +23,7 @@ namespace Wave.Essence.Raycast.Editor
         /// RaycastRing options
         SerializedProperty m_PointerRingWidth, m_PointerCircleRadius, m_PointerDistance, m_PointerColor, m_ProgressColor, m_PointerMaterial, m_PointerRenderQueue, m_PointerSortingOrder, m_TimeToGaze;
         /// GazeRaycastRing options
-        SerializedProperty m_EyeTracking, m_Eye, m_InputEvent, m_ControlKey, m_AlwaysEnable;
+        SerializedProperty m_EyeTracking, m_Eye, m_InputEvent, m_ControlKey, m_ControlHand, m_AlwaysEnable;
 #if ENABLE_INPUT_SYSTEM
         SerializedProperty m_RotationInput;
 #endif
@@ -49,6 +49,7 @@ namespace Wave.Essence.Raycast.Editor
             m_Eye = serializedObject.FindProperty("m_Eye");
             m_InputEvent = serializedObject.FindProperty("m_InputEvent");
             m_ControlKey = serializedObject.FindProperty("m_ControlKey");
+            m_ControlHand = serializedObject.FindProperty("m_ControlHand");
 #if ENABLE_INPUT_SYSTEM
             m_RotationInput = serializedObject.FindProperty("m_RotationInput");
 #endif
@@ -127,6 +128,7 @@ namespace Wave.Essence.Raycast.Editor
                 EditorGUILayout.PropertyField(m_TimeToGaze);
                 EditorGUILayout.PropertyField(m_InputEvent);
                 EditorGUILayout.PropertyField(m_ControlKey);
+                EditorGUILayout.PropertyField(m_ControlHand);
             }
 
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

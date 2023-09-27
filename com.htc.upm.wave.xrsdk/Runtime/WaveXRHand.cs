@@ -107,6 +107,12 @@ namespace Wave.OpenXR
 		public const string kRightHandName = "Wave Right Hand";
 		public const string kLeftHandSN = "HTC-211116-LeftHand";
 		public const string kRightHandSN = "HTC-211116-RightHand";
+
+		public const string kHandConfidenceLeft = "HandConfidenceLeft";
+		public const string kHandConfidenceRight = "HandConfidenceRight";
+		public const string kHandScaleLeftX = "HandScaleLeftX", kHandScaleLeftY = "HandScaleLeftY", kHandScaleLeftZ = "HandScaleLeftZ";
+		public const string kHandScaleRightX = "HandScaleRightX", kHandScaleRightY = "HandScaleRightY", kHandScaleRightZ = "HandScaleRightZ";
+
 		/// <summary> Right Tracker Characteristics </summary>
 		public const InputDeviceCharacteristics kRightHandCharacteristics = (
 			InputDeviceCharacteristics.HandTracking |
@@ -440,6 +446,48 @@ namespace Wave.OpenXR
 				}
 			}
 			return s_FingerBones[isLeft][finger];
+		}
+
+		/// <summary>
+		/// Retrieves the scale of wrist.
+		/// </summary>
+		/// <param name="isLeft">Left or right hand.</param>
+		/// <param name="scale">Wrist scale in Vector3.</param>
+		/// <returns></returns>
+		public static bool GetHandScale(bool isLeft, out Vector3 scale)
+		{
+			float scale_x = 0, scale_y = 0, scale_z = 0;
+			if (isLeft)
+			{
+				SettingsHelper.GetFloat(kHandScaleLeftX, ref scale_x);
+				SettingsHelper.GetFloat(kHandScaleLeftY, ref scale_y);
+				SettingsHelper.GetFloat(kHandScaleLeftZ, ref scale_z);
+			}
+			else
+			{
+				SettingsHelper.GetFloat(kHandScaleRightX, ref scale_x);
+				SettingsHelper.GetFloat(kHandScaleRightY, ref scale_y);
+				SettingsHelper.GetFloat(kHandScaleRightZ, ref scale_z);
+			}
+			scale.x = scale_x;
+			scale.y = scale_y;
+			scale.z = scale_z;
+			return true;
+		}
+
+		/// <summary>
+		/// Retrieves the wrist confidence which is a 0~1 float value where 1 means the most accurate.
+		/// </summary>
+		/// <param name="isLeft">Left or right hand.</param>
+		/// <returns></returns>
+		public static float GetHandConfidence(bool isLeft)
+		{
+			float confidence = 0;
+			if (isLeft)
+				SettingsHelper.GetFloat(kHandConfidenceLeft, ref confidence);
+			else
+				SettingsHelper.GetFloat(kHandConfidenceRight, ref confidence);
+			return confidence;
 		}
 	}
 }

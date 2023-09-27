@@ -24,6 +24,7 @@ using Wave.XR.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Wave.XR.BuildCheck
 {
@@ -41,7 +42,7 @@ namespace Wave.XR.BuildCheck
 		const string Aar2022PathDest = "Assets/Plugins/Android/wvr_unity_plugin_2022.aar";
 		const string ForceBuildWVR = "ForceBuildWVR.txt";
 
-		internal static void AddHandtrackingAndroidManifest()
+		internal static void AddHandTrackingAndroidManifest()
 		{
 			WaveXRSettings settings;
 			EditorBuildSettings.TryGetConfigObject(Constants.k_SettingsKey, out settings);
@@ -333,7 +334,7 @@ namespace Wave.XR.BuildCheck
 
 			if (settings != null)
 			{
-				addHandTracking = settings.EnableNaturalHand && !checkHandtrackingFeature(AndroidManifestPathDest);
+				addHandTracking = (settings.EnableNaturalHand || settings.EnableElectronicHand) && !checkHandtrackingFeature(AndroidManifestPathDest);
 				addTracker = settings.EnableTracker && !checkTrackerFeature(AndroidManifestPathDest);
 				addEyeTracking = settings.EnableEyeTracking && !checkEyeTrackingFeature(AndroidManifestPathDest);
 				addLipExpression = settings.EnableLipExpression && !checkLipExpressionFeature(AndroidManifestPathDest);
@@ -814,7 +815,7 @@ namespace Wave.XR.BuildCheck
 				if (File.Exists(ForceBuildWVR))
 				{
 					//SetBuildingWave();
-					AddHandtrackingAndroidManifest();
+					AddHandTrackingAndroidManifest();
 					AddTrackerAndroidManifest();
 					AddEyeTrackingAndroidManifest();
 					AddLipExpressionAndroidManifest();
@@ -874,7 +875,7 @@ namespace Wave.XR.BuildCheck
 				settings.EnableNaturalHand = enabled;
 			}
 			if (enabled)
-				CustomBuildProcessor.AddHandtrackingAndroidManifest();
+				CustomBuildProcessor.AddHandTrackingAndroidManifest();
 			/// Saving editor state
 			EditorPrefs.SetBool(CheckIfHandTrackingEnabled.MENU_NAME, enabled);
 
@@ -893,7 +894,7 @@ namespace Wave.XR.BuildCheck
 	{
 		const string LOG_TAG = "Wave.XR.CheckIfWaveEnabled";
 		static void DEBUG(string msg) { Debug.Log(LOG_TAG + " " + msg); }
-		const string VERSION_DEFINE_WAVE_XR = "USE_VIVE_WAVE_XR_5_2_0";
+		const string VERSION_DEFINE_WAVE_XR = "USE_VIVE_WAVE_XR_5_3_1";
 		internal struct ScriptingDefinedSettings
 		{
 			public string[] scriptingDefinedSymbols;
@@ -1190,6 +1191,147 @@ namespace Wave.XR.BuildCheck
 		public static bool ValidateEnabled()
 		{
 			Menu.SetChecked(CheckIfLipExpressionEnabled.MENU_NAME, enabled_);
+			return true;
+		}
+	}
+
+	[InitializeOnLoad]
+	public static class MenuAvatarIKHandler
+	{
+		internal const string MENU_NAME = "Wave/Body Tracking/Enable Avatar IK";
+
+		const string LOG_TAG = "Wave.XR.MenuAvatarIKHandler ";
+		static StringBuilder m_sb = null;
+		static StringBuilder sb
+		{
+			get
+			{
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		static void DEBUG(StringBuilder msg)
+		{
+			msg.Insert(0, LOG_TAG);
+			Debug.Log(msg);
+		}
+
+		#region Scripting Symbol
+		const string DEFINE_AVATAR_IK = "WAVE_AVATAR_IK";
+		internal struct ScriptingDefinedSettings
+		{
+			public string[] scriptingDefinedSymbols;
+			public BuildTargetGroup[] targetGroups;
+
+			public ScriptingDefinedSettings(string[] symbols, BuildTargetGroup[] groups)
+			{
+				scriptingDefinedSymbols = symbols;
+				targetGroups = groups;
+			}
+		}
+		static readonly ScriptingDefinedSettings m_SettingAvatarIK = new ScriptingDefinedSettings(
+			new string[] { DEFINE_AVATAR_IK, },
+			new BuildTargetGroup[] { BuildTargetGroup.Android, }
+		);
+		static void AddScriptingDefineSymbols(ScriptingDefinedSettings setting)
+		{
+			for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
+			{
+				var group = setting.targetGroups[group_index];
+				string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+				List<string> allDefines = definesString.Split(';').ToList();
+				for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+				{
+					if (!allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
+					{
+						sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" to group ").Append(group);
+						DEBUG(sb);
+						allDefines.Add(setting.scriptingDefinedSymbols[symbol_index]);
+					}
+					else
+					{
+						sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
+						DEBUG(sb);
+					}
+				}
+				PlayerSettings.SetScriptingDefineSymbolsForGroup(
+					group,
+					string.Join(";", allDefines.ToArray())
+				);
+			}
+		}
+		static void RemoveScriptingDefineSymbols(ScriptingDefinedSettings setting)
+		{
+			for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
+			{
+				var group = setting.targetGroups[group_index];
+				string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+				List<string> allDefines = definesString.Split(';').ToList();
+				for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+				{
+					if (allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
+					{
+						sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" from group ").Append(group);
+						DEBUG(sb);
+						allDefines.Remove(setting.scriptingDefinedSymbols[symbol_index]);
+					}
+					else
+					{
+						sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
+						DEBUG(sb);
+					}
+				}
+				PlayerSettings.SetScriptingDefineSymbolsForGroup(
+					group,
+					string.Join(";", allDefines.ToArray())
+				);
+			}
+		}
+		#endregion
+
+		private static bool m_Enabled = false;
+		static MenuAvatarIKHandler()
+		{
+			MenuAvatarIKHandler.m_Enabled = EditorPrefs.GetBool(MenuAvatarIKHandler.MENU_NAME, false);
+
+			/// Delaying until first editor tick so that the menu
+			/// will be populated before setting check state, and
+			/// re-apply correct action
+			EditorApplication.delayCall += () =>
+			{
+				PerformAction(MenuAvatarIKHandler.m_Enabled);
+			};
+		}
+
+		//[MenuItem(MenuAvatarIKHandler.MENU_NAME, priority = 604)]
+		private static void ToggleAction()
+		{
+			/// Toggling action
+			PerformAction(!MenuAvatarIKHandler.m_Enabled);
+		}
+
+		private static void PerformAction(bool enabled)
+		{
+			/// Set checkmark on menu item
+			Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, enabled);
+			if (enabled)
+			{
+				AddScriptingDefineSymbols(m_SettingAvatarIK);
+			}
+			else
+			{
+				RemoveScriptingDefineSymbols(m_SettingAvatarIK);
+			}
+			/// Saving editor state
+			EditorPrefs.SetBool(MenuAvatarIKHandler.MENU_NAME, enabled);
+
+			MenuAvatarIKHandler.m_Enabled = enabled;
+		}
+
+		//[MenuItem(MenuAvatarIKHandler.MENU_NAME, validate = true, priority = 604)]
+		private static bool ValidateEnabled()
+		{
+			Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, m_Enabled);
 			return true;
 		}
 	}

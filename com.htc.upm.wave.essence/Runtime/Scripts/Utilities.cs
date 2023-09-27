@@ -18,6 +18,7 @@ using Wave.XR;
 using Wave.XR.Function;
 using System.Collections.Generic;
 using UnityEngine.Profiling;
+using System.Diagnostics;
 
 namespace Wave.Essence
 {
@@ -180,10 +181,10 @@ namespace Wave.Essence
 
 		public static bool IsValid(this Quaternion quat)
 		{
-			if (quat.x > 1 || quat.x < -1) { return false; }
-			if (quat.y > 1 || quat.y < -1) { return false; }
-			if (quat.z > 1 || quat.z < -1) { return false; }
-			if (quat.w > 1 || quat.w < -1) { return false; }
+			if (quat.x > 1 || quat.x < -1 || float.IsNaN(quat.x)) { return false; }
+			if (quat.y > 1 || quat.y < -1 || float.IsNaN(quat.y)) { return false; }
+			if (quat.z > 1 || quat.z < -1 || float.IsNaN(quat.z)) { return false; }
+			if (quat.w > 1 || quat.w < -1 || float.IsNaN(quat.w)) { return false; }
 			return true;
 		}
 	} // class Numeric
@@ -637,6 +638,13 @@ namespace Wave.Essence
 		{
 			return InputDeviceControl.IsUserPresence();
 		}
+
+		#region Table Static
+		public static bool IsTableStatic(XR_Hand hand)
+		{
+			return WaveEssence.Instance.IsTableStatic(hand);
+		}
+		#endregion
 	} // class WXRDevice
 
 	public static class NotifyDevice
@@ -727,6 +735,26 @@ namespace Wave.Essence
 			IntPtr ptrParameterName = Marshal.StringToHGlobalAnsi(info);
 			Interop.WVR_UpdateNotifyDeviceInfo(type, ptrParameterName);
 			Marshal.FreeHGlobal(ptrParameterName);
+		}
+	}
+
+	public static class Misc
+	{
+		public static string GetCaller()
+		{
+			string caller = "none";
+
+			var frame = new StackFrame(2, true);
+			if (frame != null)
+			{
+				var method = frame.GetMethod();
+				if (method != null)
+					caller = method.Name;
+				else
+					caller = "No method.";
+			}
+
+			return caller;
 		}
 	}
 }

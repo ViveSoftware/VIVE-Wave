@@ -14,6 +14,9 @@ using UnityEngine;
 
 using Wave.Native;
 using Wave.XR.Function;
+#if UNITY_EDITOR
+using Wave.Essence.Editor;
+#endif
 
 namespace Wave.Essence.Events
 {
@@ -192,6 +195,9 @@ namespace Wave.Essence.Events
             {
                 GameObject obj = new GameObject("Wave.Essence.SystemEvent");
                 instance = obj.AddComponent<WaveVR_SystemEvent>();
+#if UNITY_EDITOR
+                WaveEditor.AssertInstance();
+#endif
             }
         }
 

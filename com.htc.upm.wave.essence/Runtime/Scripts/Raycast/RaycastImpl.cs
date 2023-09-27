@@ -25,7 +25,7 @@ namespace Wave.Essence.Raycast
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastImpl";
 		static StringBuilder m_sb = null;
-		static StringBuilder sb {
+		protected static StringBuilder sb {
 			get {
 				if (m_sb == null) { m_sb = new StringBuilder(); }
 				return m_sb;
@@ -83,7 +83,7 @@ namespace Wave.Essence.Raycast
 			base.OnDisable();
 		}
 
-		protected bool m_Interactable = true;
+		protected bool m_Interactable = false;
 		protected virtual void Update()
 		{
 			logFrame++;

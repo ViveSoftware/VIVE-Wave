@@ -157,15 +157,15 @@ namespace Wave.XR.Settings
         SerializedProperty Property_ThreadPriority;
 
         static string PropertyName_GameThreadPriority = "gameThreadPriority";
-        static GUIContent Label_GameThreadPriority = new GUIContent("Game thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
+        static GUIContent Label_GameThreadPriority = new GUIContent("Game thread priority", "Default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
         SerializedProperty Property_GameThreadPriority;
 
         static string PropertyName_RenderThreadPriority = "renderThreadPriority";
-        static GUIContent Label_RenderThreadPriority = new GUIContent("Render thread priority default is -2.  Its range is from -20 to 19, and the lower number the higher priority.");
+        static GUIContent Label_RenderThreadPriority = new GUIContent("Render thread priority", "Default is -2.  Its range is from -20 to 19, and the lower number the higher priority.");
         SerializedProperty Property_RenderThreadPriority;
 
         static string PropertyName_JobWorkerThreadPriority = "jobWorkerThreadPriority";
-        static GUIContent Label_JobWorkerThreadPriority = new GUIContent("Job Worker thread priority default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
+        static GUIContent Label_JobWorkerThreadPriority = new GUIContent("Job Worker thread priority", "Default is 0.  Its range is from -20 to 19, and the lower number the higher priority.");
         SerializedProperty Property_JobWorkerThreadPriority;
 
         static string PropertyName_AMCMode = "amcMode";
@@ -226,6 +226,9 @@ namespace Wave.XR.Settings
         static string PropertyName_EnableNaturalHand = "EnableNaturalHand";
         static GUIContent Label_EnableNaturalHand = new GUIContent("Enable Natural Hand");
         SerializedProperty Property_EnableNaturalHand = null;
+        static string PropertyName_EnableElectronicHand = "EnableElectronicHand";
+        static GUIContent Label_EnableElectronicHand = new GUIContent("Enable Electronic Hand");
+        SerializedProperty Property_EnableElectronicHand = null;
         #endregion
 
         #region Eye
@@ -264,6 +267,17 @@ namespace Wave.XR.Settings
         static string PropertyName_AllowSpectatorCamera = "allowSpectatorCamera";
         static GUIContent Label_AllowSpectatorCamera = new GUIContent("Allow Spectator Camera", "Allow this plugin to generate a spectator camera to produce images for Screenshot, Recording, or Broadcast usages.This camera will consume more performance when it is activated, but captured image will have better FOV result.");
         SerializedProperty Property_AllowSpectatorCamera;
+        
+        static string PropertyName_AllowSpectatorCameraCapture360Image = 
+	        "allowSpectatorCameraCapture360Image";
+        static GUIContent Label_AllowSpectatorCameraCapture360Image = new GUIContent(
+	        "Allow Capture 360 Image",
+	        "Allow the spectator camera to capture 360 images. Addition Request:\n" +
+	        "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
+	        "Page\n2.) Set the Android target API Level to 29 or lower\n3.) Add " +
+	        "the write external storage permission and legacy external storage " +
+	        "flag in the AndroidManifest.xml file.");
+        SerializedProperty Property_AllowSpectatorCameraCapture360Image;
 
 
         enum Platform
@@ -281,6 +295,8 @@ namespace Wave.XR.Settings
             BuildTargetGroup selectedBuildTargetGroup = EditorGUILayout.BeginBuildTargetSelectionGrouping();
             if (selectedBuildTargetGroup == BuildTargetGroup.Android)
             {
+                if (EditorGUIUtility.currentViewWidth > 200)
+                    EditorGUIUtility.labelWidth = EditorGUIUtility.currentViewWidth * 0.25f;
                 AndroidSettings();
             }
 
@@ -342,8 +358,9 @@ namespace Wave.XR.Settings
             if (Property_FSELevel == null) Property_FSELevel = serializedObject.FindProperty(PropertyName_FSELevel);
 
             if (Property_AllowSpectatorCamera == null) Property_AllowSpectatorCamera = serializedObject.FindProperty(PropertyName_AllowSpectatorCamera);
-
-            if (Property_SupportedFPS == null) Property_SupportedFPS = serializedObject.FindProperty(PropertyName_SupportedFPS);
+			if (Property_AllowSpectatorCameraCapture360Image == null) Property_AllowSpectatorCameraCapture360Image = serializedObject.FindProperty(PropertyName_AllowSpectatorCameraCapture360Image);
+            
+			if (Property_SupportedFPS == null) Property_SupportedFPS = serializedObject.FindProperty(PropertyName_SupportedFPS);
             if (Property_WaveXRFolder == null) Property_WaveXRFolder = serializedObject.FindProperty(PropertyName_WaveXRFolder);
             if (Property_WaveEssenceFolder == null) Property_WaveEssenceFolder = serializedObject.FindProperty(PropertyName_WaveEssenceFolder);
 
@@ -361,6 +378,7 @@ namespace Wave.XR.Settings
 
             #region Hand
             if (Property_EnableNaturalHand == null) Property_EnableNaturalHand = serializedObject.FindProperty(PropertyName_EnableNaturalHand);
+            if (Property_EnableElectronicHand == null) Property_EnableElectronicHand = serializedObject.FindProperty(PropertyName_EnableElectronicHand);
             #endregion
 
             #region Eye
@@ -448,7 +466,132 @@ namespace Wave.XR.Settings
 
                 MultiLayerGUI();
 
+                #region Spectator Camera Setting
+
+                const string Capture360ImageToggleTitle = 
+	                "Allow Capture 360 Image";
+                const string Capture360ImageToggleHint =
+	                "Allow the spectator camera to capture 360 images. Addition Request:\n" +
+	                "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
+	                "Page\n2.) Set the Android target API Level to 29 or lower\n3.) Add " +
+	                "the write external storage permission and legacy external storage " +
+	                "flag in the AndroidManifest.xml file.";
+                const string AcceptButtonString = 
+	                "OK";
+                const string CancelButtonString = 
+	                "Cancel";
+                const string OpenCapture360ImageAdditionRequestTitle =
+	                "Additional Request of Capturing 360 Image throughout the Spectator Camera";
+                const string OpenCapture360ImageAdditionRequestDescription =
+	                "Allow the spectator camera to capture 360 images. Addition Request:\n" +
+	                "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
+	                "Page.\n2.) Set the Android target API Level to 29 or lower.\n3.) Add " +
+	                "the write external storage permission and legacy external storage " +
+	                "flag in the AndroidManifest.xml file.";
+                const string ConfirmModifySettingTitle =
+	                "Will modify the setting as the following, please confirm.";
+                const string Modify360StereoCaptureDescription =
+	                "PlayerSettings.enable360StereoCapture\n" +
+	                "Current value: FALSE; Will set to TRUE.";
+                string modifyAPILevelDescription =
+	                "PlayerSettings.Android.targetSdkVersion\n" +
+	                $"Current value: {PlayerSettings.Android.targetSdkVersion}; " +
+	                $"Will set to AndroidApiLevel29.";
+                string modify360StereoCaptureAndAPILevelDescription =
+	                "PlayerSettings.enable360StereoCapture\n" +
+	                $"Current value: FALSE; Will set to TRUE.\n\n" +
+	                $"PlayerSettings.Android.targetSdkVersion\n" +
+	                $"Current value: {PlayerSettings.Android.targetSdkVersion}; " +
+	                $"Will set to AndroidApiLevel29.";
+                
                 EditorGUILayout.PropertyField(Property_AllowSpectatorCamera, Label_AllowSpectatorCamera);
+                WaveXRSettings mySettings = target as WaveXRSettings;
+                if (mySettings.allowSpectatorCamera)
+                {
+	                EditorGUI.indentLevel++;
+
+	                EditorGUI.BeginChangeCheck();
+	                EditorGUILayout.PropertyField(
+		                Property_AllowSpectatorCameraCapture360Image,
+		                Label_AllowSpectatorCameraCapture360Image);
+	                bool currentValue = mySettings.allowSpectatorCameraCapture360Image;
+	                if (EditorGUI.EndChangeCheck())
+	                {
+		                // currentValue change to True
+		                if (!currentValue)
+		                {
+			                bool isEnable360StereoCapture = PlayerSettings.enable360StereoCapture;
+			                bool isCompatibleAPILevel =
+				                PlayerSettings.Android.targetSdkVersion <= AndroidSdkVersions.AndroidApiLevel29;
+
+			                var acceptDialog1 = EditorUtility.DisplayDialog(
+				                OpenCapture360ImageAdditionRequestTitle,
+				                OpenCapture360ImageAdditionRequestDescription,
+				                AcceptButtonString,
+				                CancelButtonString);
+			                if (acceptDialog1)
+			                {
+				                bool acceptDialog2 = false;
+				                if (!isEnable360StereoCapture && !isCompatibleAPILevel)
+				                {
+					                acceptDialog2 = EditorUtility.DisplayDialog(
+						                ConfirmModifySettingTitle,
+						                modify360StereoCaptureAndAPILevelDescription,
+						                AcceptButtonString,
+						                CancelButtonString);
+				                }
+				                else if (!isEnable360StereoCapture && isCompatibleAPILevel)
+				                {
+					                acceptDialog2 = EditorUtility.DisplayDialog(
+						                ConfirmModifySettingTitle,
+						                Modify360StereoCaptureDescription,
+						                AcceptButtonString,
+						                CancelButtonString);
+				                }
+				                else if (isEnable360StereoCapture && !isCompatibleAPILevel)
+				                {
+					                acceptDialog2 = EditorUtility.DisplayDialog(
+						                ConfirmModifySettingTitle,
+						                modifyAPILevelDescription,
+						                AcceptButtonString,
+						                CancelButtonString);
+				                }
+
+				                if (acceptDialog2)
+				                {
+					                if (!isEnable360StereoCapture)
+					                {
+						                PlayerSettings.enable360StereoCapture = true;
+					                }
+
+					                if (!isCompatibleAPILevel)
+					                {
+						                PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
+					                }
+				                }
+				                else if (!acceptDialog2 && (!isEnable360StereoCapture || !isCompatibleAPILevel))
+				                {
+					                Property_AllowSpectatorCameraCapture360Image.boolValue = false;
+				                }
+			                }
+			                else
+			                {
+				                Property_AllowSpectatorCameraCapture360Image.boolValue = false;
+			                }
+		                }
+	                }
+
+	                EditorGUI.indentLevel--;
+                }
+                else
+                {
+	                // if allowSpectatorCamera is disabled,
+	                // the attribute of allowSpectatorCameraCapture360Image
+	                // should be disabled too.
+	                Property_AllowSpectatorCameraCapture360Image.boolValue = false;
+                }
+                
+                #endregion
 
                 ThreadPriorityGUI();
 
@@ -476,6 +619,7 @@ namespace Wave.XR.Settings
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(Property_EnableNaturalHand, Label_EnableNaturalHand);
+                //EditorGUILayout.PropertyField(Property_EnableElectronicHand, Label_EnableElectronicHand);
                 EditorGUI.indentLevel--;
             }
 

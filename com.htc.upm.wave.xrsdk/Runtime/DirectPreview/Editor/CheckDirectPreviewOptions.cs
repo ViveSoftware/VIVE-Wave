@@ -299,7 +299,7 @@ namespace Wave.XR.DirectPreview.Editor
 
 			EditorGUILayout.LabelField("List Direct Preview supported features as below:");
 			EditorGUILayout.LabelField("1. Controller Model.");
-			EditorGUILayout.LabelField("2. Hand Tracking.");
+			EditorGUILayout.LabelField("2. Hand Tracking. (without hand scale and hand pinch)");
 			EditorGUILayout.LabelField("List Direct Preview not supported features as below:");
 			EditorGUILayout.LabelField("1. Hand Gesture.");
 			EditorGUILayout.LabelField("2. Passthrough.");

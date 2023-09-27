@@ -18,6 +18,7 @@ using UnityEditor;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -33,20 +34,11 @@ namespace Wave.XR
         // you to easily recognize memory that belongs to your own Device.
         public FourCC format => new FourCC('W', 'A', 'V', 'E');
 
-        [InputControl(name = "isTracked", layout = "Button", format = "BIT", offset = 0, displayName = "IsTracked")]
-        public bool isTracked;
+        [InputControl(name = "pose", layout = "Pose", format = "Pose", offset = 0, displayName = "Pose")]
+        public PoseState pose;
 
-        [InputControl(name = "trackingState", layout = "Integer", format = "INT", offset = 4, displayName = "TrackingState")]
-        public int trackingState;
-
-        [InputControl(name = "position", layout = "Vector3", format = "VEC3", offset = 8, displayName = "Position")]
-        public Vector3 position;
-
-        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 20, displayName = "Rotation")]
-        public Quaternion rotation;
-
-        [InputControl(name = "menuButton",      layout = "Button", format = "BIT", offset = 36, bit = 1, displayName = "MenuButton")]
-        [InputControl(name = "primaryButton",   layout = "Button", format = "BIT", offset = 36, bit = 2, displayName = "PrimaryButton")]
+        [InputControl(name = "menuButton",      layout = "Button", format = "BIT", offset = 60, bit = 1, displayName = "MenuButton")]
+        [InputControl(name = "primaryButton",   layout = "Button", format = "BIT", offset = 60, bit = 2, displayName = "PrimaryButton")]
         public uint pressed;
     }
 
@@ -120,13 +112,7 @@ namespace Wave.XR
         }
 
         [InputControl]
-        public ButtonControl isTracked { get; private set; }
-        [InputControl]
-        public IntegerControl trackingState { get; private set; }
-        [InputControl]
-        public Vector3Control position { get; private set; }
-        [InputControl]
-        public QuaternionControl rotation { get; private set; }
+        public PoseControl pose { get; private set; }
         [InputControl]
         public ButtonControl menuButton { get; private set; }
         [InputControl]
@@ -136,10 +122,7 @@ namespace Wave.XR
         {
             base.FinishSetup();
 
-            isTracked = GetChildControl<ButtonControl>("isTracked");
-            trackingState = GetChildControl<IntegerControl>("trackingState");
-            position = GetChildControl<Vector3Control>("position");
-            rotation = GetChildControl<QuaternionControl>("rotation");
+            pose = GetChildControl<PoseControl>("pose");
             menuButton = GetChildControl<ButtonControl>("menuButton");
             primaryButton = GetChildControl<ButtonControl>("primaryButton");
 
@@ -170,20 +153,26 @@ namespace Wave.XR
 
             ViveWaveWristTrackerState state = new ViveWaveWristTrackerState();
 
-            state.isTracked = InputDeviceTracker.IsTracked(m_TrackerId);
+            state.pose.isTracked = InputDeviceTracker.IsTracked(m_TrackerId);
             if (InputDeviceTracker.GetPosition(m_TrackerId, out Vector3 pos))
             {
-                // POSITION_VALID_BIT = 0x0002
-                // POSITION_TRACKED_BIT = 0x0008
-                state.trackingState |= (0x0002 | 0x0008);
-                state.position = pos;
+                state.pose.trackingState |= UnityEngine.XR.InputTrackingState.Position;
+                state.pose.position = pos;
             }
             if (InputDeviceTracker.GetRotation(m_TrackerId, out Quaternion rot))
-			{
-                // ORIENTATION_VALID_BIT = 0x0001
-                // ORIENTATION_TRACKED_BIT = 0x0004
-                state.trackingState |= (0x0001 | 0x0004);
-                state.rotation = rot;
+            {
+                state.pose.trackingState |= UnityEngine.XR.InputTrackingState.Rotation;
+                state.pose.rotation = rot;
+            }
+            if (InputDeviceTracker.GetVelocity(m_TrackerId, out Vector3 vel))
+            {
+                state.pose.trackingState |= UnityEngine.XR.InputTrackingState.Velocity;
+                state.pose.velocity = vel;
+            }
+            if (InputDeviceTracker.GetAngularVelocity(m_TrackerId, out Vector3 angularVel))
+            {
+                state.pose.trackingState |= UnityEngine.XR.InputTrackingState.AngularVelocity;
+                state.pose.angularVelocity = angularVel;
             }
 
             if (InputDeviceTracker.ButtonDown(m_TrackerId, UnityEngine.XR.CommonUsages.menuButton, out bool menuButtonDown))
@@ -201,8 +190,8 @@ namespace Wave.XR
             {
                 sb.Clear(); sb.Append("OnUpdate() ").Append(m_TrackerId)
                     .Append(", product: ").Append(description.product)
-                    .Append(", isTracked: ").Append(state.isTracked)
-                    .Append(", trackingState: ").Append(state.trackingState)
+                    .Append(", isTracked: ").Append(state.pose.isTracked)
+                    .Append(", trackingState: ").Append(state.pose.trackingState)
                     .Append(", position (").Append(pos.x).Append(", ").Append(pos.y).Append(", ").Append(pos.z).Append(")");
                 DEBUG(sb);
             }

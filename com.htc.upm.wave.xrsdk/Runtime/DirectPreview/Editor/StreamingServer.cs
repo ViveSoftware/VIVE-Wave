@@ -59,8 +59,29 @@ namespace Wave.XR.DirectPreview.Editor
 					UnityEngine.Debug.Log("driveStr " + driveStr);
 
 					//Get the path of the Game data folder
+					string taskstring = "";
+					Process[] procs = Process.GetProcessesByName("RRServer");
+					if (procs.Length > 0)
+					{
+						UnityEngine.Debug.Log("RRServer running");
+						taskstring += "taskkill /F /IM RRServer.exe && ";
+					}
+					procs = Process.GetProcessesByName("VHConsole");
+					if (procs.Length > 0)
+					{
+						UnityEngine.Debug.Log("VHConsole running");
+						taskstring += "taskkill /F /IM VHConsole.exe && ";
+					}
+					procs = Process.GetProcessesByName("RRConsole");
+					if (procs.Length > 0)
+					{
+						UnityEngine.Debug.Log("RRConsole running");
+						taskstring += "taskkill /F /IM RRConsole.exe && ";
+					}
+					taskstring += driveStr + " && cd " + absolutePath + " && RRserver";
+					UnityEngine.Debug.Log(taskstring);
 					myProcess.StartInfo.FileName = "C:\\Windows\\system32\\cmd.exe";
-					myProcess.StartInfo.Arguments = "/c taskkill /F /IM RRServer.exe & taskkill /T /F /IM VHConsole.exe & taskkill /T /F /IM RRConsole.exe & " + driveStr + " && cd " + absolutePath + " && RRserver";
+					myProcess.StartInfo.Arguments = "/c " + taskstring;
 					myProcess.Start();
 				}
 				catch (Exception e)

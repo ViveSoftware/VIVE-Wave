@@ -178,6 +178,21 @@ namespace Wave.Essence
 
 			return "Unknown";
 		}
+		public static string Name(this XR_InteractionMode mode)
+		{
+			if (mode == XR_InteractionMode.Gaze) { return "Gaze"; }
+			if (mode == XR_InteractionMode.Controller) { return "Controller"; }
+			if (mode == XR_InteractionMode.Hand) { return "Hand"; }
+			return "Default";
+		}
+		public static string Name(this XR_Hand hand)
+		{
+			if (hand == XR_Hand.Dominant) { return "Dominant Hand"; }
+			if (hand == XR_Hand.Right) { return "Right Hand"; }
+			if (hand == XR_Hand.NonDominant) { return "NonDominant Hand"; }
+			if (hand == XR_Hand.Left) { return "Left Hand"; }
+			return "";
+		}
 
 		public static WVR_InputId ViveFocus3Button(this InputFeatureUsage<bool> input, bool isLeft)
 		{

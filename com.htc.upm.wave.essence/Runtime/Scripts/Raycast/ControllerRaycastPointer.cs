@@ -14,18 +14,18 @@ using Wave.Essence.Events;
 using UnityEngine.XR;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Wave.Essence.Raycast
 {
 	public class ControllerRaycastPointer : RaycastPointer
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.ControllerRaycastPointer";
-		private void DEBUG(string msg)
+		private void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_Controller + " " + msg, true);
+				Log.d(LOG_TAG, msg, true);
 		}
-		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 
 		[Serializable]
 		public class ButtonOption
@@ -108,7 +108,8 @@ namespace Wave.Essence.Raycast
 			m_ControlKey.Update();
 			for (int i = 0; i < m_ControlKey.OptionList.Count; i++)
 			{
-				DEBUG("Awake() m_ControlKey[" + i + "] = " + m_ControlKey.OptionList[i].name);
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("Awake() m_ControlKey[").Append(i).Append("] = ").Append(m_ControlKey.OptionList[i].name);
+				DEBUG(sb);
 			}
 		}
 		protected override void OnEnable()
@@ -137,24 +138,27 @@ namespace Wave.Essence.Raycast
 
 			UpdateButtonStates();
 
-			INTERVAL("Update() m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
-				+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
-				);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("Update() m_ControlKey.Primary2DAxisClick: ").Append(m_ControlKey.Primary2DAxisClick)
+					.Append(", m_ControlKey.TriggerButton: ").Append(m_ControlKey.TriggerButton);
+				DEBUG(sb);
+			}
 		}
 		protected override void Start()
 		{
 			base.Start();
 
 			m_TableStatic = Interop.WVR_IsDeviceTableStatic((WVR_DeviceType)m_Controller);
-			DEBUG("Start() m_TableStatic = " + m_TableStatic);
+			sb.Clear().Append(m_Controller.Name()).Append(" ").Append("Start() m_TableStatic = ").Append(m_TableStatic); DEBUG(sb);
 		}
 		private void OnApplicationPause(bool pause)
 		{
-			DEBUG("OnApplicationPause() " + pause);
+			sb.Clear().Append(m_Controller.Name()).Append(" ").Append("OnApplicationPause() ").Append(pause); DEBUG(sb);
 			if (!pause)
 			{
 				m_TableStatic = Interop.WVR_IsDeviceTableStatic((WVR_DeviceType)m_Controller);
-				DEBUG("Resume, m_TableStatic = " + m_TableStatic);
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("Resume, m_TableStatic = ").Append(m_TableStatic); DEBUG(sb);
 			}
 		}
 		#endregion
@@ -166,7 +170,7 @@ namespace Wave.Essence.Raycast
 			if (deviceType == (WVR_DeviceType)m_Controller)
 			{
 				m_TableStatic = Interop.WVR_IsDeviceTableStatic(deviceType);
-				DEBUG("OnTableStaticLocked() m_TableStatic = " + m_TableStatic);
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("OnTableStaticLocked() m_TableStatic = ").Append(m_TableStatic); DEBUG(sb);
 			}
 		}
 		private void OnTableStaticUnocked(WVR_Event_t systemEvent)
@@ -175,7 +179,7 @@ namespace Wave.Essence.Raycast
 			if (deviceType == (WVR_DeviceType)m_Controller)
 			{
 				m_TableStatic = Interop.WVR_IsDeviceTableStatic(deviceType);
-				DEBUG("OnTableStaticUnocked() m_TableStatic = " + m_TableStatic);
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("OnTableStaticUnocked() m_TableStatic = ").Append(m_TableStatic); DEBUG(sb);
 			}
 		}
 		private void OnDeviceConnected(WVR_Event_t systemEvent)
@@ -184,7 +188,7 @@ namespace Wave.Essence.Raycast
 			if (deviceType == (WVR_DeviceType)m_Controller)
 			{
 				m_TableStatic = false;
-				DEBUG("OnDeviceConnected() set m_TableStatic to false.");
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("OnDeviceConnected() set m_TableStatic to false."); DEBUG(sb);
 			}
 		}
 		private void OnDeviceDisconnected(WVR_Event_t systemEvent)
@@ -193,7 +197,7 @@ namespace Wave.Essence.Raycast
 			if (deviceType == (WVR_DeviceType)m_Controller)
 			{
 				m_TableStatic = false;
-				DEBUG("OnDeviceDisconnected() set m_TableStatic to false.");
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("OnDeviceDisconnected() set m_TableStatic to false."); DEBUG(sb);
 			}
 		}
 
@@ -206,14 +210,18 @@ namespace Wave.Essence.Raycast
 
 			m_Interactable = (m_AlwaysEnable || enabled) && validPose && hasFocus && (!hideWhenIdle);
 
-			INTERVAL("IsInteractable() enabled: " + enabled
-				+ ", validPose: " + validPose
-				+ ", hasFocus: " + hasFocus
-				+ ", m_HideWhenIdle: " + m_HideWhenIdle
-				+ ", m_TableStatic: " + m_TableStatic
-				+ ", hideWhenIdle: " + hideWhenIdle
-				+ ", m_AlwaysEnable: " + m_AlwaysEnable
-				+ ", m_Interactable: " + m_Interactable);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append(m_Controller.Name()).Append(" ").Append("IsInteractable() enabled: ").Append(enabled)
+					.Append(", validPose: ").Append(validPose)
+					.Append(", hasFocus: ").Append(hasFocus)
+					.Append(", m_HideWhenIdle: ").Append(m_HideWhenIdle)
+					.Append(", m_TableStatic: ").Append(m_TableStatic)
+					.Append(", hideWhenIdle: ").Append(hideWhenIdle)
+					.Append(", m_AlwaysEnable: ").Append(m_AlwaysEnable)
+					.Append(", m_Interactable: ").Append(m_Interactable);
+				DEBUG(sb);
+			}
 
 			return m_Interactable;
 		}
@@ -250,9 +258,8 @@ namespace Wave.Essence.Raycast
 
 					if (down)
 					{
-						DEBUG("UpdateButtonStates() " +
-							", " + m_ControlKey.OptionList[i].name +
-							", down: " + down);
+						sb.Clear().Append(m_Controller.Name()).Append(" ").Append("UpdateButtonStates() ").Append(", ").Append(m_ControlKey.OptionList[i].name).Append(", down: ").Append(down);
+						DEBUG(sb);
 					}
 				}
 			}

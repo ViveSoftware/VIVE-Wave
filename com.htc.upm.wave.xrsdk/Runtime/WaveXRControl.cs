@@ -462,6 +462,46 @@ namespace Wave.OpenXR
 		}
 		public static bool GetAngularVelocity(ControlDevice device, out Vector3 angularVelocity) { return GetAngularVelocity(device.characteristic(), out angularVelocity); }
 
+		private static Vector3[] s_Acceleration = new Vector3[4] { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
+		private static int[] accelerationFrame = new int[4] { -1, -1, -1, -1 };
+		private static bool UpdateAcceleration(InputDeviceCharacteristics device, out uint index)
+		{
+			index = GetIndex((uint)device);
+			if (index == 0) { return false; }
+
+			if (accelerationFrame[index] != Time.frameCount)
+			{
+				accelerationFrame[index] = Time.frameCount;
+				return true;
+			}
+			return false;
+		}
+		public static bool GetAcceleration(InputDeviceCharacteristics device, out Vector3 acceleration)
+		{
+			acceleration = Vector3.zero;
+			if (!IsTracked(device)) { return false; }
+			if (!UpdateAcceleration(device, out uint index)) { acceleration = s_Acceleration[index]; return true; }
+
+			if (m_InputDevices != null && m_InputDevices.Count > 0)
+			{
+				for (int i = 0; i < m_InputDevices.Count; i++)
+				{
+					// The device is connected.
+					if (m_InputDevices[i].characteristics.Equals(device))
+					{
+						if (m_InputDevices[i].TryGetFeatureValue(CommonUsages.deviceAcceleration, out s_Acceleration[index]))
+						{
+							acceleration = s_Acceleration[index];
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+		public static bool GetAcceleration(ControlDevice device, out Vector3 acceleration) { return GetAcceleration(device.characteristic(), out acceleration); }
+
 		/// Battery
 		private static float[] s_BatteryLevels = new float[4] { 0, 0, 0, 0 };
 		private static int[] batteryFrame = new int[4] { -1, -1, -1, -1 };

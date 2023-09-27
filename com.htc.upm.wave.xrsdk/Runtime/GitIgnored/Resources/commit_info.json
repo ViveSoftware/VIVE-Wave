@@ -1,10 +1,10 @@
 
 {
 
-    "commit": "f02ed1d662cd7d24a8b38a186c0ad4c70c40ebdf",
+    "commit": "05ed1c5395612581ad2afc7edf4a3a16bd4c50c5",
 
-    "abbreviated_commit": "f02ed1d66",
+    "abbreviated_commit": "05ed1c539",
 
-    "refs": "HEAD, tag: 5.3.2-u04, origin/master"
+    "refs": "HEAD -> master, origin/master, origin/HEAD"
 
 }

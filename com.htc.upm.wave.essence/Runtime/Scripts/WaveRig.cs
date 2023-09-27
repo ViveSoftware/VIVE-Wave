@@ -73,9 +73,10 @@ namespace Wave.Essence
 			}
 			m_TrackingOriginEx = m_TrackingOrigin;
 		}
-
+#endif
 		private void Update()
 		{
+#if !UNITY_EDITOR && UNITY_ANDROID
 			if (m_InputSystem != null)
 			{
 				TrackingOriginModeFlags mode = m_InputSystem.GetTrackingOriginMode();
@@ -88,6 +89,7 @@ namespace Wave.Essence
 					m_TrackingOriginEx = m_TrackingOrigin;
 				}
 			}
+#endif
 
 			if (m_CameraOffset != null)
 			{
@@ -98,6 +100,5 @@ namespace Wave.Essence
 				m_CameraOffset.transform.localPosition = cameraPosOffset;
 			}
 		}
-#endif
 	}
 }

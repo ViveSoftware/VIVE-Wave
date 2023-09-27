@@ -29,9 +29,6 @@ namespace Wave.Essence.Samples.ButtonTest
 
 		void OnEnable()
 		{
-			if (Application.isEditor)
-				return;
-
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_DownToUpSwipe, OnSwipe);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_LeftToRightSwipe, OnSwipe);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_RightToLeftSwipe, OnSwipe);
@@ -40,9 +37,6 @@ namespace Wave.Essence.Samples.ButtonTest
 
 		void OnDisable()
 		{
-			if (Application.isEditor)
-				return;
-
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_DownToUpSwipe, OnSwipe);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_LeftToRightSwipe, OnSwipe);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_RightToLeftSwipe, OnSwipe);

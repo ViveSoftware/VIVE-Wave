@@ -40,6 +40,7 @@ namespace Wave.Essence.Tracker
 		}
 		int logFrame = 0;
 		bool printIntervalLog = false;
+		private void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 		private void WARNING(StringBuilder msg) { Log.w(LOG_TAG, msg, true); }
 
 		private bool m_UseXRDevice = true;
@@ -393,6 +394,7 @@ namespace Wave.Essence.Tracker
 		public void StartTracker()
 		{
 			m_TrackerRefCount++;
+
 			string caller = "TBD";
 			var frame = new StackFrame(1, true);
 			if (frame != null)
@@ -411,6 +413,7 @@ namespace Wave.Essence.Tracker
 				return;
 			}
 
+			sb.Clear().Append("StartTracker() from ").Append(caller); INFO(sb);
 			Thread tracker_t = new Thread(StartTrackerThread);
 			tracker_t.Name = "StartTrackerThread";
 			tracker_t.Start();
@@ -606,6 +609,7 @@ namespace Wave.Essence.Tracker
 			public RigidTransform rigid = RigidTransform.identity;
 			public Vector3 velocity = Vector3.zero;
 			public Vector3 angularVelocity = Vector3.zero;
+			public Vector3 acceleration = Vector3.zero;
 
 			public TrackerPose()
 			{
@@ -641,6 +645,7 @@ namespace Wave.Essence.Tracker
 					s_TrackerPoses[trackerId].angularVelocity.x = -pose.AngularVelocity.v0;
 					s_TrackerPoses[trackerId].angularVelocity.y = -pose.AngularVelocity.v1;
 					s_TrackerPoses[trackerId].angularVelocity.z = pose.AngularVelocity.v2;
+					Coordinate.GetVectorFromGL(pose.Acceleration, out s_TrackerPoses[trackerId].acceleration);
 				}
 			}
 		}
@@ -1176,6 +1181,22 @@ namespace Wave.Essence.Tracker
 					return Vector3.zero;
 			}
 			return s_TrackerPoses[trackerId].angularVelocity;
+		}
+		public bool GetTrackerAcceleration(TrackerId trackerId, out Vector3 acceleration)
+		{
+			if (UseXRData())
+			{
+				return InputDeviceTracker.GetAcceleration(trackerId.InputDevice(), out acceleration);
+			}
+			acceleration = s_TrackerPoses[trackerId].acceleration;
+			return s_TrackerPoses[trackerId].valid;
+		}
+		public Vector3 GetTrackerAcceleration(TrackerId trackerId)
+		{
+			if (GetTrackerAcceleration(trackerId, out Vector3 acceleration))
+				return acceleration;
+
+			return Vector3.zero;
 		}
 
 		public AxisType GetTrackerButtonAxisType(TrackerId trackerId, TrackerButton id)

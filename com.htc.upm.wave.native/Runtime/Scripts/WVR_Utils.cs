@@ -28,7 +28,9 @@ namespace Wave.Native
 				case WVR_DeviceType.WVR_DeviceType_Controller_Left: return "Controller Left";
 				case WVR_DeviceType.WVR_DeviceType_Controller_Right: return "Controller Right";
 				case WVR_DeviceType.WVR_DeviceType_HMD: return "HMD";
-				default: return "Invalidate";
+				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Left: return "Hand Left";
+				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Right: return "Hand Right";
+				default: return "Invalid";
 			}
 		}
 

@@ -48,8 +48,11 @@ namespace Wave.Native
 		WVR_EventType_RenderingToBeResumed               = 1011,
 		WVR_EventType_SpectatingStarted                  = 1012,
 		WVR_EventType_SpectatingStopped                  = 1013,
+		WVR_EventType_SpatialAnchor_Changed              = 1101,
+		WVR_EventType_CachedSpatialAnchor_Changed        = 1102,
+		WVR_EventType_PersistedSpatialAnchor_Changed     = 1103,
 
-		WVR_EventType_DeviceConnected                    = 2000,    /**< @ref WVR_DeviceType connected. */
+        WVR_EventType_DeviceConnected = 2000,    /**< @ref WVR_DeviceType connected. */
 		WVR_EventType_DeviceDisconnected                 = 2001,    /**< @ref WVR_DeviceType disconnected. */
 		WVR_EventType_DeviceStatusUpdate                 = 2002,    /**< @ref WVR_DeviceType configure changed. */
 		WVR_EventType_DeviceSuspend                      = 2003,    /**< When user takes off HMD*/
@@ -525,6 +528,40 @@ namespace Wave.Native
 		public float v0;  // float[3]
 		public float v1;
 		public float v2;
+
+		public override bool Equals(object rhs)
+		{
+			if (rhs is WVR_Vector3f_t)
+				return this == (WVR_Vector3f_t)rhs;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return v0.GetHashCode() ^ v1.GetHashCode() ^ v2.GetHashCode();
+		}
+
+		public static bool operator ==(WVR_Vector3f_t lhs, WVR_Vector3f_t rhs)
+		{
+			return lhs.v0 == rhs.v0 && lhs.v1 == rhs.v1 && lhs.v2 == rhs.v2;
+		}
+
+		public static bool operator !=(WVR_Vector3f_t lhs, WVR_Vector3f_t rhs)
+		{
+			return lhs.v0 != rhs.v0 || lhs.v1 != rhs.v1 || lhs.v2 != rhs.v2;
+		}
+
+		public WVR_Vector3f_t(float x, float y, float z)
+		{
+			v0 = x;
+			v1 = y;
+			v2 = z;
+		}
+		public static WVR_Vector3f_t Zero {
+			get {
+				return new WVR_Vector3f_t(0, 0, 0);
+			}
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -551,6 +588,41 @@ namespace Wave.Native
 		public float x;
 		public float y;
 		public float z;
+
+		public override bool Equals(object rhs)
+		{
+			if (rhs is WVR_Quatf_t)
+				return this == (WVR_Quatf_t)rhs;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return w.GetHashCode() ^ x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
+		}
+
+		public static bool operator ==(WVR_Quatf_t lhs, WVR_Quatf_t rhs)
+		{
+			return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+		}
+
+		public static bool operator !=(WVR_Quatf_t lhs, WVR_Quatf_t rhs)
+		{
+			return lhs.w != rhs.w || lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != rhs.z;
+		}
+
+		public WVR_Quatf_t(float in_x, float in_y, float in_z, float in_w)
+		{
+			x = in_x;
+			y = in_y;
+			z = in_z;
+			w = in_w;
+		}
+		public static WVR_Quatf_t Identity {
+			get {
+				return new WVR_Quatf_t(0, 0, 0, 1);
+			}
+		}
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
@@ -715,10 +787,45 @@ namespace Wave.Native
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct WVR_Pose_t	// [FieldOffset(28)]
+	public struct WVR_Pose_t    // [FieldOffset(28)]
 	{
 		[FieldOffset(0)] public WVR_Vector3f_t position;
 		[FieldOffset(12)] public WVR_Quatf_t rotation;
+
+		public static bool operator ==(WVR_Pose_t lhs, WVR_Pose_t rhs)
+		{
+			return lhs.position == rhs.position && lhs.rotation == rhs.rotation;
+		}
+
+		public static bool operator !=(WVR_Pose_t lhs, WVR_Pose_t rhs)
+		{
+			return lhs.position != rhs.position || lhs.rotation != rhs.rotation;
+		}
+
+		public override bool Equals(object rhs)
+		{
+			if (rhs is WVR_Pose_t)
+				return this == (WVR_Pose_t)rhs;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return position.GetHashCode() ^ rotation.GetHashCode();
+		}
+
+		public WVR_Pose_t(WVR_Vector3f_t in_pos, WVR_Quatf_t in_rot)
+		{
+			position = in_pos;
+			rotation = in_rot;
+		}
+		public static WVR_Pose_t Identity
+		{
+			get
+			{
+				return new WVR_Pose_t(WVR_Vector3f_t.Zero, WVR_Quatf_t.Identity);
+			}
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1282,6 +1389,7 @@ namespace Wave.Native
 		public float strength;                  /**< The value of ranges between 0 to 1 for each finger pich, 1 means pinch with the finger touching the thumb fully. */
 		public WVR_Vector3f_t origin;           /**< The pinch origin. */
 		public WVR_Vector3f_t direction;        /**< The pinch direction. */
+		public bool isPinching;
 	}
 
 	/**
@@ -1334,6 +1442,7 @@ namespace Wave.Native
 		public IntPtr jointMappingArray;      /**< The array corresponds to the conventions of hand joints. Refer to @ref WVR_HandJoint. */
 		public IntPtr jointValidFlagArray;    /**< The array that indicates which data of each hand joint is valid, refer to @ref WVR_HandJointValidFlag. */
 		public float pinchThreshold;          /**< The value of ranges between 0 to 1. */
+		public float pinchOff;
 	}
 
 	/**
@@ -1693,6 +1802,20 @@ namespace Wave.Native
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SpatialAnchorCacheInfo
+	{
+		public UInt64 spatialAnchor;  /* WVR_SpatialAnchor */
+		public WVR_SpatialAnchorName cachedSpatialAnchorName;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SpatialAnchorFromCacheNameCreateInfo
+	{
+		public WVR_SpatialAnchorName cachedSpatialAnchorName;
+		public WVR_SpatialAnchorName spatialAnchorName;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
 	public struct WVR_SpatialAnchorName
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
@@ -1706,6 +1829,28 @@ namespace Wave.Native
 		public WVR_Pose_t pose;
 		public WVR_SpatialAnchorName anchorName;
 	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SpatialAnchorPersistInfo
+	{
+		public UInt64 spatialAnchor;  /* WVR_SpatialAnchor */
+		public WVR_SpatialAnchorName persistedSpatialAnchorName;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_PersistedSpatialAnchorCountGetInfo
+	{
+		public UInt32 maximumTrackingCount;
+		public UInt32 currentTrackingCount;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SpatialAnchorFromPersistenceNameCreateInfo
+	{
+		public WVR_SpatialAnchorName persistedSpatialAnchorName;
+		public WVR_SpatialAnchorName spatialAnchorName;
+	}
+
 
 	#endregion
 
@@ -1771,6 +1916,63 @@ namespace Wave.Native
 		public WVR_MarkerTrackingState state;			/**< indicates the state */
 		public WVR_Pose_t pose;							/**< indicates the pose of the trackable marker */
 		public WVR_MarkerName markerName;				/**< indicates the name */
+	}
+	#endregion
+
+	#region Body Tracking
+	public enum WVR_BodyTrackingType : UInt32
+	{
+		WVR_BodyTrackingType_Invalid = 0,
+		WVR_BodyTrackingType_HMD = 1,
+		WVR_BodyTrackingType_Controller = 2,
+		WVR_BodyTrackingType_Hand = 3,
+		WVR_BodyTrackingType_WristTracker = 4,
+		WVR_BodyTrackingType_ViveSelfTracker = 5,
+		WVR_BodyTrackingType_ViveSelfTrackerIM = 6,
+	}
+
+	public enum WVR_TrackedDeviceRole : Int32
+	{
+		WVR_TrackedDeviceRole_Invalid = -1,
+
+		WVR_TrackedDeviceRole_Hip = 0,
+		WVR_TrackedDeviceRole_Chest = 1,
+		WVR_TrackedDeviceRole_Head = 2,
+
+		WVR_TrackedDeviceRole_LeftElbow = 3,
+		WVR_TrackedDeviceRole_LeftWrist = 4,
+		WVR_TrackedDeviceRole_LeftHand = 5,
+		WVR_TrackedDeviceRole_LeftHandheld = 6,
+
+		WVR_TrackedDeviceRole_RightElbow = 7,
+		WVR_TrackedDeviceRole_RightWrist = 8,
+		WVR_TrackedDeviceRole_RightHand = 9,
+		WVR_TrackedDeviceRole_RightHandheld = 10,
+
+		WVR_TrackedDeviceRole_LeftKnee = 11,
+		WVR_TrackedDeviceRole_LeftAnkle = 12,
+		WVR_TrackedDeviceRole_LeftFoot = 13,
+
+		WVR_TrackedDeviceRole_RightKnee = 14,
+		WVR_TrackedDeviceRole_RightAnkle = 15,
+		WVR_TrackedDeviceRole_RightFoot = 16,
+
+		WVR_TrackedDeviceRole_Max,
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyTrackingExtrinsic
+	{
+		[FieldOffset(0)] public WVR_TrackedDeviceRole role;
+		[FieldOffset(4)] public WVR_BodyTrackingType deviceType;
+		[FieldOffset(8)] public WVR_Pose_t pose;
+
+		public WVR_BodyTrackingExtrinsic(WVR_TrackedDeviceRole in_role, WVR_BodyTrackingType in_type, WVR_Pose_t in_pose)
+		{
+			role = in_role;
+			deviceType = in_type;
+			pose = in_pose;
+		}
 	}
 	#endregion
 
@@ -2399,7 +2601,118 @@ namespace Wave.Native
 			return WVR_Base.Instance.GetSpatialAnchorState(anchor, originModel, out anchorState);
 		}
 
+		public static WVR_Result WVR_CacheSpatialAnchor(ref WVR_SpatialAnchorCacheInfo spatialAnchorPersistInfo)
+		{
+			return WVR_Base.Instance.CacheSpatialAnchor(ref spatialAnchorPersistInfo);
+		}
+
+		public static WVR_Result WVR_UncacheSpatialAnchor(ref WVR_SpatialAnchorName cachedSpatialAnchorName)
+		{
+			return WVR_Base.Instance.UncacheSpatialAnchor(ref cachedSpatialAnchorName);
+		}
+
+		public static WVR_Result WVR_EnumerateCachedSpatialAnchorNames(
+			UInt32 cachedSpatialAnchorNamesCapacityInput,
+			out UInt32 cachedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] cachedSpatialAnchorNames)
+		{
+			return WVR_Base.Instance.EnumerateCachedSpatialAnchorNames(
+				cachedSpatialAnchorNamesCapacityInput,
+				out cachedSpatialAnchorNamesCountOutput,
+				 cachedSpatialAnchorNames);
+		}
+
+		public static WVR_Result WVR_ClearCachedSpatialAnchors()
+		{
+			return WVR_Base.Instance.ClearCachedSpatialAnchors();
+		}
+
+		public static WVR_Result WVR_CreateSpatialAnchorFromCacheName(ref WVR_SpatialAnchorFromCacheNameCreateInfo createInfo, out UInt64 anchor /* WVR_SpatialAnchor */)
+		{
+			return WVR_Base.Instance.CreateSpatialAnchorFromCacheName(ref createInfo, out anchor);
+		}
+
+		public static WVR_Result WVR_PersistSpatialAnchor(ref WVR_SpatialAnchorPersistInfo spatialAnchorPersistInfo)
+		{
+			return WVR_Base.Instance.PersistSpatialAnchor(ref spatialAnchorPersistInfo);
+		}
+
+		public static WVR_Result WVR_UnpersistSpatialAnchor(ref WVR_SpatialAnchorName persistedSpatialAnchorName)
+		{
+			return WVR_Base.Instance.UnpersistSpatialAnchor(ref persistedSpatialAnchorName);
+		}
+
+		public static WVR_Result WVR_EnumeratePersistedSpatialAnchorNames(
+			UInt32 persistedSpatialAnchorNamesCapacityInput,
+			out UInt32 persistedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] persistedSpatialAnchorNames)
+		{
+			return WVR_Base.Instance.EnumeratePersistedSpatialAnchorNames(
+				persistedSpatialAnchorNamesCapacityInput,
+				out persistedSpatialAnchorNamesCountOutput,
+				persistedSpatialAnchorNames);
+		}
+
+		public static WVR_Result WVR_ClearPersistedSpatialAnchors()
+		{
+			return WVR_Base.Instance.ClearPersistedSpatialAnchors();
+		}
+
+		public static WVR_Result WVR_GetPersistedSpatialAnchorCount(
+			ref WVR_PersistedSpatialAnchorCountGetInfo getInfo)
+		{
+			return WVR_Base.Instance.GetPersistedSpatialAnchorCount(ref getInfo);
+
+		}
+
+		public static WVR_Result WVR_CreateSpatialAnchorFromPersistenceName(
+			ref WVR_SpatialAnchorFromPersistenceNameCreateInfo createInfo,
+			out UInt64 anchor /* WVR_SpatialAnchor* */)
+		{
+			return WVR_Base.Instance.CreateSpatialAnchorFromPersistenceName(ref createInfo, out anchor);
+		}
+
+		public static WVR_Result WVR_ExportPersistedSpatialAnchor(
+			ref WVR_SpatialAnchorName persistedSpatialAnchorName,
+			UInt32 dataCapacityInput,
+			out UInt32 dataCountOutput,
+			[Out] byte[] data)
+		{
+			return WVR_Base.Instance.ExportPersistedSpatialAnchor(
+				ref persistedSpatialAnchorName, dataCapacityInput, out dataCountOutput, data);
+		}
+
+		public static WVR_Result WVR_ImportPersistedSpatialAnchor(
+			UInt32 dataCount,
+			[In] byte[] data)
+		{
+			return WVR_Base.Instance.ImportPersistedSpatialAnchor(dataCount, data);
+		}
+
 		#endregion
+
+		#region Body Tracking
+		public static UInt32 WVR_GetBodyTrackingStandardPoseSize()
+		{
+			return WVR_Base.Instance.GetBodyTrackingStandardPoseSize();
+		}
+		public static bool WVR_GetBodyTrackingStandardPoseInfo([In, Out] WVR_BodyTrackingType[] types, [In, Out] UInt32[] counts)
+		{
+			return WVR_Base.Instance.GetBodyTrackingStandardPoseInfo(types, counts);
+		}
+		public static bool WVR_GetBodyTrackingStandardPose(WVR_BodyTrackingType type, [In, Out] UInt32[] ids, [In, Out] WVR_Pose_t[] poses)
+		{
+			return WVR_Base.Instance.GetBodyTrackingStandardPose(type, ids, poses);
+		}
+
+		public static UInt32 WVR_GetBodyTrackingExtrinsicCount()
+		{
+			return WVR_Base.Instance.GetBodyTrackingExtrinsicCount();
+		}
+		public static bool WVR_GetBodyTrackingExtrinsics([In, Out] WVR_BodyTrackingExtrinsic[] extrinsics, ref UInt32 count)
+		{
+			return WVR_Base.Instance.GetBodyTrackingExtrinsics(extrinsics, ref count);
+		}
 
 		#region Trackable Marker
 
@@ -2478,6 +2791,7 @@ namespace Wave.Native
 			return WVR_Base.Instance.GetArucoMarkerData(markerId, out data);
 		}
 
+		#endregion
 		#endregion
 
 		public static ulong WVR_GetSupportedFeatures()
@@ -3570,6 +3884,91 @@ namespace Wave.Native
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
 
+			public virtual WVR_Result CacheSpatialAnchor(ref WVR_SpatialAnchorCacheInfo spatialAnchorPersistInfo)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result UncacheSpatialAnchor(ref WVR_SpatialAnchorName cachedSpatialAnchorName)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result EnumerateCachedSpatialAnchorNames(
+				UInt32 cachedSpatialAnchorNamesCapacityInput,
+				out UInt32 cachedSpatialAnchorNamesCountOutput,
+				[Out] WVR_SpatialAnchorName[] cachedSpatialAnchorNames)
+			{
+				cachedSpatialAnchorNamesCountOutput = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result ClearCachedSpatialAnchors()
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result CreateSpatialAnchorFromCacheName(ref WVR_SpatialAnchorFromCacheNameCreateInfo createInfo, out UInt64 anchor /* WVR_SpatialAnchor */)
+			{
+				anchor = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result PersistSpatialAnchor(ref WVR_SpatialAnchorPersistInfo spatialAnchorPersistInfo)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result UnpersistSpatialAnchor(ref WVR_SpatialAnchorName persistedSpatialAnchorName)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result EnumeratePersistedSpatialAnchorNames(
+				UInt32 persistedSpatialAnchorNamesCapacityInput,
+				out UInt32 persistedSpatialAnchorNamesCountOutput,
+				[Out] WVR_SpatialAnchorName[] persistedSpatialAnchorNames)
+			{
+				persistedSpatialAnchorNamesCountOutput = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result ClearPersistedSpatialAnchors()
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result GetPersistedSpatialAnchorCount(
+				ref WVR_PersistedSpatialAnchorCountGetInfo getInfo)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result CreateSpatialAnchorFromPersistenceName(
+				ref WVR_SpatialAnchorFromPersistenceNameCreateInfo createInfo,
+				out UInt64 anchor /* WVR_SpatialAnchor* */)
+			{
+				anchor = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result ExportPersistedSpatialAnchor(
+				ref WVR_SpatialAnchorName persistedSpatialAnchorName,
+				UInt32 dataCapacityInput,
+				out UInt32 dataCountOutput,
+				[Out] byte[] data)
+			{
+				dataCountOutput = 0;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result ImportPersistedSpatialAnchor(
+				UInt32 dataCount,
+				[In] byte[] data)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
 			#endregion
 
 			#region Trackable Marker
@@ -3654,6 +4053,222 @@ namespace Wave.Native
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
 
+			#endregion
+
+			#region Body Tracking
+			public virtual UInt32 GetBodyTrackingStandardPoseSize() { return 0; }
+
+			public virtual bool GetBodyTrackingStandardPoseInfo([In, Out] WVR_BodyTrackingType[] types, [In, Out] UInt32[] counts)
+			{
+				types[0] = WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker;
+				counts[0] = 2;
+				types[1] = WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker;
+				counts[1] = 3;
+				return true;
+			}
+
+			UInt32[] s_WristTrackerIds = {
+				(UInt32)WVR_TrackerId.WVR_TrackerId_0,
+				(UInt32)WVR_TrackerId.WVR_TrackerId_1
+			};
+			UInt32[] s_InsideOutTrackerIds = {
+				(UInt32)WVR_TrackerId.WVR_TrackerId_2,
+				(UInt32)WVR_TrackerId.WVR_TrackerId_3,
+				(UInt32)WVR_TrackerId.WVR_TrackerId_4
+			};
+			public virtual bool GetBodyTrackingStandardPose(WVR_BodyTrackingType type, [In, Out] UInt32[] ids, [In, Out] WVR_Pose_t[] poses)
+			{
+				if (type == WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker) { ids = s_WristTrackerIds; }
+				if (type == WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker) { ids = s_InsideOutTrackerIds; }
+
+				return true;
+			}
+
+			#region Tracked Device Extrinsics
+			// Head
+			private static readonly WVR_BodyTrackingExtrinsic extHead = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_Head,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_HMD,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.0f, -0.08f, 0.1f),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+
+			// Wrist: Self Tracker or Wrist Tracker
+			private static readonly WVR_BodyTrackingExtrinsic extLeftWrist_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftWrist,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.0f, -0.035f, -0.043f),
+						new WVR_Quatf_t(0.0f, 0.707f, 0.0f, -0.707f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightWrist_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightWrist,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.0f, -0.035f, -0.043f),
+						new WVR_Quatf_t(0.0f, -0.707f, 0.0f, -0.707f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extLeftWrist_WristTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftWrist,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(-0.03f, 0.005f, -0.056f),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightWrist_WristTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightWrist,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.03f, 0.005f, -0.056f),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+
+			// Controller
+			private static readonly WVR_BodyTrackingExtrinsic extLeftHandheld = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftHandheld,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_Controller,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(-0.03f, -0.035f, 0.13f),
+						new WVR_Quatf_t(-0.345273f, 0.639022f, -0.462686f, -0.508290f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightHandheld = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightHandheld,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_Controller,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.03f, -0.035f, 0.13f),
+						new WVR_Quatf_t(-0.345273f, -0.639022f, 0.462686f, -0.508290f)
+					)
+				);
+
+			// Hand
+			private static readonly WVR_BodyTrackingExtrinsic extLeftHand = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftHand,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_Hand,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0.094802f, 0.641923f, 0.071626f, -0.757508f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightHand = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightHand,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_Hand,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0.094802f, -0.641923f, 0.071626f, -0.757508f)
+					)
+				);
+
+			// Hip: Self Tracker
+			private static readonly WVR_BodyTrackingExtrinsic extHip = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_Hip,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+
+			// Knee: Self Tracker IM
+			private static readonly WVR_BodyTrackingExtrinsic extLeftKnee_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftKnee,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightKnee_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightKnee,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+
+			// Ankle: Self Tracker or Self Tracker IM
+			private static readonly WVR_BodyTrackingExtrinsic extLeftAnkle_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftAnkle,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.0f, -0.05f, 0.0f),
+						new WVR_Quatf_t(-0.5f, 0.5f, -0.5f, 0.5f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightAnkle_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightAnkle,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0.0f, -0.05f, 0.0f),
+						new WVR_Quatf_t(0.5f, 0.5f, -0.5f, -0.5f)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extLeftAnkle_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftAnkle,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightAnkle_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightAnkle,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extLeftFoot_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftFoot,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0.13f),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			private static readonly WVR_BodyTrackingExtrinsic extRightFoot_SelfTracker = new WVR_BodyTrackingExtrinsic(
+					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightFoot,
+					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
+					new WVR_Pose_t(
+						new WVR_Vector3f_t(0, 0, 0.13f),
+						new WVR_Quatf_t(0, 0, 0, -1)
+					)
+				);
+			#endregion
+
+			const UInt32 extrinsicCount = 18;
+			private readonly WVR_BodyTrackingExtrinsic[] s_TrackingExtrinsics = new WVR_BodyTrackingExtrinsic[18] {
+				extHead,
+				extLeftWrist_SelfTracker, extRightWrist_SelfTracker,
+				extLeftWrist_WristTracker, extRightWrist_WristTracker,
+				extLeftHandheld, extRightHandheld,
+				extLeftHand, extRightHand,
+				extHip,
+				extLeftKnee_SelfTrackerIM, extRightKnee_SelfTrackerIM,
+				extLeftAnkle_SelfTracker, extRightAnkle_SelfTracker,
+				extLeftAnkle_SelfTrackerIM, extRightAnkle_SelfTrackerIM,
+				extLeftFoot_SelfTracker, extRightFoot_SelfTracker,
+			};
+			public virtual UInt32 GetBodyTrackingExtrinsicCount()
+			{
+				return extrinsicCount;
+			}
+			public virtual bool GetBodyTrackingExtrinsics([In, Out] WVR_BodyTrackingExtrinsic[] extrinsics, ref UInt32 count)
+			{
+				count = extrinsicCount;
+				for (UInt32 i = 0; i < count; i++)
+					extrinsics[i] = s_TrackingExtrinsics[i];
+
+				return true;
+			}
 			#endregion
 
 			public virtual ulong GetSupportedFeatures()

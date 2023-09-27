@@ -12,6 +12,7 @@ namespace Wave.Essence.Editor
 		public bool importedHandModelPackage = false;
 		public bool importedInteractionModePackage = false;
 		public bool importedTrackerModelPackage = false;
+		public bool importedBodyTrackingPackage = false;
 	}
 }
 #endif

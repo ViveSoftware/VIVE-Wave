@@ -193,6 +193,9 @@ namespace Wave.XR.Settings
 
         [SerializeField, Tooltip("Allow this plugin to generate a spectator camera to produce images for Screenshot, Recording, or Broadcast usages.  This camera will consume more performance when it is activated, but captured image will have better FOV result.")]
         public bool allowSpectatorCamera = false;
+        
+        [SerializeField, Tooltip("Allow the spectator camera to capture 360 image.")]
+        public bool allowSpectatorCameraCapture360Image = false;
 
         #region Tracker
         [SerializeField, Tooltip("Select to enable the Tracker feature when AP starts.")]

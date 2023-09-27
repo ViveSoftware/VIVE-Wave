@@ -32,20 +32,8 @@ namespace Wave.Native
 		// A default StringBuilder
 		// Please don't use Insert().  Insert() will let StringBuilder create new buffer when Clear().
 		// Please use SB only in game thread.  It's not thread safe.
-		private readonly static int SBLength = 511;
-		public readonly static StringBuilder SB = new StringBuilder(SBLength, SBLength);
-		public static StringBuilder CSB
-		{
-			get
-			{
-#if NET_2_0 || NET_2_0_SUBSET
-					SB.Length = 0;
-					return SB;
-#else
-				return SB.Clear();
-#endif
-			}
-		}
+		public readonly static StringBuilder SB = new StringBuilder();
+		public static StringBuilder CSB { get { return SB.Clear(); } }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 		[DllImportAttribute("log", EntryPoint = "__android_log_print", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -78,7 +66,7 @@ namespace Wave.Native
 			return 0;
 		}
 #else
-		private static int __log_print(int prio, string tag, string fmt, System.IntPtr ptr)
+        private static int __log_print(int prio, string tag, string fmt, System.IntPtr ptr)
 		{
 			return 0;
 		}
@@ -231,7 +219,7 @@ namespace Wave.Native
 			// Only debug log need print periodically.  Other type please just print it out.
 			public void d(string tag, string message, bool logInEditor = false)
 			{
-				if (Print) Log.d(tag, message);
+				if (Print) Log.d(tag, message, logInEditor);
 			}
 
 			// This is better the string version.  Only Print will trigger the ToString().  Save more GC.Alloc().

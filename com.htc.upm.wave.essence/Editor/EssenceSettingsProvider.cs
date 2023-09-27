@@ -15,6 +15,7 @@ using System.Threading;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Wave.XR;
 using Wave.XR.Settings;
 
@@ -182,6 +183,35 @@ namespace Wave.Essence.Editor
 		}
 		#endregion
 
+		#region BodyTracking asset
+		const string kBodyTrackingAsset = "/BodyTracking.asset";
+		public static void UpdateAssetBodyTracking(bool importedBodyTrackingPackage)
+		{
+			PackageEssenceAsset asset = null;
+			if (File.Exists(WaveEssencePath + kBodyTrackingAsset))
+			{
+				asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kBodyTrackingAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
+				asset.importedBodyTrackingPackage = importedBodyTrackingPackage;
+			}
+			else
+			{
+				asset = ScriptableObject.CreateInstance(typeof(PackageEssenceAsset)) as PackageEssenceAsset;
+				asset.importedBodyTrackingPackage = importedBodyTrackingPackage;
+				AssetDatabase.CreateAsset(asset, WaveEssencePath + kBodyTrackingAsset);
+			}
+			AssetDatabase.SaveAssets();
+			Debug.Log("UpdateAssetBodyTracking() " + WaveEssencePath + kBodyTrackingAsset + ", importedBodyTrackingPackage: " + asset.importedBodyTrackingPackage);
+		}
+		internal static bool IsBodyTrackingPackageOnceImported()
+		{
+			if (!File.Exists(WaveEssencePath + kBodyTrackingAsset))
+				return false;
+
+			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kBodyTrackingAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
+			return asset.importedBodyTrackingPackage;
+		}
+		#endregion
+
 		private static readonly string[] essenceKeywords = new string[]
 		{
 			"Wave",
@@ -195,7 +225,10 @@ namespace Wave.Essence.Editor
 			"XR",
 			"Tracker",
 			"ScenePerception",
-			"TrackableMarker"
+			"TrackableMarker",
+			"URPMaterials",
+			"Spectator",
+			"BodyTracking",
 		};
 
 		internal static UnityEditor.PackageManager.PackageInfo pi = null;
@@ -239,6 +272,12 @@ namespace Wave.Essence.Editor
 		internal const string kScenePerceptionPackage = "wave_essence_sceneperception.unitypackage";
 		internal const string kTrackableMarkerPath = "/TrackableMarker";
 		internal const string kTrackableMarkerPackage = "wave_essence_trackablemarker.unitypackage";
+        internal const string kURPMaterialsPackage = "wave_essence_urpmaterials.unitypackage";
+		internal const string kSpectatorPath = "/Spectator";
+		internal const string kSpectatorPackage = "wave_essence_spectator.unitypackage";
+		internal const string kBodyTrackingPath = "/BodyTracking";
+		internal const string kBodyTrackingPackage = "wave_essence_bodytracking.unitypackage";
+		internal const string kVrm1Package = "VRM-0.109.0_7aff.unitypackage";
 
 		internal static bool featureControllerModelImported = false;
 		internal static bool featureInputModuleImported = false;
@@ -252,6 +291,8 @@ namespace Wave.Essence.Editor
 		internal static bool featureTrackerModelImported = false;
 		internal static bool featureScenePerceptionImported = false;
 		internal static bool featureTrackableMarkerImported = false;
+		internal static bool featureSpectatorImported = false;
+		internal static bool featureBodyTrackingImported = false;
 
 		internal static bool featureControllerModelNeedUpdate = false;
 		internal static bool featureInputModuleNeedUpdate = false;
@@ -265,6 +306,8 @@ namespace Wave.Essence.Editor
 		internal static bool featureTrackerModelNeedUpdate = false;
 		internal static bool featureScenePerceptionNeedUpdate = false;
 		internal static bool featureTrackableMarkerNeedUpdate = false;
+		internal static bool featureSpectatorNeedUpdate = false;
+		internal static bool featureBodyTrackingNeedUpdate = false;
 
 		internal static bool hasFeatureNeedUpdate = false;
 
@@ -282,6 +325,8 @@ namespace Wave.Essence.Editor
 			featureTrackerModelImported = Directory.Exists(WaveEssencePath + kTrackerModelPath);
 			featureScenePerceptionImported = Directory.Exists(WaveEssencePath + kScenePerceptionPath);
 			featureTrackableMarkerImported = Directory.Exists(WaveEssencePath + kTrackableMarkerPath);
+			featureSpectatorImported = Directory.Exists(WaveEssencePath + kSpectatorPath);
+			featureBodyTrackingImported = Directory.Exists(WaveEssencePath + kBodyTrackingPath);
 
 			if (pi == null)
 				return false;
@@ -310,9 +355,12 @@ namespace Wave.Essence.Editor
 				!Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION);
 			featureTrackableMarkerNeedUpdate = featureTrackableMarkerImported && !Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + FAKE_VERSION);
+			featureSpectatorNeedUpdate = featureSpectatorImported && !Directory.Exists(WaveEssencePath + kSpectatorPath + "/" + pi.version) && !Directory.Exists(WaveEssencePath + kSpectatorPath + "/" + FAKE_VERSION);
+			featureBodyTrackingNeedUpdate = featureBodyTrackingImported && !Directory.Exists(WaveEssencePath + kBodyTrackingPath + "/" + pi.version) &&
+				!Directory.Exists(WaveEssencePath + kBodyTrackingPath + "/" + FAKE_VERSION);
 
 			hasFeatureNeedUpdate = featureControllerModelNeedUpdate || featureInputModuleNeedUpdate || featureHandModelNeedUpdate || featureInteractionModeNeedUpdate || featureInteractionToolkitNeedUpdate ||
-				featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate || featureScenePerceptionNeedUpdate || featureTrackableMarkerNeedUpdate;
+				featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate || featureScenePerceptionNeedUpdate || featureTrackableMarkerNeedUpdate || featureSpectatorNeedUpdate || featureBodyTrackingNeedUpdate;
 
 			return hasFeatureNeedUpdate;
 		}
@@ -344,6 +392,10 @@ namespace Wave.Essence.Editor
 				UpdateModule(WaveEssencePath + kScenePerceptionPath, kScenePerceptionPackage);
 			if (featureTrackableMarkerNeedUpdate)
 				UpdateModule(WaveEssencePath + kTrackableMarkerPath, kTrackableMarkerPackage);
+			if (featureSpectatorNeedUpdate)
+				UpdateModule(WaveEssencePath + kSpectatorPath, kSpectatorPackage);
+			if (featureBodyTrackingNeedUpdate)
+				UpdateModule(WaveEssencePath + kBodyTrackingPath, kBodyTrackingPackage);
 		}
 
 		public override void OnGUI(string searchContext)
@@ -361,6 +413,9 @@ namespace Wave.Essence.Editor
 			bool showTrackerModel = searchContext.Contains("Tracker");
 			bool showScenePerception = searchContext.Contains("ScenePerception");
 			bool showTrackableMarker = searchContext.Contains("TrackableMarker");
+			bool showURPMaterials = searchContext.Contains("URPMaterials");
+			bool showSpectator = searchContext.Contains("Spectator");
+			bool showBodyTracking = searchContext.Contains("BodyTracking");
 
 			if (showControllerModel ||
 				showInputModule ||
@@ -373,7 +428,10 @@ namespace Wave.Essence.Editor
 				showInteractionToolkit ||
 				showTrackerModel ||
 				showScenePerception ||
-				showTrackableMarker)
+				showTrackableMarker ||
+				showURPMaterials ||
+				showSpectator ||
+				showBodyTracking)
 			{
 				hasKeyword = true;
 			}
@@ -392,7 +450,10 @@ namespace Wave.Essence.Editor
              * 10. Tracker Model
              * 11. Scene Perception
              * 12. Trackable Marker
-            **/
+             * 13. URP Materials
+			 * 14. Spectator
+             * 15. Body Tracking
+             **/
 
 			checkFeaturePackages();
 
@@ -754,7 +815,100 @@ namespace Wave.Essence.Editor
 				GUILayout.EndVertical();
 			}
 
-		}
+            if (GraphicsSettings.renderPipelineAsset != null && (showURPMaterials || !hasKeyword))
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                {
+                    GUILayout.Label("URP materials", EditorStyles.boldLabel);
+                    GUILayout.Label("These materials will overwrite the original contents."
+                                    , new GUIStyle(EditorStyles.label) { wordWrap = true });
+                    GUILayout.Label("The feature will be imported at everywhere", EditorStyles.label);
+                    GUILayout.Space(5f);
+                    if (GUILayout.Button("Import Feature - URP Materials", GUILayout.ExpandWidth(false)))
+                        ImportModule(kURPMaterialsPackage, true);
+                    GUILayout.Space(5f);
+                    GUI.enabled = true;
+                }
+                GUILayout.EndVertical();
+            }
+
+			if (showSpectator || !hasKeyword)
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("Spectator", EditorStyles.boldLabel);
+					GUILayout.Label("Note: This feature is currently in Beta.\n" +
+					                "Spectator is a feature that enables you to set the spectator camera to record the VR scene freely.\n"
+						, new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("The feature will be imported at " + WaveEssencePath + kSpectatorPath, EditorStyles.label);
+					GUILayout.Space(5f);
+					GUI.enabled = !featureSpectatorImported || featureSpectatorNeedUpdate;
+					if (featureSpectatorNeedUpdate)
+					{
+						if (GUILayout.Button("Update Feature - Spectator", GUILayout.ExpandWidth(false)))
+						{
+							// To check wherever the Spectator setup correctly in the Wave setting
+							WaveXRSettings waveXRSettings = WaveXRSettings.GetInstance();
+							if (waveXRSettings != null)
+							{
+								if (waveXRSettings.allowSpectatorCamera == false)
+								{
+									waveXRSettings.allowSpectatorCamera = true;
+								}
+								UpdateModule(WaveEssencePath + kSpectatorPath, kSpectatorPackage);
+							}
+							else
+							{
+								Debug.LogError("Import Spectator feature fail because cannot get the WaveXR" +
+								               "setting, please try again later.");
+							}
+						}
+					}
+					else
+					{
+						if (GUILayout.Button("Import Feature - Spectator", GUILayout.ExpandWidth(false)))
+							ImportModule(kSpectatorPackage);
+					}
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+
+			if (showBodyTracking || !hasKeyword)
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("Body Tracking", EditorStyles.boldLabel);
+					GUILayout.Label(
+						"The Body Tracking feature depends on Humanoid VRM plugin.",
+						new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label(
+						"Note: Must using Unity Editor 2020.3.30f1 or newer version.",
+						new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("This feature will be imported at " + WaveEssencePath + "/BodyTracking.\n" +
+						"Import the Tracker Model package first before using this feature.", EditorStyles.label);
+					GUILayout.Space(5f);
+					GUI.enabled = (!featureBodyTrackingImported || featureBodyTrackingNeedUpdate) && featureTrackerModelImported;
+					if (featureBodyTrackingNeedUpdate)
+					{
+						if (GUILayout.Button("Update Feature - Body Tracking", GUILayout.ExpandWidth(false)))
+							UpdateModule(WaveEssencePath + kBodyTrackingPath, kBodyTrackingPackage);
+					}
+					else
+					{
+						if (GUILayout.Button("Import Feature - Body Tracking", GUILayout.ExpandWidth(false)))
+						{
+							ImportModule(kVrm1Package);
+							ImportModule(kBodyTrackingPackage);
+						}
+					}
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+        }
 
 		public static void DeleteFolder(string path)
 		{
@@ -852,11 +1006,11 @@ namespace Wave.Essence.Editor
 			AssetDatabase.ImportPackage(target, false);
 		}
 
-		internal static void ImportModule(string packagePath)
+		internal static void ImportModule(string packagePath, bool interactive = false)
 		{
 			string target = Path.Combine("Packages/" + Constants.EssencePackageName + "/UnityPackages~", packagePath);
 			Debug.Log("Import: " + target);
-			AssetDatabase.ImportPackage(target, false);
+			AssetDatabase.ImportPackage(target, interactive);
 		}
 
 		[SettingsProvider]
@@ -1093,6 +1247,27 @@ namespace Wave.Essence.Editor
 				GetCurrent = () => { return EssenceSettingsProvider.featureTrackableMarkerNeedUpdate.ToString(); },
 			};
 
+            var URPMaterials = new Item("URP Materials")
+            {
+                IsShow = () => { return true; },
+                IsReady = () => { return true; },
+                GetCurrent = () => { return "Need Manual Update"; },
+            };
+
+			var Spectator = new Item("Spectator")
+			{
+				IsShow = () => { return EssenceSettingsProvider.featureSpectatorImported; },
+				IsReady = () => { return !EssenceSettingsProvider.featureSpectatorNeedUpdate; },
+				GetCurrent = () => { return EssenceSettingsProvider.featureSpectatorNeedUpdate.ToString(); },
+			};
+
+			var BodyTracking = new Item("Body Tracking")
+			{
+				IsShow = () => { return EssenceSettingsProvider.featureBodyTrackingImported; },
+				IsReady = () => { return !EssenceSettingsProvider.featureBodyTrackingNeedUpdate; },
+				GetCurrent = () => { return EssenceSettingsProvider.featureBodyTrackingNeedUpdate.ToString(); },
+			};
+
 			return new List<Item>()
 			{
 				ControllerModel,
@@ -1105,7 +1280,10 @@ namespace Wave.Essence.Editor
 				RenderDoc,
 				InteractionToolkit,
 				ScenePerception,
-				TrackableMarker
+				TrackableMarker,
+                URPMaterials,
+				Spectator,
+				BodyTracking,
 			};
 		}
 

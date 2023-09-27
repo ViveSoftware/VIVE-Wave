@@ -315,10 +315,38 @@ namespace Wave.OpenXR
 		}
 
 		internal static List<InputDevice> s_InputDevices = new List<InputDevice>();
+		internal static int inputDeviceFrame = -1;
+		private static void UpdateInputDevices()
+		{
+			if (inputDeviceFrame != Time.frameCount)
+			{
+				inputDeviceFrame = Time.frameCount;
+				InputDevices.GetDevices(s_InputDevices);
+			}
+		}
+
+		private static readonly InputDevice kInputDeviceDefault;
+		private static bool GetTrackerDevice(TrackerId trackerId, out InputDevice device)
+		{
+			UpdateInputDevices();
+			for (int i = 0; i < s_InputDevices.Count; i++)
+			{
+				if (!s_InputDevices[i].isValid) { continue; }
+
+				if (IsTrackerDevice(s_InputDevices[i], trackerId))
+				{
+					device = s_InputDevices[i];
+					return true;
+				}
+			}
+
+			device = kInputDeviceDefault;
+			return false;
+		}
 
 		public static bool IsAvailable()
 		{
-			InputDevices.GetDevices(s_InputDevices);
+			UpdateInputDevices();
 			for (int i = 0; s_InputDevices != null && i < s_InputDevices.Count; i++)
 			{
 				if (!s_InputDevices[i].isValid) { continue; }
@@ -331,48 +359,27 @@ namespace Wave.OpenXR
 			}
 			return false;
 		}
-
 		public static bool IsAvailable(TrackerId trackerId)
 		{
-			InputDevices.GetDevices(s_InputDevices);
-			for (int i = 0; i < s_InputDevices.Count; i++)
-			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (IsTrackerDevice(s_InputDevices[i], trackerId)) { return true; }
-			}
-			return false;
+			return GetTrackerDevice(trackerId, out InputDevice device);
 		}
 
 		public static bool IsTracked(TrackerId trackerId)
 		{
-			InputDevices.GetDevices(s_InputDevices);
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				if (s_InputDevices[i].TryGetFeatureValue(CommonUsages.isTracked, out bool isTracked))
-				{
+				if (device.TryGetFeatureValue(CommonUsages.isTracked, out bool isTracked))
 					return isTracked;
-				}
 			}
 			return false;
 		}
-
 		public static bool GetTrackingState(TrackerId trackerId, out InputTrackingState state)
 		{
 			state = InputTrackingState.None;
 
-			InputDevices.GetDevices(s_InputDevices);
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				if (s_InputDevices[i].TryGetFeatureValue(CommonUsages.trackingState, out InputTrackingState value))
+				if (device.TryGetFeatureValue(CommonUsages.trackingState, out InputTrackingState value))
 				{
 					state = value;
 					return true;
@@ -381,18 +388,17 @@ namespace Wave.OpenXR
 
 			return false;
 		}
-
 		public static bool GetPosition(TrackerId trackerId, out Vector3 position)
 		{
 			position = Vector3.zero;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(CommonUsages.devicePosition, out position);
+				if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 value))
+				{
+					position = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -401,13 +407,13 @@ namespace Wave.OpenXR
 		{
 			rotation = Quaternion.identity;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(CommonUsages.deviceRotation, out rotation);
+				if (device.TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion value))
+				{
+					rotation = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -416,13 +422,13 @@ namespace Wave.OpenXR
 		{
 			velocity = Vector3.zero;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(CommonUsages.deviceVelocity, out velocity);
+				if (device.TryGetFeatureValue(CommonUsages.deviceVelocity, out Vector3 value))
+				{
+					velocity = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -431,13 +437,58 @@ namespace Wave.OpenXR
 		{
 			angularVelocity = Vector3.zero;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
+				if (device.TryGetFeatureValue(CommonUsages.deviceAngularVelocity, out Vector3 value))
+				{
+					angularVelocity = value;
+					return true;
+				}
+			}
 
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
+			return false;
+		}
+		public static bool GetAcceleration(TrackerId trackerId, out Vector3 acceleration)
+		{
+			acceleration = Vector3.zero;
 
-				return s_InputDevices[i].TryGetFeatureValue(CommonUsages.deviceAngularVelocity, out angularVelocity);
+			if (GetTrackerDevice(trackerId, out InputDevice device))
+			{
+				if (device.TryGetFeatureValue(CommonUsages.deviceAcceleration, out Vector3 value))
+				{
+					acceleration = value;
+					return true;
+				}
+			}
+
+			return false;
+		}
+		public static bool GetAngularAcceleration(TrackerId trackerId, out Vector3 angularAcceleration)
+		{
+			angularAcceleration = Vector3.zero;
+
+			if (GetTrackerDevice(trackerId, out InputDevice device))
+			{
+				if (device.TryGetFeatureValue(CommonUsages.deviceAngularAcceleration, out Vector3 value))
+				{
+					angularAcceleration = value;
+					return true;
+				}
+			}
+
+			return false;
+		}
+		public static bool BatteryLevel(TrackerId trackerId, out float level)
+		{
+			level = 0;
+
+			if (GetTrackerDevice(trackerId, out InputDevice device))
+			{
+				if (device.TryGetFeatureValue(CommonUsages.batteryLevel, out float value))
+				{
+					level = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -477,12 +528,13 @@ namespace Wave.OpenXR
 		{
 			down = false;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(button, out down);
+				if (device.TryGetFeatureValue(button, out bool value))
+				{
+					down = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -491,12 +543,13 @@ namespace Wave.OpenXR
 		{
 			axis = 0;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(button, out axis);
+				if (device.TryGetFeatureValue(button, out float value))
+				{
+					axis = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -505,27 +558,13 @@ namespace Wave.OpenXR
 		{
 			axis = Vector2.zero;
 
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(button, out axis);
-			}
-
-			return false;
-		}
-
-		public static bool BatteryLevel(TrackerId trackerId, out float level)
-		{
-			level = 0;
-
-			for (int i = 0; i < s_InputDevices.Count; i++)
-			{
-				if (!s_InputDevices[i].isValid) { continue; }
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				return s_InputDevices[i].TryGetFeatureValue(CommonUsages.batteryLevel, out level);
+				if (device.TryGetFeatureValue(button, out Vector2 value))
+				{
+					axis = value;
+					return true;
+				}
 			}
 
 			return false;
@@ -533,13 +572,10 @@ namespace Wave.OpenXR
 
 		public static bool HapticPulse(TrackerId trackerId, UInt32 durationMicroSec = 500000, UInt32 frequency = 0, float amplitude = 0.5f)
 		{
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
 				float durationSec = durationMicroSec / 1000000;
+
 				string caller = "TBD";
 				var frame = new StackFrame(1, true);
 				if (frame != null)
@@ -551,14 +587,13 @@ namespace Wave.OpenXR
 						caller = "No method.";
 				}
 
-				sb.Clear();
-				sb.Append("HapticPulse() ").Append(trackerId.Name())
-					.Append("[").Append(s_InputDevices[i].name).Append("]")
-					.Append("[").Append(s_InputDevices[i].serialNumber).Append("]")
+				sb.Clear().Append("HapticPulse() ").Append(trackerId.Name())
+					.Append("[").Append(device.name).Append("]")
+					.Append("[").Append(device.serialNumber).Append("]")
 					.Append(" durationSec: ").Append(durationSec).Append(", amplitude: ").Append(amplitude)
 					.Append(" from ").Append(caller);
 				DEBUG(sb);
-				return s_InputDevices[i].SendHapticImpulse(0, amplitude, durationSec);
+				return device.SendHapticImpulse(0, amplitude, durationSec);
 			}
 
 			return false;
@@ -566,16 +601,10 @@ namespace Wave.OpenXR
 
 		public static bool GetTrackerDeviceName(TrackerId trackerId, out string trackerName)
 		{
-			InputDevices.GetDevices(s_InputDevices);
-			for (int i = 0; i < s_InputDevices.Count; i++)
+			if (GetTrackerDevice(trackerId, out InputDevice device))
 			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (IsTrackerDevice(s_InputDevices[i], trackerId))
-				{
-					trackerName = s_InputDevices[i].name;
-					return true;
-				}
+				trackerName = device.name;
+				return true;
 			}
 
 			trackerName = "";

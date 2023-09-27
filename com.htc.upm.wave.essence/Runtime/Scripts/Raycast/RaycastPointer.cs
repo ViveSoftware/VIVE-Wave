@@ -8,6 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Wave.Native;
@@ -18,12 +19,7 @@ namespace Wave.Essence.Raycast
 	public class RaycastPointer : RaycastImpl
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastPointer";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 
 		#region Inspector
 		[Tooltip("To show the ray which presents the casting direction.")]
@@ -54,19 +50,23 @@ namespace Wave.Essence.Raycast
 		#region MonoBehaviour overrides
 		protected override void OnEnable()
 		{
-			INFO("OnEnable()");
+			sb.Clear().Append("OnEnable()"); INFO(sb);
 			base.OnEnable();
 
 			if (m_Ray == null) { m_Ray = GetComponent<LineRenderer>(); }
 			if (m_Pointer != null)
 			{
 				m_PointerScale = m_Pointer.transform.localScale;
-				INFO("OnEnable() Get default pointer scale (" + m_PointerScale.x + ", " + m_PointerScale.y + ", " + m_PointerScale.z + ")");
+				sb.Clear().Append("OnEnable() Get default pointer scale (").Append(m_PointerScale.x).Append(", ").Append(m_PointerScale.y).Append(", ").Append(m_PointerScale.z).Append(")"); INFO(sb);
 			}
+
+			// Hides pointer & ray in AP start.
+			ActivatePointer(false);
+			ActivateRay(false);
 		}
 		protected override void OnDisable()
 		{
-			INFO("OnDisable()");
+			sb.Clear().Append("OnDisable()"); INFO(sb);
 			base.OnDisable();
 
 			ActivatePointer(false);

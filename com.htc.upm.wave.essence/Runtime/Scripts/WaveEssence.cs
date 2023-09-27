@@ -14,6 +14,8 @@ using Wave.Essence.Events;
 using System.Collections.Generic;
 using System;
 using UnityEngine.Profiling;
+using System.Text;
+using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 using Wave.Essence.Editor;
@@ -24,7 +26,14 @@ namespace Wave.Essence
 	public class WaveEssence : MonoBehaviour
 	{
 		private const string LOG_TAG = "Wave.Essence.WaveEssence";
-		private void DEBUG(string msg)
+		static StringBuilder m_sb = null;
+		protected static StringBuilder sb {
+			get {
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		private void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
@@ -96,6 +105,8 @@ namespace Wave.Essence
 			UpdateAllControllerPoseOffset();
 			Log.i(LOG_TAG, "Start() 5.Update the interaction mode.");
 			UpdateInteractionMode();
+			Log.i(LOG_TAG, "Start() 6.Update table static.", true);
+			UpdateTableStatic();
 		}
 		void OnApplicationPause(bool pauseStatus)
 		{
@@ -116,6 +127,8 @@ namespace Wave.Essence
 				UpdateAllControllerPoseOffset();
 				Log.i(LOG_TAG, "Resume() 6.Update the interaction mode.");
 				UpdateInteractionMode();
+				Log.i(LOG_TAG, "Resume() 7.Update table static.", true);
+				UpdateTableStatic();
 			}
 		}
 		private void OnEnable()
@@ -136,6 +149,9 @@ namespace Wave.Essence
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_ControllerPoseModeOffsetReady, OnControllerPoseModeOffsetReady);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_SystemInteractionModeChanged, OnInteractionModeChanged);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_InputDevMappingChanged, OnInputDevMappingChanged);
+
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceTableStaticLocked, OnTableStaticLocked);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceTableStaticUnlocked, OnTableStaticUnlocked);
 
 #if UNITY_EDITOR
 			if (!DummyPose.ToUpdatePose)
@@ -166,6 +182,9 @@ namespace Wave.Essence
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_SystemInteractionModeChanged, OnInteractionModeChanged);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_InputDevMappingChanged, OnInputDevMappingChanged);
 
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceTableStaticLocked, OnTableStaticLocked);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceTableStaticUnlocked, OnTableStaticUnlocked);
+
 #if UNITY_EDITOR
 			if (DummyPose.ToUpdatePose)
 			{
@@ -185,18 +204,18 @@ namespace Wave.Essence
 		#region Major Standalone Functions
 		private void OnRenderingToBePaused(WVR_Event_t systemEvent)
 		{
-			DEBUG("WVR_EventType_RenderingToBePaused");
+			sb.Clear().Append("WVR_EventType_RenderingToBePaused"); DEBUG(sb);
 		}
 		private void OnRenderingToBeResumed(WVR_Event_t systemEvent)
 		{
-			DEBUG("WVR_EventType_RenderingToBeResumed");
+			sb.Clear().Append("WVR_EventType_RenderingToBeResumed"); DEBUG(sb);
 		}
 
 		private void UpdateControllerRole()
 		{
 			WVR_DeviceType default_role = Interop.WVR_GetDefaultControllerRole();
 			m_IsLeftHanded = (default_role == WVR_DeviceType.WVR_DeviceType_Controller_Left ? true : false);
-			DEBUG("UpdateControllerRole() m_IsLeftHanded = " + m_IsLeftHanded);
+			sb.Clear().Append("UpdateControllerRole() m_IsLeftHanded = ").Append(m_IsLeftHanded); DEBUG(sb);
 		}
 		private void OnControllerRoleChange(WVR_Event_t systemEvent)
 		{
@@ -205,14 +224,14 @@ namespace Wave.Essence
 			if (m_IsLeftHanded != left_handed)
 			{
 				m_IsLeftHanded = left_handed;
-				DEBUG("OnControllerRoleChange() Set left handed mode to " + m_IsLeftHanded);
+				sb.Clear().Append("OnControllerRoleChange() Set left handed mode to ").Append(m_IsLeftHanded); DEBUG(sb);
 				UpdateDeviceConnections();
 				UpdateInputMappingTables();
 				ResetAllButtonStates();
 			}
 			else
 			{
-				DEBUG("OnControllerRoleChange() No change for left handed mode: " + m_IsLeftHanded);
+				sb.Clear().Append("OnControllerRoleChange() No change for left handed mode: ").Append(m_IsLeftHanded); DEBUG(sb);
 			}
 		}
 
@@ -226,19 +245,21 @@ namespace Wave.Essence
 			{
 				bool connected = Interop.WVR_IsDeviceConnected((WVR_DeviceType)i);
 				DeviceConnectionHandler((WVR_DeviceType)i, connected);
-				DEBUG("UpdateDeviceConnections() " + (WVR_DeviceType)i + " connected? " + m_Connected[(WVR_DeviceType)i]);
+				sb.Clear().Append("UpdateDeviceConnections() ").Append((WVR_DeviceType)i).Append(" connected? ").Append(m_Connected[(WVR_DeviceType)i]); DEBUG(sb);
 			}
 		}
 		private void OnDeviceConnected(WVR_Event_t systemEvent)
 		{
 			WVR_DeviceType device = systemEvent.device.type;
-			DEBUG("OnDeviceConnected() " + device);
+			s_TableStatic[device] = false;
+			sb.Clear().Append("OnDeviceConnected() ").Append(device); DEBUG(sb);
 			DeviceConnectionHandler(device, true);
 		}
 		private void OnDeviceDisconnected(WVR_Event_t systemEvent)
 		{
 			WVR_DeviceType device = systemEvent.device.type;
-			DEBUG("OnDeviceDisconnected() " + device);
+			s_TableStatic[device] = false;
+			sb.Clear().Append("OnDeviceDisconnected() ").Append(device); DEBUG(sb);
 			DeviceConnectionHandler(device, false);
 		}
 		private void DeviceConnectionHandler(WVR_DeviceType device, bool connected)
@@ -246,7 +267,7 @@ namespace Wave.Essence
 			if (m_Connected[device] == connected)
 				return;
 
-			DEBUG("DeviceConnectionHandler() " + device + " is " + (connected ? "connected." : "disconnected."));
+			sb.Clear().Append("DeviceConnectionHandler() ").Append(device).Append(" is ").Append(connected ? "connected." : "disconnected."); DEBUG(sb);
 			m_Connected[device] = connected;
 			if (m_Connected[device])
 			{
@@ -294,7 +315,7 @@ namespace Wave.Essence
 
 		private void OnControllerPoseModeChanged(WVR_Event_t systemEvent)
 		{
-			DEBUG("OnControllerPoseModeChanged() " + systemEvent.device.type);
+			sb.Clear().Append("OnControllerPoseModeChanged() ").Append(systemEvent.device.type); DEBUG(sb);
 			if (UpdateCurrentPoseMode(systemEvent.device.type))
 			{
 				if (systemEvent.device.type == WVR_DeviceType.WVR_DeviceType_Controller_Right)
@@ -305,7 +326,7 @@ namespace Wave.Essence
 		}
 		private void OnControllerPoseModeOffsetReady(WVR_Event_t systemEvent)
 		{
-			DEBUG("OnControllerPoseModeOffsetReady()");
+			sb.Clear().Append("OnControllerPoseModeOffsetReady()"); DEBUG(sb);
 			UpdateAllControllerPoseOffset();
 		}
 		#endregion
@@ -334,7 +355,7 @@ namespace Wave.Essence
 		/// <summary> Resets the button states of a device. Called when the device is disconnected. </summary>
 		private void ResetButtonStates(WVR_DeviceType device)
 		{
-			DEBUG("ResetButtonStates() " + device);
+			sb.Clear().Append("ResetButtonStates() ").Append(device); DEBUG(sb);
 			for (int button_index = 0; button_index < (int)WVR_InputId.WVR_InputId_Max; button_index++)
 			{
 				s_EventPress[(int)device, button_index] = false;
@@ -352,7 +373,7 @@ namespace Wave.Essence
 		/// <summary> Resets the button states of all devices. Called when the controller role changes. </summary>
 		private void ResetAllButtonStates()
 		{
-			DEBUG("ResetAllButtonStates()");
+			sb.Clear().Append("ResetAllButtonStates()"); DEBUG(sb);
 			ResetButtonStates(WVR_DeviceType.WVR_DeviceType_HMD);
 			ResetButtonStates(WVR_DeviceType.WVR_DeviceType_Controller_Right);
 			ResetButtonStates(WVR_DeviceType.WVR_DeviceType_Controller_Left);
@@ -376,7 +397,7 @@ namespace Wave.Essence
 					if (s_EventPress[(uint)dev, id] != pressed)
 					{
 						s_EventPress[(uint)dev, id] = pressed;
-						DEBUG("UpdateEventButtonsHmd() HMD button " + id + " is " + (pressed ? "pressed." : "released."));
+						sb.Clear().Append("UpdateEventButtonsHmd() HMD button ").Append(id).Append(" is ").Append(pressed ? "pressed." : "released."); DEBUG(sb);
 					}
 					/// No Touch & Axis
 				}
@@ -435,14 +456,14 @@ namespace Wave.Essence
 						if (s_EventPress[(uint)dev, id] != pressed)
 						{
 							s_EventPress[(uint)dev, id] = pressed;
-							DEBUG("UpdateEventButtonsController() " + dev + ", analogCount: " + analogCount + ", button " + id + " is " + (pressed ? "pressed." : "released."));
+							sb.Clear().Append("UpdateEventButtonsController() ").Append(dev).Append(", analogCount: ").Append(analogCount).Append(", button ").Append(id).Append(" is ").Append(pressed ? "pressed." : "released."); DEBUG(sb);
 						}
 						/// Touch
 						bool touched = ((touches & input) == input);
 						if (s_EventTouch[(uint)dev, id] != touched)
 						{
 							s_EventTouch[(uint)dev, id] = touched;
-							DEBUG("UpdateEventButtonsController() " + dev + ", analogCount: " + analogCount + ", button " + id + " is " + (touched ? "touched." : "untouched."));
+							sb.Clear().Append("UpdateEventButtonsController() ").Append(dev).Append(", analogCount: ").Append(analogCount).Append(", button ").Append(id).Append(" is ").Append(touched ? "touched." : "untouched."); DEBUG(sb);
 						}
 						/// Axis
 						if (s_EventTouch[(uint)dev, id])
@@ -476,14 +497,14 @@ namespace Wave.Essence
 						if (s_EventPress[(uint)dev, id] != pressed)
 						{
 							s_EventPress[(uint)dev, id] = pressed;
-							DEBUG("UpdateEventButtonsController() " + dev + " button " + id + " is " + (pressed ? "pressed." : "released."));
+							sb.Clear().Append("UpdateEventButtonsController() ").Append(dev).Append(" button ").Append(id).Append(" is ").Append(pressed ? "pressed." : "released."); DEBUG(sb);
 						}
 						/// Touch
 						bool touched = ((touches & input) == input);
 						if (s_EventTouch[(uint)dev, id] != touched)
 						{
 							s_EventTouch[(uint)dev, id] = touched;
-							DEBUG("UpdateEventButtonsController() " + dev + " button " + id + " is " + (touched ? "touched." : "untouched."));
+							sb.Clear().Append("UpdateEventButtonsController() ").Append(dev).Append(" button ").Append(id).Append(" is ").Append(touched ? "touched." : "untouched."); DEBUG(sb);
 						}
 						/// Axis
 						s_ButtonAxis[(uint)dev, id].x = 0;
@@ -672,13 +693,15 @@ namespace Wave.Essence
 				{
 					if (inputTableHMD[_i].source.capability != 0)
 					{
-						DEBUG("UpdateInputMappingTableHead()"
-							+ " button: " + inputTableHMD[_i].source.id + "(capability: " + inputTableHMD[_i].source.capability + ")"
-							+ " is mapping to HMD input ID: " + inputTableHMD[_i].destination.id);
+						sb.Clear().Append("UpdateInputMappingTableHead()")
+							.Append(" button: ").Append(inputTableHMD[_i].source.id).Append("(capability: ").Append(inputTableHMD[_i].source.capability).Append(")")
+							.Append(" is mapping to HMD input ID: ").Append(inputTableHMD[_i].destination.id);
+						DEBUG(sb);
 					}
 					else
 					{
-						DEBUG("UpdateInputMappingTableHead() source button " + inputTableHMD[_i].source.id + " has invalid capability.");
+						sb.Clear().Append("UpdateInputMappingTableHead() source button ").Append(inputTableHMD[_i].source.id).Append(" has invalid capability.");
+						DEBUG(sb);
 					}
 				}
 			}
@@ -698,13 +721,15 @@ namespace Wave.Essence
 				{
 					if (inputTableRight[_i].source.capability != 0)
 					{
-						DEBUG("UpdateInputMappingTableRight()"
-							+ " button: " + inputTableRight[_i].source.id + "(capability: " + inputTableRight[_i].source.capability + ")"
-							+ " is mapping to Dominant input ID: " + inputTableRight[_i].destination.id);
+						sb.Clear().Append("UpdateInputMappingTableRight()")
+							.Append(" button: ").Append(inputTableRight[_i].source.id).Append("(capability: ").Append(inputTableRight[_i].source.capability).Append(")")
+							.Append(" is mapping to Dominant input ID: ").Append(inputTableRight[_i].destination.id);
+						DEBUG(sb);
 					}
 					else
 					{
-						DEBUG("UpdateInputMappingTableRight() source button " + inputTableRight[_i].source.id + " has invalid capability.");
+						sb.Clear().Append("UpdateInputMappingTableRight() source button ").Append(inputTableRight[_i].source.id).Append(" has invalid capability.");
+						DEBUG(sb);
 					}
 				}
 			}
@@ -724,13 +749,15 @@ namespace Wave.Essence
 				{
 					if (inputTableLeft[_i].source.capability != 0)
 					{
-						DEBUG("UpdateInputMappingTableLeft()"
-							+ " button: " + inputTableLeft[_i].source.id + "(capability: " + inputTableLeft[_i].source.capability + ")"
-							+ " is mapping to NonDominant input ID: " + inputTableLeft[_i].destination.id);
+						sb.Clear().Append("UpdateInputMappingTableLeft()")
+							.Append(" button: ").Append(inputTableLeft[_i].source.id).Append("(capability: ").Append(inputTableLeft[_i].source.capability).Append(")")
+							.Append(" is mapping to NonDominant input ID: ").Append(inputTableLeft[_i].destination.id);
+						DEBUG(sb);
 					}
 					else
 					{
-						DEBUG("UpdateInputMappingTableLeft() source button " + inputTableLeft[_i].source.id + " has invalid capability.");
+						sb.Clear().Append("UpdateInputMappingTableLeft() source button ").Append(inputTableLeft[_i].source.id).Append(" has invalid capability.");
+						DEBUG(sb);
 					}
 				}
 			}
@@ -739,7 +766,7 @@ namespace Wave.Essence
 		private void OnInputDevMappingChanged(WVR_Event_t systemEvent)
 		{
 			WVR_DeviceType device = systemEvent.device.type;
-			DEBUG("OnInputDevMappingChanged() " + device);
+			sb.Clear().Append("OnInputDevMappingChanged() ").Append(device); DEBUG(sb);
 			if (device == WVR_DeviceType.WVR_DeviceType_HMD)
 				UpdateInputMappingTableHead();
 			if (device == WVR_DeviceType.WVR_DeviceType_Controller_Right)
@@ -813,7 +840,7 @@ namespace Wave.Essence
 		{
 			WVR_ControllerPoseMode mode = WVR_ControllerPoseMode.WVR_ControllerPoseMode_Raw;
 			bool isValid = Interop.WVR_GetControllerPoseMode(type, ref mode);
-			DEBUG("UpdateCurrentPoseMode() isValid: " + isValid + ", device: " + type + ", mode: " + mode);
+			sb.Clear().Append("UpdateCurrentPoseMode() isValid: ").Append(isValid).Append(", device: ").Append(type).Append(", mode: ").Append(mode); DEBUG(sb);
 			if (type == WVR_DeviceType.WVR_DeviceType_Controller_Right)
 			{
 				m_RightPoseMode.isValid = isValid;
@@ -1001,7 +1028,7 @@ namespace Wave.Essence
 		}
 		public bool SetControllerPoseMode(WVR_DeviceType type, WVR_ControllerPoseMode mode)
 		{
-			DEBUG("SetControllerPoseMode() " + type + ", " + mode);
+			sb.Clear().Append("SetControllerPoseMode() ").Append(type.Name()).Append(", ").Append(mode); DEBUG(sb);
 			return Interop.WVR_SetControllerPoseMode(type, mode);
 		}
 		#endregion
@@ -1011,7 +1038,7 @@ namespace Wave.Essence
 		void UpdateInteractionMode()
 		{
 			m_InteractionMode = (XR_InteractionMode)Interop.WVR_GetInteractionMode();
-			DEBUG("UpdateInteractionMode() m_InteractionMode = " + m_InteractionMode);
+			sb.Clear().Append("UpdateInteractionMode() m_InteractionMode = ").Append(m_InteractionMode); DEBUG(sb);
 		}
 
 		[System.Obsolete("This is an obsolete function.", true)]
@@ -1020,7 +1047,7 @@ namespace Wave.Essence
 			if (Interop.WVR_SetInteractionMode((WVR_InteractionMode)mode))
 			{
 				m_InteractionMode = mode;
-				DEBUG("SetInteractionMode() " + m_InteractionMode);
+				sb.Clear().Append("SetInteractionMode() ").Append(m_InteractionMode); DEBUG(sb);
 			}
 		}
 
@@ -1034,7 +1061,7 @@ namespace Wave.Essence
 		}
 		private void OnInteractionModeChanged(WVR_Event_t systemEvent)
 		{
-			DEBUG("OnInteractionModeChanged()");
+			sb.Clear().Append("OnInteractionModeChanged()"); DEBUG(sb);
 			UpdateInteractionMode();
 		}
 		#endregion
@@ -1044,6 +1071,46 @@ namespace Wave.Essence
 		public Vector3 GetPosition(WVR_DeviceType device) { return DummyPose.GetPosition(device); }
 		public Quaternion GetRotation(WVR_DeviceType device) { return DummyPose.GetRotation(device); }
 #endif
+		#endregion
+
+		#region Table Static
+		private Dictionary<WVR_DeviceType, bool> s_TableStatic = new Dictionary<WVR_DeviceType, bool>()
+		{
+			{ WVR_DeviceType.WVR_DeviceType_Controller_Left, false },
+			{ WVR_DeviceType.WVR_DeviceType_Controller_Right, false },
+		};
+		private void UpdateTableStatic()
+		{
+			for (int i = 0; i < s_TableStatic.Count; i++)
+			{
+				WVR_DeviceType deviceType = s_TableStatic.ElementAt(i).Key;
+				s_TableStatic[deviceType] = Interop.WVR_IsDeviceTableStatic(deviceType);
+				sb.Clear().Append("UpdateTableStatic() ").Append(deviceType.Name()).Append(" table static: ").Append(s_TableStatic[deviceType]); DEBUG(sb);
+			}
+		}
+		private void OnTableStaticLocked(WVR_Event_t systemEvent)
+		{
+			var deviceType = systemEvent.device.type;
+			if (s_TableStatic.ContainsKey(deviceType))
+			{
+				s_TableStatic[deviceType] = Interop.WVR_IsDeviceTableStatic(deviceType);
+				sb.Clear().Append("OnTableStaticLocked() ").Append(deviceType.Name()).Append(" table static: ").Append(s_TableStatic[deviceType]); DEBUG(sb);
+			}
+		}
+		private void OnTableStaticUnlocked(WVR_Event_t systemEvent)
+		{
+			var deviceType = systemEvent.device.type;
+			if (s_TableStatic.ContainsKey(deviceType))
+			{
+				s_TableStatic[deviceType] = Interop.WVR_IsDeviceTableStatic(deviceType);
+				sb.Clear().Append("OnTableStaticUnlocked() ").Append(deviceType.Name()).Append(" table static: ").Append(s_TableStatic[deviceType]); DEBUG(sb);
+			}
+		}
+		public bool IsTableStatic(XR_Hand hand)
+		{
+			if (s_TableStatic != null && s_TableStatic.ContainsKey((WVR_DeviceType)hand)) { return s_TableStatic[(WVR_DeviceType)hand]; }
+			return false;
+		}
 		#endregion
 	}
 }

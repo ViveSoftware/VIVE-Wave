@@ -732,6 +732,137 @@ namespace Wave.Native
 			return WVR_GetSpatialAnchorState(anchor, originModel, out anchorState);
 		}
 
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_CacheSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_CacheSpatialAnchor(ref WVR_SpatialAnchorCacheInfo spatialAnchorPersistInfo);
+		public override WVR_Result CacheSpatialAnchor(ref WVR_SpatialAnchorCacheInfo spatialAnchorPersistInfo)
+		{
+			return WVR_CacheSpatialAnchor(ref spatialAnchorPersistInfo);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_UncacheSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_UncacheSpatialAnchor(ref WVR_SpatialAnchorName cachedSpatialAnchorName);
+		public override WVR_Result UncacheSpatialAnchor(ref WVR_SpatialAnchorName cachedSpatialAnchorName)
+		{
+			return WVR_UncacheSpatialAnchor(ref cachedSpatialAnchorName);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_EnumerateCachedSpatialAnchorNames", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_EnumerateCachedSpatialAnchorNames(
+			UInt32 cachedSpatialAnchorNamesCapacityInput,
+			out UInt32 cachedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] cachedSpatialAnchorNames);
+		public override WVR_Result EnumerateCachedSpatialAnchorNames(
+			UInt32 cachedSpatialAnchorNamesCapacityInput,
+			out UInt32 cachedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] cachedSpatialAnchorNames)
+		{
+			return WVR_EnumerateCachedSpatialAnchorNames(cachedSpatialAnchorNamesCapacityInput, out cachedSpatialAnchorNamesCountOutput, cachedSpatialAnchorNames);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ClearCachedSpatialAnchors", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ClearCachedSpatialAnchors();
+
+		public override WVR_Result ClearCachedSpatialAnchors()
+		{
+			return WVR_ClearCachedSpatialAnchors();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_CreateSpatialAnchorFromCacheName", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_CreateSpatialAnchorFromCacheName(ref WVR_SpatialAnchorFromCacheNameCreateInfo createInfo, out UInt64 anchor /* WVR_SpatialAnchor */);
+		public override WVR_Result CreateSpatialAnchorFromCacheName(ref WVR_SpatialAnchorFromCacheNameCreateInfo createInfo, out UInt64 anchor /* WVR_SpatialAnchor */)
+		{
+			anchor = 0;
+			return WVR_CreateSpatialAnchorFromCacheName(ref createInfo, out anchor);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_PersistSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_PersistSpatialAnchor(ref WVR_SpatialAnchorPersistInfo spatialAnchorPersistInfo);
+		public override WVR_Result PersistSpatialAnchor(ref WVR_SpatialAnchorPersistInfo spatialAnchorPersistInfo)
+		{
+			return WVR_PersistSpatialAnchor(ref spatialAnchorPersistInfo);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_UnpersistSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_UnpersistSpatialAnchor(ref WVR_SpatialAnchorName persistedSpatialAnchorName);
+
+		public override WVR_Result UnpersistSpatialAnchor(ref WVR_SpatialAnchorName persistedSpatialAnchorName)
+		{
+			return WVR_UnpersistSpatialAnchor(ref persistedSpatialAnchorName);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_EnumeratePersistedSpatialAnchorNames", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_EnumeratePersistedSpatialAnchorNames(
+			UInt32 persistedSpatialAnchorNamesCapacityInput,
+			out UInt32 persistedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] persistedSpatialAnchorNames);
+		public override WVR_Result EnumeratePersistedSpatialAnchorNames(
+			UInt32 persistedSpatialAnchorNamesCapacityInput,
+			out UInt32 persistedSpatialAnchorNamesCountOutput,
+			[Out] WVR_SpatialAnchorName[] persistedSpatialAnchorNames)
+		{
+			return WVR_EnumeratePersistedSpatialAnchorNames(
+				persistedSpatialAnchorNamesCapacityInput,
+				out persistedSpatialAnchorNamesCountOutput,
+				persistedSpatialAnchorNames);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ClearPersistedSpatialAnchors", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ClearPersistedSpatialAnchors();
+        public override WVR_Result ClearPersistedSpatialAnchors()
+        {
+            return WVR_ClearPersistedSpatialAnchors();
+        }
+
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetPersistedSpatialAnchorCount", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetPersistedSpatialAnchorCount(ref WVR_PersistedSpatialAnchorCountGetInfo getInfo);
+
+		public override WVR_Result GetPersistedSpatialAnchorCount(
+			ref WVR_PersistedSpatialAnchorCountGetInfo getInfo)
+		{
+			return WVR_GetPersistedSpatialAnchorCount(ref getInfo);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_CreateSpatialAnchorFromPersistenceName", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_CreateSpatialAnchorFromPersistenceName(
+			ref WVR_SpatialAnchorFromPersistenceNameCreateInfo createInfo,
+			out UInt64 anchor /* WVR_SpatialAnchor* */);
+
+		public override WVR_Result CreateSpatialAnchorFromPersistenceName(
+			ref WVR_SpatialAnchorFromPersistenceNameCreateInfo createInfo,
+			out UInt64 anchor /* WVR_SpatialAnchor* */)
+		{
+			return WVR_CreateSpatialAnchorFromPersistenceName(ref createInfo, out anchor);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ExportPersistedSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ExportPersistedSpatialAnchor(
+			ref WVR_SpatialAnchorName persistedSpatialAnchorName,
+			UInt32 dataCapacityInput,
+			out UInt32 dataCountOutput,
+			[Out] byte[] data);
+
+		public override WVR_Result ExportPersistedSpatialAnchor(
+			ref WVR_SpatialAnchorName persistedSpatialAnchorName,
+			UInt32 dataCapacityInput,
+			out UInt32 dataCountOutput,
+			[Out] byte[] data)
+		{
+			return WVR_ExportPersistedSpatialAnchor(ref persistedSpatialAnchorName, dataCapacityInput, out dataCountOutput, data);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ImportPersistedSpatialAnchor", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ImportPersistedSpatialAnchor(
+			UInt32 dataCount,
+			[In] byte[] data);
+
+		public override WVR_Result ImportPersistedSpatialAnchor(
+			UInt32 dataCount,
+			[In] byte[] data)
+		{
+			return WVR_ImportPersistedSpatialAnchor(dataCount, data);
+		}
+
 		#endregion
 
 		#region wvr_marker.h

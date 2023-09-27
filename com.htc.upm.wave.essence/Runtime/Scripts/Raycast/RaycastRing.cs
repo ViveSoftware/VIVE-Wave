@@ -8,6 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System.Text;
 using UnityEngine;
 using Wave.Native;
 
@@ -20,12 +21,12 @@ namespace Wave.Essence.Raycast
 	public class RaycastRing : RaycastImpl
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastRing";
-		private void DEBUG(string msg)
+		private void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
 		}
-		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 
 		public enum GazeEvent
 		{
@@ -133,7 +134,7 @@ namespace Wave.Essence.Raycast
 		private bool mEnabled = false;
 		protected override void OnEnable()
 		{
-			INFO("OnEnable()");
+			sb.Clear().Append("OnEnable()"); INFO(sb);
 			base.OnEnable();
 
 			if (!mEnabled)
@@ -150,7 +151,7 @@ namespace Wave.Essence.Raycast
 				if (m_PointerMaterial != null)
 				{
 					pointerMaterialInstance = Instantiate(m_PointerMaterial);
-					DEBUG("OnEnable() Loaded resource " + pointerMaterialInstance.name);
+					sb.Clear().Append("OnEnable() Loaded resource " + pointerMaterialInstance.name); DEBUG(sb);
 				}
 
 				// 3. Get the MeshFilter.
@@ -168,7 +169,7 @@ namespace Wave.Essence.Raycast
 
 		protected override void OnDisable()
 		{
-			INFO("OnDisable()");
+			sb.Clear().Append("OnDisable()"); INFO(sb);
 			base.OnDisable();
 
 			if (mEnabled)
@@ -181,7 +182,7 @@ namespace Wave.Essence.Raycast
 				Destroy(pointerMaterialInstance);
 
 				mEnabled = false;
-				DEBUG("OnDisable()");
+				sb.Clear().Append("OnDisable()"); DEBUG(sb);
 			}
 		}
 
@@ -200,7 +201,7 @@ namespace Wave.Essence.Raycast
 			// Calculate the pointer world position
 			Vector3 rotated_direction = transform.rotation * ringFrameOffset;
 			ringWorldPosition = transform.position + rotated_direction;
-			//DEBUG("ringWorldPosition: " + ringWorldPosition.x + ", " + ringWorldPosition.y + ", " + ringWorldPosition.z);
+			//sb.Clear().Append("ringWorldPosition: ").Append(ringWorldPosition.x).Append(", ").Append(ringWorldPosition.y).Append(", ").Append(ringWorldPosition.z); DEBUG(sb);
 
 			float calcRingWidth = m_PointerRingWidth * (ringFrameOffset.z / kPointerDistanceDefault);
 			float calcInnerCircleRadius = m_PointerCircleRadius * (ringFrameOffset.z / kPointerDistanceDefault);
@@ -208,10 +209,11 @@ namespace Wave.Essence.Raycast
 			UpdateRingPercent();
 			DrawRingRoll(calcRingWidth + calcInnerCircleRadius, calcInnerCircleRadius, ringFrameOffset, m_RingPercent);
 
-			if (Log.gpl.Print)
+			if (printIntervalLog)
 			{
-				DEBUG("Update() " + gameObject.name + " is " + (m_MeshRenderer.enabled ? "shown" : "hidden")
-					+ ", ringFrameOffset (" + ringFrameOffset.x + ", " + ringFrameOffset.y + ", " + ringFrameOffset.z + ")");
+				sb.Clear().Append("Update() ").Append(gameObject.name).Append(" is ").Append(m_MeshRenderer.enabled ? "shown" : "hidden")
+					.Append(", ringFrameOffset (").Append(ringFrameOffset.x).Append(", ").Append(ringFrameOffset.y).Append(", ").Append(ringFrameOffset.z).Append(")");
+				DEBUG(sb);
 			}
 		}
 		#endregion
@@ -229,7 +231,7 @@ namespace Wave.Essence.Raycast
 			if (m_MeshRenderer.enabled != active)
 			{
 				m_MeshRenderer.enabled = active;
-				DEBUG("ActivatePointer() " + m_MeshRenderer.enabled);
+				sb.Clear().Append("ActivatePointer() ").Append(m_MeshRenderer.enabled); DEBUG(sb);
 				if (m_MeshRenderer.enabled)
 				{
 					m_MeshRenderer.sortingOrder = m_PointerSortingOrder;
@@ -345,5 +347,15 @@ namespace Wave.Essence.Raycast
 			return ringWorldPosition;
 		}
 		#endregion
+	}
+
+	public static class RaycastRingHelper
+	{
+		public static string Name(this RaycastRing.GazeEvent gaze)
+		{
+			if (gaze == RaycastRing.GazeEvent.Down) { return "Down"; }
+			if (gaze == RaycastRing.GazeEvent.Submit) { return "Submit"; }
+			return "";
+		}
 	}
 }

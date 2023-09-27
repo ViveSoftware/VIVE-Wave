@@ -14,6 +14,9 @@ using UnityEngine;
 using UnityEngine.XR;
 using Wave.Native;
 using Wave.Essence.Eye;
+using Wave.Essence.Hand;
+using System.Text;
+
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -23,12 +26,11 @@ namespace Wave.Essence.Raycast
 	public class GazeRaycastRing : RaycastRing
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.GazeRaycastRing";
-		private void DEBUG(string msg)
+		private void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
 				Log.d(LOG_TAG, msg, true);
 		}
-		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 
 		[Serializable]
 		public class ButtonOption
@@ -81,6 +83,21 @@ namespace Wave.Essence.Raycast
 			}
 		}
 
+		[Serializable]
+		public class PinchOption
+		{
+			[HideInInspector]
+			public bool IsPinching = false;
+
+			[SerializeField]
+			private bool m_LeftHand = false;
+			public bool LeftHand { get { return m_LeftHand; } set { m_LeftHand = value; } }
+
+			[SerializeField]
+			private bool m_RightHand = false;
+			public bool RightHand { get { return m_RightHand; } set { m_RightHand = value; } }
+		}
+
 		#region Inspector
 		[SerializeField]
 		[Tooltip("Use Eye Tracking data for Gaze.")]
@@ -100,6 +117,10 @@ namespace Wave.Essence.Raycast
 		[SerializeField]
 		private ButtonOption m_ControlKey = new ButtonOption();
 		public ButtonOption ControlKey { get { return m_ControlKey; } set { m_ControlKey = value; } }
+
+		[SerializeField]
+		private PinchOption m_ControlHand = new PinchOption();
+		public PinchOption ControlHand { get { return m_ControlHand; } set { m_ControlHand = value; } }
 
 #if ENABLE_INPUT_SYSTEM
 		[SerializeField]
@@ -145,11 +166,12 @@ namespace Wave.Essence.Raycast
 			m_ControlKey.Update();
 			for (int i = 0; i < m_ControlKey.OptionList.Count; i++)
 			{
-				DEBUG("Awake() m_ControlKey[" + i + "] = " + m_ControlKey.OptionList[i].name);
+				sb.Clear().Append("Awake() m_ControlKey[").Append(i).Append("] = ").Append(m_ControlKey.OptionList[i].name);
+				DEBUG(sb);
 			}
 		}
 
-		private bool m_KeyDown = false;
+		private bool m_KeyDown = false, m_HandPinch = false;
 		protected override void Update()
 		{
 			base.Update();
@@ -157,12 +179,18 @@ namespace Wave.Essence.Raycast
 			if (!IsInteractable()) { return; }
 
 			m_KeyDown = ButtonPressed();
+			m_HandPinch = HandPinched();
 
-			INTERVAL("Update() m_InputEvent: " + m_InputEvent
-				+ ", m_AlwaysEnable: " + m_AlwaysEnable
-				+ ", m_ControlKey.Primary2DAxisClick: " + m_ControlKey.Primary2DAxisClick
-				+ ", m_ControlKey.TriggerButton: " + m_ControlKey.TriggerButton
-				);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append("Update() m_InputEvent: ").Append(m_InputEvent.Name())
+					.Append(", m_AlwaysEnable: ").Append(m_AlwaysEnable)
+					.Append(", m_ControlKey.Primary2DAxisClick: ").Append(m_ControlKey.Primary2DAxisClick)
+					.Append(", m_ControlKey.TriggerButton: ").Append(m_ControlKey.TriggerButton)
+					.Append(", m_ControlHand.LeftHand: ").Append(m_ControlHand.LeftHand)
+					.Append(", m_ControlHand.RightHand: ").Append(m_ControlHand.RightHand);
+				DEBUG(sb);
+			}
 		}
 		#endregion
 
@@ -173,7 +201,11 @@ namespace Wave.Essence.Raycast
 
 			m_Interactable = (m_AlwaysEnable || enabled) && hasFocus;
 
-			INTERVAL("IsInteractable() enabled: " + enabled + ", hasFocus: " + hasFocus + ", m_AlwaysEnable: " + m_AlwaysEnable);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append("IsInteractable() enabled: ").Append(enabled).Append(", hasFocus: ").Append(hasFocus).Append(", m_AlwaysEnable: ").Append(m_AlwaysEnable);
+				DEBUG(sb);
+			}
 
 			return m_Interactable;
 		}
@@ -209,21 +241,69 @@ namespace Wave.Essence.Raycast
 			return down;
 		}
 
+		const float kPinchDefOn = .5f, kPinchDiff = .3f;
+		public bool pinchedL = false, pinchedR = false;
+		private bool HandPinched()
+		{
+			bool pinched = false;
+
+			var pinchThreshold = HandManager.Instance.GetPinchThreshold();
+			var pinchStrengthL = HandManager.Instance.GetPinchStrength(true);
+			pinchedL = (pinchStrengthL > pinchThreshold);
+			var pinchStrengthR = HandManager.Instance.GetPinchStrength(false);
+			pinchedR = (pinchStrengthR > pinchThreshold);
+
+			if (!m_ControlHand.IsPinching)
+			{
+				if (m_ControlHand.LeftHand) { pinched |= pinchedL; }
+				if (m_ControlHand.RightHand) { pinched |= pinchedR; }
+				m_ControlHand.IsPinching = pinched;
+			}
+			else
+			{
+				bool hold = false;
+				if (m_ControlHand.LeftHand)
+				{
+					hold |= pinchThreshold > kPinchDefOn ?
+						pinchStrengthL > (pinchThreshold - kPinchDiff) : pinchStrengthL > kPinchDefOn;
+				}
+				if (m_ControlHand.RightHand)
+				{
+					hold |= pinchThreshold > kPinchDefOn ?
+						pinchStrengthR > (pinchThreshold - kPinchDiff) : pinchStrengthR > kPinchDefOn;
+				}
+				if (!hold)
+				{
+					m_ControlHand.IsPinching = false;
+				}
+			}
+
+			return pinched;
+		}
+
 		protected override bool UseEyeData(out Vector3 direction, out EyeManager.EyeSpace space)
 		{
-			INTERVAL("UseEyeData() m_EyeTracking: " + m_EyeTracking + ", m_Eye: " + m_Eye);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append("UseEyeData() m_EyeTracking: ").Append(m_EyeTracking).Append(", m_Eye: ").Append(m_Eye);
+				DEBUG(sb);
+			}
 
 			if (m_EyeTracking)
 			{
 #if ENABLE_INPUT_SYSTEM
-				INTERVAL("UseEyeData() m_UseInputAction: " + m_UseInputAction);
+				if (printIntervalLog)
+				{
+					sb.Clear().Append("UseEyeData() m_UseInputAction: ").Append(m_UseInputAction);
+					DEBUG(sb);
+				}
 				if (m_UseInputAction)
 				{
 					if (VALIDATE(m_RotationInput, out string msg))
 					{
 						if (!m_RotationInput.action.enabled)
 						{
-							DEBUG("UseEyeData() enable " + m_RotationInput.action.name);
+							sb.Clear().Append("UseEyeData() enable ").Append(m_RotationInput.action.name); DEBUG(sb);
 							m_RotationInput.action.Enable();
 						}
 						direction = m_RotationInput.action.ReadValue<Quaternion>() * Vector3.forward;
@@ -232,7 +312,11 @@ namespace Wave.Essence.Raycast
 					}
 					else
 					{
-						INTERVAL("UseEyeData() " + msg);
+						if (printIntervalLog)
+						{
+							sb.Clear().Append("UseEyeData() ").Append(msg);
+							DEBUG(sb);
+						}
 					}
 				}
 				else
@@ -245,13 +329,21 @@ namespace Wave.Essence.Raycast
 							direction = value;
 						}
 						space = EyeManager.Instance.LocationSpace;
-						INTERVAL("UseEyeData() direction (" + direction.x.ToString() + ", " + direction.y.ToString() + ", " + direction.z.ToString() + ")"
-							+ ", space: " + space);
+						if (printIntervalLog)
+						{
+							sb.Clear().Append("UseEyeData() space: ").Append(space)
+								.Append(", direction (").Append(direction.x).Append(", ").Append(direction.y).Append(", ").Append(direction.z).Append(")");
+							DEBUG(sb);
+						}
 						return true;
 					}
 					else
 					{
-						INTERVAL("UseEyeData() no data.");
+						if (printIntervalLog)
+						{
+							sb.Clear().Append("UseEyeData() no data.");
+							DEBUG(sb);
+						}
 					}
 				}
 #else
@@ -277,27 +369,30 @@ namespace Wave.Essence.Raycast
 			if (m_InputEvent != GazeEvent.Down) { return false; }
 
 			bool down = false;
-			if (m_RingPercent >= 100 || m_KeyDown)
+			if (m_RingPercent >= 100 || m_KeyDown || m_HandPinch)
 			{
 				m_RingPercent = 0;
 				m_GazeOnTime = Time.unscaledTime;
 				down = true;
-				DEBUG("OnDown()");
+
+				sb.Clear().Append("OnDown()"); DEBUG(sb);
 			}
 
 			return down;
 		}
+
 		protected override bool OnSubmit()
 		{
 			if (m_InputEvent != GazeEvent.Submit) { return false; }
 
 			bool submit = false;
-			if (m_RingPercent >= 100 || m_KeyDown)
+			if (m_RingPercent >= 100 || m_KeyDown | m_HandPinch)
 			{
 				m_RingPercent = 0;
 				m_GazeOnTime = Time.unscaledTime;
 				submit = true;
-				DEBUG("OnSubmit()");
+
+				sb.Clear().Append("OnSubmit()"); DEBUG(sb);
 			}
 
 			return submit;

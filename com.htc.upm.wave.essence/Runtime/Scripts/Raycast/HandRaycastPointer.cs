@@ -8,6 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System.Text;
 using UnityEngine;
 using Wave.Essence.Hand;
 using Wave.Native;
@@ -17,12 +18,11 @@ namespace Wave.Essence.Raycast
 	public class HandRaycastPointer : RaycastPointer
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.HandRaycastPointer";
-		private void DEBUG(string msg)
+		private void DEBUG(StringBuilder msg)
 		{
 			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_Hand + " " + msg, true);
+				Log.d(LOG_TAG, msg, true);
 		}
-		private void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 
 		#region Inspector
 		[SerializeField]
@@ -82,7 +82,13 @@ namespace Wave.Essence.Raycast
 
 			base.Update();
 
-			INTERVAL("Update() m_UsePose: " + m_UsePose + ", m_PinchStrength: " + m_PinchStrength + ", m_PinchRelease: " + m_PinchRelease);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append(m_Hand.Name()).Append(" ").Append("Update() m_UsePose: ").Append(m_UsePose)
+					.Append(", m_PinchStrength: ").Append(m_PinchStrength)
+					.Append(", m_PinchRelease: ").Append(m_PinchRelease);
+				DEBUG(sb);
+			}
 
 			if (!IsInteractable()) { return; }
 
@@ -103,11 +109,18 @@ namespace Wave.Essence.Raycast
 			bool enabled = RaycastSwitch.Hand.Enabled;
 			bool validPose = HandManager.Instance.IsHandPoseValid(m_Hand);
 			bool hasFocus = ClientInterface.IsFocused;
-			bool valid_motion = (HandManager.Instance.GetHandMotion(m_Hand) != HandManager.HandMotion.None);
+			bool validMotion = (HandManager.Instance.GetHandMotion(m_Hand) != HandManager.HandMotion.None);
 
-			m_Interactable = (m_AlwaysEnable || enabled) && validPose && hasFocus && valid_motion;
+			m_Interactable = (m_AlwaysEnable || enabled) && validPose && hasFocus && validMotion;
 
-			INTERVAL("IsInteractable() enabled: " + enabled + ", validPose: " + validPose + ", hasFocus: " + hasFocus + ", m_AlwaysEnable: " + m_AlwaysEnable);
+			if (printIntervalLog)
+			{
+				sb.Clear().Append(m_Hand.Name()).Append(" ").Append("IsInteractable() enabled: ").Append(enabled)
+					.Append(", validPose: ").Append(validPose)
+					.Append(", hasFocus: ").Append(hasFocus)
+					.Append(", m_AlwaysEnable: ").Append(m_AlwaysEnable);
+				DEBUG(sb);
+			}
 
 			return m_Interactable;
 		}
