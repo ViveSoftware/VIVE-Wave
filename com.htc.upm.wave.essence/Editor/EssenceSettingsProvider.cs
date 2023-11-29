@@ -464,7 +464,17 @@ namespace Wave.Essence.Editor
 				GUILayout.Space(5f);
 				if (GUILayout.Button("Check packages", GUILayout.ExpandWidth(false)))
 					EssenseSettingsConfigDialog.ShowDialog();
-				GUILayout.Space(5f);
+
+                bool b = EditorPrefs.GetBool("EssenceNotifyUpdatePackageSkip", false);
+                if (GUILayout.Toggle(b, "Do not auto check package update"))
+                {
+                    EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", true);
+                }
+                else
+                {
+                    EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", false);
+                }
+                GUILayout.Space(5f);
 			}
 			GUILayout.EndVertical();
 
@@ -1305,6 +1315,12 @@ namespace Wave.Essence.Editor
 		static void Update()
 		{
 			Debug.Log("Check for Essense Settings Update.");
+			if (EditorPrefs.GetBool("EssenceNotifyUpdatePackageSkip", false))
+			{
+				Debug.Log("Skip Essense Settings Update.  EssenceNotifyUpdatePackageSkip=true");
+				EditorApplication.update -= Update;
+				return;
+			}
 			EssenceSettingsProvider.Init();
 			EssenceSettingsProvider.checkFeaturePackages();
 			var items = GetItems();
@@ -1377,6 +1393,18 @@ namespace Wave.Essence.Editor
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
+			{
+				bool b = EditorPrefs.GetBool("EssenceNotifyUpdatePackageSkip", false);
+				if (GUILayout.Toggle(b, "Don't show me again"))
+				{
+					EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", true);
+				}
+				else
+				{
+					EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", false);
+				}
+			}
+
 			if (notReadyItems > 0)
 			{
 				if (GUILayout.Button("Update All"))

@@ -11,6 +11,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using System;
+using CommonUsages = UnityEngine.XR.CommonUsages;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -49,23 +50,42 @@ namespace Wave.XR.Sample.Controller
 			primary2DAxisClick,
 			primary2DAxisTouch,
 			triggerButton,
+			triggerTouch,
 			secondary2DAxisClick,
 			secondary2DAxisTouch,
 		}
+		public static string Name(this BinaryButtons button)
+		{
+			if (button == BinaryButtons.menuButton) { return "menuButton"; }
+			if (button == BinaryButtons.gripButton) { return "gripButton"; }
+			if (button == BinaryButtons.primaryButton) { return "primaryButton"; }
+			if (button == BinaryButtons.primaryTouch) { return "primaryTouch"; }
+			if (button == BinaryButtons.secondaryButton) { return "secondaryButton"; }
+			if (button == BinaryButtons.secondaryTouch) { return "secondaryTouch"; }
+			if (button == BinaryButtons.primary2DAxisClick) { return "primary2DAxisClick"; }
+			if (button == BinaryButtons.primary2DAxisTouch) { return "primary2DAxisTouch"; }
+			if (button == BinaryButtons.triggerButton) { return "triggerButton"; }
+			if (button == BinaryButtons.triggerTouch) { return "triggerTouch"; }
+			if (button == BinaryButtons.secondary2DAxisClick) { return "secondary2DAxisClick"; }
+			if (button == BinaryButtons.secondary2DAxisTouch) { return "secondary2DAxisTouch"; }
+
+			return "";
+		}
 		public static InputFeatureUsage<bool> InputFeature(this BinaryButtons button)
 		{
-			if (button == BinaryButtons.menuButton) { return UnityEngine.XR.CommonUsages.menuButton; }
-			if (button == BinaryButtons.gripButton) { return UnityEngine.XR.CommonUsages.gripButton; }
-			if (button == BinaryButtons.primaryButton) { return UnityEngine.XR.CommonUsages.primaryButton; }
-			if (button == BinaryButtons.primaryTouch) { return UnityEngine.XR.CommonUsages.primaryTouch; }
-			if (button == BinaryButtons.secondaryButton) { return UnityEngine.XR.CommonUsages.secondaryButton; }
-			if (button == BinaryButtons.secondaryTouch) { return UnityEngine.XR.CommonUsages.secondaryTouch; }
-			if (button == BinaryButtons.primary2DAxisClick) { return UnityEngine.XR.CommonUsages.primary2DAxisClick; }
-			if (button == BinaryButtons.secondary2DAxisClick) { return UnityEngine.XR.CommonUsages.secondary2DAxisClick; }
-			if (button == BinaryButtons.triggerButton) { return UnityEngine.XR.CommonUsages.triggerButton; }
-			if (button == BinaryButtons.primary2DAxisTouch) { return UnityEngine.XR.CommonUsages.primary2DAxisTouch; }
+			if (button == BinaryButtons.menuButton) { return CommonUsages.menuButton; }
+			if (button == BinaryButtons.gripButton) { return CommonUsages.gripButton; }
+			if (button == BinaryButtons.primaryButton) { return CommonUsages.primaryButton; }
+			if (button == BinaryButtons.primaryTouch) { return CommonUsages.primaryTouch; }
+			if (button == BinaryButtons.secondaryButton) { return CommonUsages.secondaryButton; }
+			if (button == BinaryButtons.secondaryTouch) { return CommonUsages.secondaryTouch; }
+			if (button == BinaryButtons.primary2DAxisClick) { return CommonUsages.primary2DAxisClick; }
+			if (button == BinaryButtons.secondary2DAxisClick) { return CommonUsages.secondary2DAxisClick; }
+			if (button == BinaryButtons.triggerButton) { return CommonUsages.triggerButton; }
+			if (button == BinaryButtons.triggerTouch) { return new InputFeatureUsage<bool>("TriggerTouch"); }
+			if (button == BinaryButtons.primary2DAxisTouch) { return CommonUsages.primary2DAxisTouch; }
 
-			return UnityEngine.XR.CommonUsages.secondary2DAxisTouch;
+			return CommonUsages.secondary2DAxisTouch;
 		}
 
 		public enum Vector2Buttons : UInt32

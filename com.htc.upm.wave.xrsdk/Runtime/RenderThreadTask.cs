@@ -1,6 +1,7 @@
 using AOT;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -104,15 +105,19 @@ namespace Wave.XR
 	// Run a lambda/delegate code in RenderThread
 	public class RenderThreadTask
 	{
+		// Only used for Editor
+		[DllImport("wvrunityxr", CallingConvention = CallingConvention.Cdecl)]
+		private extern static IntPtr SetRenderThreadSyncObjectEventFunc(IntPtr del);
+
+		// Only used for Editor
+		[DllImport("wvrunityxr", CallingConvention = CallingConvention.Cdecl)]
+		private extern static IntPtr GetRenderThreadSyncObjectEventFunc();
+
+
 		// In Windows, Marshal.GetFunctionPointerForDelegate() will cause application hang
 		private static IntPtr GetFunctionPointerForDelegate(Delegate del)
 		{
-#if UNITY_EDITOR && !UNITY_2021_3
-			// Older version will hang after run script in render thread.
-			return IntPtr.Zero;
-#else
 			return System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(del);
-#endif
 		}
 
 		public delegate void RenderEventDelegate(int e);
@@ -146,32 +151,13 @@ namespace Wave.XR
 
 		void IssuePluginEvent(IntPtr callback, int eventID)
 		{
-#if UNITY_EDITOR && !UNITY_2021_3
-			// Older version will hang after run script in render thread.
-			if (Application.isEditor)
-			{
-				receiver(queue);
-				return;
-			}
-#endif
-
-#if UNITY_ANDROID
 			// Older version will hang after run script in render thread.
 			GL.IssuePluginEvent(callback, eventID);
 			return;
-#else
-			receiver(queue);
-			return;
-#endif
 		}
 
 		void IssuePluginEvent(CommandBuffer cmdBuf, IntPtr callback, int eventID)
 		{
-#if UNITY_EDITOR && !UNITY_2021_3
-			if (Application.isEditor)
-				throw new NotImplementedException("Should not use this function in Windows");
-#endif
-
 			cmdBuf.IssuePluginEvent(callback, eventID);
 			return;
 		}
@@ -179,14 +165,26 @@ namespace Wave.XR
 		// Run in GameThread
 		public void IssueEvent()
 		{
-			// Let the render thread run the RunSyncObjectInRenderThread(id)
-			IssuePluginEvent(handlePtr, id);
+#if UNITY_EDITOR && !UNITY_2021_3_OR_NEWER
+			SetRenderThreadSyncObjectEventFunc(handlePtr);
+			if (Application.isEditor)
+				IssuePluginEvent(GetRenderThreadSyncObjectEventFunc(), id);
+			else
+#endif
+				// Let the render thread run the RunSyncObjectInRenderThread(id)
+				IssuePluginEvent(handlePtr, id);
 		}
 
 		public void IssueInCommandBuffer(CommandBuffer cmdBuf)
 		{
-			// Let the render thread run the RunSyncObjectInRenderThread(id)
-			IssuePluginEvent(cmdBuf, handlePtr, id);
+#if UNITY_EDITOR && !UNITY_2021_3_OR_NEWER
+			SetRenderThreadSyncObjectEventFunc(handlePtr);
+			if (Application.isEditor)
+				IssuePluginEvent(cmdBuf, GetRenderThreadSyncObjectEventFunc(), id);
+			else
+#endif
+				// Let the render thread run the RunSyncObjectInRenderThread(id)
+				IssuePluginEvent(cmdBuf, handlePtr, id);
 		}
 
 		// Called by RunSyncObjectInRenderThread()

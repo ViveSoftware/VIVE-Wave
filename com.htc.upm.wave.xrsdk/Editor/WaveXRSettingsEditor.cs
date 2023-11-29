@@ -1,4 +1,13 @@
-using System.Collections.Generic;
+// "WaveVR SDK 
+// © 2017 HTC Corporation. All Rights Reserved.
+//
+// Unless otherwise required by copyright law and practice,
+// upon the execution of HTC SDK license agreement,
+// HTC grants you access to and use of the WaveVR SDK(s).
+// You shall fully comply with all of HTC’s SDK license agreement terms and
+// conditions signed by you and all SDK and API requirements,
+// specifications, and documentation provided by HTC to You."
+
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -274,9 +283,7 @@ namespace Wave.XR.Settings
 	        "Allow Capture 360 Image",
 	        "Allow the spectator camera to capture 360 images. Addition Request:\n" +
 	        "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
-	        "Page\n2.) Set the Android target API Level to 29 or lower\n3.) Add " +
-	        "the write external storage permission and legacy external storage " +
-	        "flag in the AndroidManifest.xml file.");
+	        "Page");
         SerializedProperty Property_AllowSpectatorCameraCapture360Image;
 
 
@@ -467,45 +474,20 @@ namespace Wave.XR.Settings
                 MultiLayerGUI();
 
                 #region Spectator Camera Setting
-
-                const string Capture360ImageToggleTitle = 
-	                "Allow Capture 360 Image";
-                const string Capture360ImageToggleHint =
-	                "Allow the spectator camera to capture 360 images. Addition Request:\n" +
-	                "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
-	                "Page\n2.) Set the Android target API Level to 29 or lower\n3.) Add " +
-	                "the write external storage permission and legacy external storage " +
-	                "flag in the AndroidManifest.xml file.";
-                const string AcceptButtonString = 
+                
+                const string acceptButtonString = 
 	                "OK";
-                const string CancelButtonString = 
+                const string cancelButtonString = 
 	                "Cancel";
-                const string OpenCapture360ImageAdditionRequestTitle =
+                const string openCapture360ImageAdditionRequestTitle =
 	                "Additional Request of Capturing 360 Image throughout the Spectator Camera";
-                const string OpenCapture360ImageAdditionRequestDescription =
+                const string openCapture360ImageAdditionRequestDescription =
 	                "Allow the spectator camera to capture 360 images. Addition Request:\n" +
 	                "1.) Open the \"enable360StereoCapture\" in the Unity Player Setting " +
-	                "Page.\n2.) Set the Android target API Level to 29 or lower.\n3.) Add " +
-	                "the write external storage permission and legacy external storage " +
-	                "flag in the AndroidManifest.xml file.";
-                const string ConfirmModifySettingTitle =
-	                "Will modify the setting as the following, please confirm.";
-                const string Modify360StereoCaptureDescription =
-	                "PlayerSettings.enable360StereoCapture\n" +
-	                "Current value: FALSE; Will set to TRUE.";
-                string modifyAPILevelDescription =
-	                "PlayerSettings.Android.targetSdkVersion\n" +
-	                $"Current value: {PlayerSettings.Android.targetSdkVersion}; " +
-	                $"Will set to AndroidApiLevel29.";
-                string modify360StereoCaptureAndAPILevelDescription =
-	                "PlayerSettings.enable360StereoCapture\n" +
-	                $"Current value: FALSE; Will set to TRUE.\n\n" +
-	                $"PlayerSettings.Android.targetSdkVersion\n" +
-	                $"Current value: {PlayerSettings.Android.targetSdkVersion}; " +
-	                $"Will set to AndroidApiLevel29.";
+	                "Page.";
                 
                 EditorGUILayout.PropertyField(Property_AllowSpectatorCamera, Label_AllowSpectatorCamera);
-                WaveXRSettings mySettings = target as WaveXRSettings;
+                var mySettings = target as WaveXRSettings;
                 if (mySettings.allowSpectatorCamera)
                 {
 	                EditorGUI.indentLevel++;
@@ -521,63 +503,23 @@ namespace Wave.XR.Settings
 		                if (!currentValue)
 		                {
 			                bool isEnable360StereoCapture = PlayerSettings.enable360StereoCapture;
-			                bool isCompatibleAPILevel =
-				                PlayerSettings.Android.targetSdkVersion <= AndroidSdkVersions.AndroidApiLevel29;
+                            if (!isEnable360StereoCapture)
+                            {
+                                bool acceptDialog1 = EditorUtility.DisplayDialog(
+                                    openCapture360ImageAdditionRequestTitle,
+                                    openCapture360ImageAdditionRequestDescription,
+                                    acceptButtonString,
+                                    cancelButtonString);
 
-			                var acceptDialog1 = EditorUtility.DisplayDialog(
-				                OpenCapture360ImageAdditionRequestTitle,
-				                OpenCapture360ImageAdditionRequestDescription,
-				                AcceptButtonString,
-				                CancelButtonString);
-			                if (acceptDialog1)
-			                {
-				                bool acceptDialog2 = false;
-				                if (!isEnable360StereoCapture && !isCompatibleAPILevel)
-				                {
-					                acceptDialog2 = EditorUtility.DisplayDialog(
-						                ConfirmModifySettingTitle,
-						                modify360StereoCaptureAndAPILevelDescription,
-						                AcceptButtonString,
-						                CancelButtonString);
-				                }
-				                else if (!isEnable360StereoCapture && isCompatibleAPILevel)
-				                {
-					                acceptDialog2 = EditorUtility.DisplayDialog(
-						                ConfirmModifySettingTitle,
-						                Modify360StereoCaptureDescription,
-						                AcceptButtonString,
-						                CancelButtonString);
-				                }
-				                else if (isEnable360StereoCapture && !isCompatibleAPILevel)
-				                {
-					                acceptDialog2 = EditorUtility.DisplayDialog(
-						                ConfirmModifySettingTitle,
-						                modifyAPILevelDescription,
-						                AcceptButtonString,
-						                CancelButtonString);
-				                }
-
-				                if (acceptDialog2)
-				                {
-					                if (!isEnable360StereoCapture)
-					                {
-						                PlayerSettings.enable360StereoCapture = true;
-					                }
-
-					                if (!isCompatibleAPILevel)
-					                {
-						                PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
-					                }
-				                }
-				                else if (!acceptDialog2 && (!isEnable360StereoCapture || !isCompatibleAPILevel))
-				                {
-					                Property_AllowSpectatorCameraCapture360Image.boolValue = false;
-				                }
-			                }
-			                else
-			                {
-				                Property_AllowSpectatorCameraCapture360Image.boolValue = false;
-			                }
+                                if (acceptDialog1)
+                                {
+                                    PlayerSettings.enable360StereoCapture = true;
+                                }
+                                else
+                                {
+                                    Property_AllowSpectatorCameraCapture360Image.boolValue = false;
+                                }
+                            }
 		                }
 	                }
 

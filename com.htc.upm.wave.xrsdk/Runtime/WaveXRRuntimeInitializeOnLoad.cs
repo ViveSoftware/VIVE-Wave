@@ -107,11 +107,12 @@ namespace Wave.XR
             }
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            if (!Application.isEditor || !Application.isMobilePlatform)
+            if (!Application.isEditor)
 #endif
             {
                 renderThreadRenameTask = new RenderThreadTask(RenameRenderThreadReceiver);
-                renderThreadRenameTask.IssueEvent();
+                if (renderThreadRenameTask != null)
+                    renderThreadRenameTask.IssueEvent();
             }
         }
 

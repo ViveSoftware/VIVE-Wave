@@ -21,6 +21,7 @@ namespace Wave.Essence.Samples.PassThrough
 		const string LOG_TAG = "Wave.Essence.Samples.PassThrough.ActivatePassThrough";
 		public Text statusIQ;
 		public Text statusIF;
+		public Text statusIR;
 
 		void DEBUG(string msg)
 		{
@@ -69,6 +70,23 @@ namespace Wave.Essence.Samples.PassThrough
 		{
 			bool ret = Interop.WVR_SetPassthroughImageFocus(WVR_PassthroughImageFocus.Scale);
 			statusIF.text = "Set S. ret=" + ret;
+		}
+
+		public void OnButtonClickRateBoost()
+		{
+			WVR_Result ret = Interop.WVR_SetPassthroughImageRate(WVR_PassthroughImageRate.Boost);
+			if (ret == WVR_Result.WVR_Success)
+				statusIR.text = "Set B. ret=0";
+			else
+				statusIR.text = "Set B. ret=" + ret;
+		}
+		public void OnButtonClickRateNormal()
+		{
+			WVR_Result ret = Interop.WVR_SetPassthroughImageRate(WVR_PassthroughImageRate.Normal);
+			if (ret == WVR_Result.WVR_Success)
+				statusIR.text = "Set N. ret=0";
+			else
+				statusIR.text = "Set N. ret=" + ret;
 		}
 
 		private void Update()

@@ -2811,7 +2811,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1567377844
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3012,7 +3012,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1722157654
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8772,7 +8772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &4044859923925435917
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8790,7 +8790,7 @@ MonoBehaviour:
   _normalColor: {r: 1, g: 0.27044016, b: 0.27044016, a: 1}
   _pressedColor: {r: 0.32704395, g: 1, b: 0.43455204, a: 1}
   isLeft: 0
-  binaryButton: 3
+  binaryButton: 9
 --- !u!224 &4044859924280959812
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15734,7 +15734,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &7908250859836447759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15751,8 +15751,8 @@ MonoBehaviour:
   _image: {fileID: 7908250859917179205}
   _normalColor: {r: 1, g: 0.27044016, b: 0.27044016, a: 1}
   _pressedColor: {r: 0.32704395, g: 1, b: 0.43455204, a: 1}
-  isLeft: 0
-  binaryButton: 3
+  isLeft: 1
+  binaryButton: 9
 --- !u!222 &7908250859917179204
 CanvasRenderer:
   m_ObjectHideFlags: 0

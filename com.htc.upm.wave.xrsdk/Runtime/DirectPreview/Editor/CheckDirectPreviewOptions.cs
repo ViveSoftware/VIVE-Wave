@@ -1,4 +1,3 @@
-
 // "WaveVR SDK 
 // © 2017 HTC Corporation. All Rights Reserved.
 //
@@ -62,8 +61,9 @@ namespace Wave.XR.DirectPreview.Editor
 		private int[] TargetDeviceValue = { 0, 1 };
 		private int selectedTargetDeviceValue = 1;
 		private int prevTargetDeviceValue = 1;
-
+#pragma warning disable
         private bool configFoldout = true;
+#pragma warning enable
 
         private static readonly string PREF_IS_ADB_EXIST = "IsAdbExist";
 

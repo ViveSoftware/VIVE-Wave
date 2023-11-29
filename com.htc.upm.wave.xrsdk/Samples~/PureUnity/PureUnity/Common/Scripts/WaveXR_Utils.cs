@@ -15,7 +15,7 @@ namespace Wave.XR.Sample
 		{
 			bool held = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			held = Input.GetMouseButton(button);
+			held = UnityEngine.Input.GetMouseButton(button);
 #elif ENABLE_INPUT_SYSTEM
 			if (button == 0)
 				held = Mouse.current.leftButton.isPressed;
@@ -28,7 +28,7 @@ namespace Wave.XR.Sample
 		{
 			bool pressed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			pressed = Input.GetMouseButtonDown(button);
+			pressed = UnityEngine.Input.GetMouseButtonDown(button);
 #elif ENABLE_INPUT_SYSTEM
 			if (button == 0)
 				pressed = Mouse.current.leftButton.wasPressedThisFrame;
@@ -41,7 +41,7 @@ namespace Wave.XR.Sample
 		{
 			bool releases = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			releases = Input.GetMouseButtonUp(button);
+			releases = UnityEngine.Input.GetMouseButtonUp(button);
 #elif ENABLE_INPUT_SYSTEM
 			if (button == 0)
 				releases = Mouse.current.leftButton.wasReleasedThisFrame;
@@ -123,7 +123,7 @@ namespace Wave.XR.Sample
 		{
 			bool held = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			held = Input.GetKey(key);
+			held = UnityEngine.Input.GetKey(key);
 #elif ENABLE_INPUT_SYSTEM
 			held = KeyboardKey(key).isPressed;
 #endif
@@ -133,7 +133,7 @@ namespace Wave.XR.Sample
 		{
 			bool pressed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			pressed = Input.GetKeyDown(key);
+			pressed = UnityEngine.Input.GetKeyDown(key);
 #elif ENABLE_INPUT_SYSTEM
 			pressed = KeyboardKey(key).wasPressedThisFrame;
 #endif
@@ -143,7 +143,7 @@ namespace Wave.XR.Sample
 		{
 			bool releases = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			releases = Input.GetKeyUp(key);
+			releases = UnityEngine.Input.GetKeyUp(key);
 #elif ENABLE_INPUT_SYSTEM
 			releases = KeyboardKey(key).wasReleasedThisFrame;
 #endif
@@ -154,7 +154,7 @@ namespace Wave.XR.Sample
 		{
 			bool held = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			held = Input.GetKey(keyName);
+			held = UnityEngine.Input.GetKey(keyName);
 #elif ENABLE_INPUT_SYSTEM
 			held = KeyboardKey(keyName).isPressed;
 #endif
@@ -164,7 +164,7 @@ namespace Wave.XR.Sample
 		{
 			bool pressed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			pressed = Input.GetKeyDown(keyName);
+			pressed = UnityEngine.Input.GetKeyDown(keyName);
 #elif ENABLE_INPUT_SYSTEM
 			pressed = KeyboardKey(keyName).wasPressedThisFrame;
 #endif
@@ -174,7 +174,7 @@ namespace Wave.XR.Sample
 		{
 			bool releases = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			releases = Input.GetKeyUp(keyName);
+			releases = UnityEngine.Input.GetKeyUp(keyName);
 #elif ENABLE_INPUT_SYSTEM
 			releases = KeyboardKey(keyName).wasReleasedThisFrame;
 #endif
@@ -273,7 +273,7 @@ namespace Wave.XR.Sample
 		{
 			bool held = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			held = Input.GetButton(buttonName);
+			held = UnityEngine.Input.GetButton(buttonName);
 #elif ENABLE_INPUT_SYSTEM
 			if (s_JoystickButtons.TryGetValue(buttonName, out bool value))
 			{
@@ -287,7 +287,7 @@ namespace Wave.XR.Sample
 		{
 			bool pressed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			pressed = Input.GetButtonDown(buttonName);
+			pressed = UnityEngine.Input.GetButtonDown(buttonName);
 #elif ENABLE_INPUT_SYSTEM
 			if (s_JoystickButtons.TryGetValue(buttonName, out bool value))
 			{
@@ -303,7 +303,7 @@ namespace Wave.XR.Sample
 		{
 			bool released = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
-			released = Input.GetButtonUp(buttonName);
+			released = UnityEngine.Input.GetButtonUp(buttonName);
 #elif ENABLE_INPUT_SYSTEM
 			if (s_JoystickButtons.TryGetValue(buttonName, out bool value))
 			{

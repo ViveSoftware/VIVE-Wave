@@ -54,7 +54,12 @@ namespace Wave.XR
             // dirty later builds with assets that may not be needed or are out of date.
             CleanOldSettings();
 
-            WaveXRSettings settings = null;
+			if ((PlayerSettings.Android.targetArchitectures & AndroidArchitecture.ARMv7) != 0)
+			{
+				throw new BuildFailedException("Wave SDK No Longer Support 32 bit.");
+			}
+
+			WaveXRSettings settings = null;
             UnityEngine.Object obj = null;
             bool hasObj = EditorBuildSettings.TryGetConfigObject(Constants.k_SettingsKey, out obj);
             if (obj == null || !(obj is WaveXRSettings))
@@ -96,25 +101,16 @@ namespace Wave.XR
 	        const string WaveXRSettingsNotFoundWarningMessage =
 		        "WaveXRSettings is null. " +
 		        "Please check or reinstall the WaveXR SDK.";
+            
+            const string WaveSpectatorCameraFeatureDisableMessage =
+                "Spectator camera feature is not enabled. " +
+                "No need to check related setting when building.";
 	        
 	        const string Wave360EnableButPlayerSetting360DisableWarningMessage =
 		        "Attribute \"allowSpectatorCameraCapture360Image\" is enabled on the WaveXR Setting, " +
 		        "but the \"enable360StereoCapture\" in the Unity Player Settings is closed. " +
 		        "The above settings are mutually exclusive. Will close the 360 image capture feature on" +
 		        "Wave XR Setting";
-
-	        const string WaveSpectatorCameraFeatureDisableMessage =
-		        "Spectator camera feature is not enabled. " +
-		        "No need to check related setting when building.";
-	        
-	        const string WaveSpectatorCamera360CaptureFeatureDisableMessage =
-		        "Capture 360 image via Spectator camera is not enabled. " +
-		        "No need to check related setting when building.";
-	        
-	        const string Wave360APINotCompatibleWarningMessage =
-		        "Capture 360 images throughout Wave Spectator Camera needs the Android SDK Versions " +
-		        "not higher than 29, but the current version is {0}. Please change the Android SDK " +
-		        "Versions to 29 or lower in the Unity Player Settings.";
 	        
 	        #region Check Wave XR Setting is exist
 	        
@@ -142,26 +138,6 @@ namespace Wave.XR
 	        {
 		        Debug.LogWarning(Wave360EnableButPlayerSetting360DisableWarningMessage);
 		        waveXRSettings.allowSpectatorCameraCapture360Image = false;
-	        }
-
-	        #endregion
-	        
-	        // If the capture 360 image feature is not enabled,
-	        // not need to run the logic related to 360 capture
-	        if (waveXRSettings.allowSpectatorCameraCapture360Image is false)
-	        {
-		        Debug.Log(WaveSpectatorCamera360CaptureFeatureDisableMessage);
-		        return;
-	        }
-	        
-	        #region Check Android API level is compatible with 360 capture feature if it is enabled
-
-	        if (waveXRSettings.allowSpectatorCameraCapture360Image &&
-	            PlayerSettings.Android.targetSdkVersion > AndroidSdkVersions.AndroidApiLevel29)
-	        {
-		        string warningMessage =
-			        string.Format(Wave360APINotCompatibleWarningMessage, PlayerSettings.Android.targetSdkVersion);
-		        Debug.LogWarning(warningMessage);
 	        }
 
 	        #endregion
@@ -193,7 +169,6 @@ namespace Wave.XR
             public static class PermissionName
             {
                 public static readonly string SceneMesh                = "wave.permission.GET_SCENE_MESH";
-                public static readonly string WriteExternalStorage     = "android.permission.WRITE_EXTERNAL_STORAGE";
             }
         }
 
@@ -249,8 +224,6 @@ namespace Wave.XR
                     appendMarker: addMarker);
 
                 androidManifest.AddSkipPermissionDialogMetaData();
-
-                androidManifest.AddSpectatorCamera360CaptureFeature(doc, waveXRSettings);
                 
                 androidManifest.Save();
             }
@@ -466,43 +439,6 @@ namespace Wave.XR
                     ApplicationElement.AppendChild(supportedFPSMetaDataElement);
                 }
 
-            }
-
-            public void AddSpectatorCamera360CaptureFeature(XmlDocument doc, WaveXRSettings waveXRSettings)
-            {
-	            const string requestLegacyExternalStorageString = "android:requestLegacyExternalStorage";
-	            
-	            if (waveXRSettings.allowSpectatorCamera &&
-	                waveXRSettings.allowSpectatorCameraCapture360Image)
-	            {
-		            if (ApplicationElement.Attributes?[requestLegacyExternalStorageString] != null)
-		            {
-			            if (ApplicationElement.Attributes[requestLegacyExternalStorageString].Value != "true")
-			            {
-				            ApplicationElement.Attributes[requestLegacyExternalStorageString].Value = "true";
-			            }
-		            }
-		            else
-		            {
-			            ApplicationElement.Attributes.Append(CreateAndroidAttribute("requestLegacyExternalStorage", "true"));
-		            }
-
-		            if (!CheckWavePermission(doc, ManifestAttributeStringDefinition.PermissionName.WriteExternalStorage))
-		            {
-			            var spectatorCameraFeaturePermissionElement = 
-				            ManifestElement.AppendChild(CreateElement("uses-permission"));
-			            spectatorCameraFeaturePermissionElement.Attributes.Append(
-				            CreateAndroidAttribute(
-					            "name",
-					            ManifestAttributeStringDefinition.PermissionName.WriteExternalStorage)
-				            );
-		            }
-	            }
-	            else
-	            {
-		            Debug.Log("Spectator camera or 360 capture feature is not enabled. " +
-		                      "No need to add related permission and flag in Android Manifest.");
-	            }
             }
 
             internal void AddWaveFeatures(bool appendHandTracking = false,

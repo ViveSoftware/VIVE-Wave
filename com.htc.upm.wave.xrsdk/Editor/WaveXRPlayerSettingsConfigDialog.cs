@@ -199,6 +199,20 @@ public class WaveXRPlayerSettingsConfigDialog : EditorWindow
 			Set = () => { PlayerSettings.gpuSkinning = false; }
 		};
 
+		var scriptingBackend = new Item("ScriptingBackend", ScriptingImplementation.IL2CPP.ToString())
+		{
+			IsReady = () => { return PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) == ScriptingImplementation.IL2CPP; },
+			GetCurrent = () => { return PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android).ToString(); },
+			Set = () => { PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP); }
+		};
+
+		var androidArchitecture = new Item("AndroidArchitecture", AndroidArchitecture.ARM64.ToString())
+		{
+			IsReady = () => { return PlayerSettings.Android.targetArchitectures == AndroidArchitecture.ARM64; },
+			GetCurrent = () => { return PlayerSettings.Android.targetArchitectures.ToString(); },
+			Set = () => { PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64; }
+		};
+
 		return new List<Item>()
 		{
 			builtTarget,
@@ -208,7 +222,9 @@ public class WaveXRPlayerSettingsConfigDialog : EditorWindow
 			autoGraphicsAPi,
 			graphicsApis,
 			AndroidMinSDK,
-			AndroidTargetSDK
+			AndroidTargetSDK,
+			scriptingBackend,
+			androidArchitecture
 		};
 	}
 

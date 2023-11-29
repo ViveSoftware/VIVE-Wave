@@ -69,17 +69,11 @@ namespace Wave.XR.Loader
                 return false;
             }
 
-#if UNITY_EDITOR
-			#if UNITY_2020_1_OR_NEWER
-			displaySubsystem.textureLayout = XRDisplaySubsystem.TextureLayout.SeparateTexture2Ds;
-			#else
-			displaySubsystem.singlePassRenderingDisabled = true;
-			#endif
-#endif
-
-#if UNITY_EDITOR
-			if (!Application.isEditor)
-#endif
+            if (Application.isEditor)
+            {
+                SettingsHelper.CheckSinglePass();
+            }
+            else
             {
                 FunctionsHelper.Process(this);
                 SettingsHelper.Process(this);
@@ -94,15 +88,8 @@ namespace Wave.XR.Loader
             StartSubsystem<XRDisplaySubsystem>();
             StartSubsystem<XRInputSubsystem>();
             StartSubsystem<XRMeshSubsystem>();
-#if UNITY_EDITOR
-            #if UNITY_2020_1_OR_NEWER
-            displaySubsystem.textureLayout = XRDisplaySubsystem.TextureLayout.SeparateTexture2Ds;
-            #else
-            displaySubsystem.singlePassRenderingDisabled = true;
-            #endif
-#else
+
             SettingsHelper.CheckSinglePass();
-#endif
 
             return true;
         }

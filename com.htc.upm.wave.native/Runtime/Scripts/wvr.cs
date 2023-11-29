@@ -2021,6 +2021,15 @@ namespace Wave.Native
 		View = 1
 	}
 
+	/**
+	 * @brief Enum used for indicating the passthrough image's refresh rate.
+	 */
+	public enum WVR_PassthroughImageRate
+	{
+		Boost = 0,    // Default passthrough image's refresh rate (default).
+		Normal = 1     // Reduce the passthrough image's refresh rate for performance improvement.
+	}
+
 	public delegate void WVR_RequestCompleteCallback(List<WVR_RequestResult> results);
 	public delegate void WVR_RequestUsbCompleteCallback(bool result);
 	public delegate void WVR_OnOEMConfigChanged();
@@ -3244,6 +3253,17 @@ namespace Wave.Native
 		{
 			return WVR_Base.Instance.WVR_SetPassthroughImageFocus(focus);
 		}
+
+		/**
+		 * Function to set passthrough image's refresh rate.
+		 * The API adjusts the refresh rate of passthourgh image to the WaveVR Runtime,
+		 * Affects the WVR_ShowPassthroughOverlay(), WVR_ShowPassthroughUnderlay and WVR_ShowProjectedPassthrough
+		 */
+		public static WVR_Result WVR_SetPassthroughImageRate(WVR_PassthroughImageRate rate)
+		{
+			return WVR_Base.Instance.SetPassthroughImageRate(rate);
+		}
+
 
         public static void WVR_EnableHandleDisplayChanged(bool enable)
         {
@@ -4719,6 +4739,11 @@ namespace Wave.Native
 			{
 				return false;
 			}
+
+			public virtual WVR_Result SetPassthroughImageRate(WVR_PassthroughImageRate rate)
+			{
+				return WVR_Result.WVR_Success;
+            }
 
             public virtual void EnableHandleDisplayChanged(bool enable)
             {

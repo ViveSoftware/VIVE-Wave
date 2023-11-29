@@ -606,6 +606,7 @@ namespace Wave.Essence.Tracker
 		class TrackerPose
 		{
 			public bool valid = false;
+			public bool is6DoF = false;
 			public RigidTransform rigid = RigidTransform.identity;
 			public Vector3 velocity = Vector3.zero;
 			public Vector3 angularVelocity = Vector3.zero;
@@ -614,6 +615,7 @@ namespace Wave.Essence.Tracker
 			public TrackerPose()
 			{
 				valid = false;
+				is6DoF = false;
 				rigid = RigidTransform.identity;
 				velocity = Vector3.zero;
 				angularVelocity = Vector3.zero;
@@ -637,9 +639,10 @@ namespace Wave.Essence.Tracker
 
 				WVR_PoseState_t pose = new WVR_PoseState_t();
 				WVR_Result result = Interop.WVR_GetTrackerPoseState(trackerId.Id(), origin, 0, ref pose);
-				if (result == WVR_Result.WVR_Success)
+				if (result == WVR_Result.WVR_Success && s_TrackerPoses.ContainsKey(trackerId))
 				{
 					s_TrackerPoses[trackerId].valid = pose.IsValidPose;
+					s_TrackerPoses[trackerId].is6DoF = pose.Is6DoFPose;
 					s_TrackerPoses[trackerId].rigid.update(pose.PoseMatrix);
 					Coordinate.GetVectorFromGL(pose.Velocity, out s_TrackerPoses[trackerId].velocity);
 					s_TrackerPoses[trackerId].angularVelocity.x = -pose.AngularVelocity.v0;
@@ -726,7 +729,9 @@ namespace Wave.Essence.Tracker
 				.Append(", system: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_System.ArrayIndex()])
 				.Append(", menu: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_Menu.ArrayIndex()])
 				.Append(", A: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_A.ArrayIndex()])
-				.Append(", B: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_B.ArrayIndex()]);
+				.Append(", B: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_B.ArrayIndex()])
+				.Append(", Touchpad: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_Touchpad.ArrayIndex()])
+				.Append(", Trigger: ").Append(s_ButtonAxisType[trackerId][WVR_InputId.WVR_InputId_Alias1_Trigger.ArrayIndex()]);
 			DEBUG(sb);
 		}
 		#endregion
@@ -1079,6 +1084,25 @@ namespace Wave.Essence.Tracker
 
 			return s_TrackerPoses[trackerId].valid;
 		}
+		public bool GetTrackerTrackingState(TrackerId trackerId, out InputTrackingState state)
+		{
+			state = InputTrackingState.None;
+
+			if (UseXRData())
+			{
+				return InputDeviceTracker.GetTrackingState(trackerId.InputDevice(), out state);
+			}
+
+			if (s_TrackerPoses[trackerId].valid)
+			{
+				if (s_TrackerPoses[trackerId].is6DoF)
+					state = InputTrackingState.All;
+				else
+					state = InputTrackingState.Rotation | InputTrackingState.AngularVelocity | InputTrackingState.AngularAcceleration;
+			}
+
+			return s_TrackerPoses[trackerId].valid;
+		}
 
 		public TrackerRole GetTrackerRole(TrackerId trackerId)
 		{
@@ -1211,6 +1235,14 @@ namespace Wave.Essence.Tracker
 		}
 		public bool TrackerButtonHold(TrackerId trackerId, TrackerButton id)
 		{
+			if (UseXRData())
+			{
+				if (InputDeviceTracker.ButtonDown(trackerId.InputDevice(), id.Usage(WVR_InputType.WVR_InputType_Button), out bool value))
+					return value;
+
+				return false;
+			}
+
 			UpdateTrackerPress(trackerId, id.Id());
 			return (ss_TrackerPressEx[trackerId][id.Num()] && ss_TrackerPress[trackerId][id.Num()]);
 		}
@@ -1226,6 +1258,14 @@ namespace Wave.Essence.Tracker
 		}
 		public bool TrackerButtonTouching(TrackerId trackerId, TrackerButton id)
 		{
+			if (UseXRData())
+			{
+				if (InputDeviceTracker.ButtonDown(trackerId.InputDevice(), id.Usage(WVR_InputType.WVR_InputType_Touch), out bool value))
+					return value;
+
+				return false;
+			}
+
 			UpdateTrackerTouch(trackerId, id.Id());
 			return (ss_TrackerTouchEx[trackerId][id.Num()] && ss_TrackerTouch[trackerId][id.Num()]);
 		}
@@ -1238,17 +1278,23 @@ namespace Wave.Essence.Tracker
 		{
 			if (UseXRData())
 			{
+				Vector2 axis = Vector2.zero;
+
+				if (id == TrackerButton.Touchpad)
+				{
+					if (InputDeviceTracker.ButtonAxis(trackerId.InputDevice(), XR_Feature.primary2DAxis, out axis))
+						return axis;
+				}
 				if (id == TrackerButton.Trigger)
 				{
-					Vector2 axis = Vector2.zero;
-					if (InputDeviceTracker.ButtonAxis(trackerId.InputDevice(), CommonUsages.trigger, out float value))
+					if (InputDeviceTracker.ButtonAxis(trackerId.InputDevice(), XR_Feature.trigger, out float value))
 					{
 						axis.x = value;
 						return axis;
 					}
 				}
 
-				return Vector2.zero;
+				return axis;
 			}
 
 			UpdateTrackerAxis(trackerId, id.Id());

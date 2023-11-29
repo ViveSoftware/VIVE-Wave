@@ -2603,7 +2603,8 @@ namespace Wave.Native
 				offset += Marshal.SizeOf(ulong_type);
 			}*/
 
-			handTrackerInfo.pinchThreshold = 0.2f;
+			handTrackerInfo.pinchThreshold = 0.51f;
+			handTrackerInfo.pinchOff = 0.2f;
 		}
 		public WVR_Result GetHandTrackerInfo(WVR_HandTrackerType tracker, ref WVR_HandTrackerInfo_t info)
 		{

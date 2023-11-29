@@ -96,6 +96,10 @@ namespace Wave.Essence.Raycast
 			[SerializeField]
 			private bool m_RightHand = false;
 			public bool RightHand { get { return m_RightHand; } set { m_RightHand = value; } }
+
+			[SerializeField]
+			private bool m_DefaultPinch = false;
+			public bool DefaultPinch { get { return m_DefaultPinch; } set { m_DefaultPinch = value; } }
 		}
 
 		#region Inspector
@@ -179,7 +183,7 @@ namespace Wave.Essence.Raycast
 			if (!IsInteractable()) { return; }
 
 			m_KeyDown = ButtonPressed();
-			m_HandPinch = HandPinched();
+			m_HandPinch = m_ControlHand.DefaultPinch ? CheckHandPinchedByDefault() : CheckHandPinchedByThreshold();
 
 			if (printIntervalLog)
 			{
@@ -188,7 +192,8 @@ namespace Wave.Essence.Raycast
 					.Append(", m_ControlKey.Primary2DAxisClick: ").Append(m_ControlKey.Primary2DAxisClick)
 					.Append(", m_ControlKey.TriggerButton: ").Append(m_ControlKey.TriggerButton)
 					.Append(", m_ControlHand.LeftHand: ").Append(m_ControlHand.LeftHand)
-					.Append(", m_ControlHand.RightHand: ").Append(m_ControlHand.RightHand);
+					.Append(", m_ControlHand.RightHand: ").Append(m_ControlHand.RightHand)
+					.Append(", m_ControlHand.DefaultPinch: ").Append(m_ControlHand.DefaultPinch);
 				DEBUG(sb);
 			}
 		}
@@ -243,11 +248,15 @@ namespace Wave.Essence.Raycast
 
 		const float kPinchDefOn = .5f, kPinchDiff = .3f;
 		public bool pinchedL = false, pinchedR = false;
-		private bool HandPinched()
+		private bool CheckHandPinchedByThreshold()
 		{
+			float pinchThreshold = kPinchDefOn;
+			float pinchDiff = kPinchDiff;
+			if (HandManager.Instance.GetPinchThreshold(HandManager.TrackerType.Natural, out float thresholdOn)) { pinchThreshold = thresholdOn; }
+			if (HandManager.Instance.GetPinchOffThreshold(HandManager.TrackerType.Natural, out float thresholdOff)) { pinchDiff = pinchThreshold - thresholdOff; }
+
 			bool pinched = false;
 
-			var pinchThreshold = HandManager.Instance.GetPinchThreshold();
 			var pinchStrengthL = HandManager.Instance.GetPinchStrength(true);
 			pinchedL = (pinchStrengthL > pinchThreshold);
 			var pinchStrengthR = HandManager.Instance.GetPinchStrength(false);
@@ -265,13 +274,39 @@ namespace Wave.Essence.Raycast
 				if (m_ControlHand.LeftHand)
 				{
 					hold |= pinchThreshold > kPinchDefOn ?
-						pinchStrengthL > (pinchThreshold - kPinchDiff) : pinchStrengthL > kPinchDefOn;
+						pinchStrengthL > (pinchThreshold - pinchDiff) : pinchStrengthL > kPinchDefOn;
 				}
 				if (m_ControlHand.RightHand)
 				{
 					hold |= pinchThreshold > kPinchDefOn ?
-						pinchStrengthR > (pinchThreshold - kPinchDiff) : pinchStrengthR > kPinchDefOn;
+						pinchStrengthR > (pinchThreshold - pinchDiff) : pinchStrengthR > kPinchDefOn;
 				}
+				if (!hold)
+				{
+					m_ControlHand.IsPinching = false;
+				}
+			}
+
+			return pinched;
+		}
+		private bool CheckHandPinchedByDefault()
+		{
+			bool pinched = false;
+
+			pinchedL = HandManager.Instance.IsHandPinching(true);
+			pinchedR = HandManager.Instance.IsHandPinching(false);
+
+			if (!m_ControlHand.IsPinching)
+			{
+				if (m_ControlHand.LeftHand) { pinched |= pinchedL; }
+				if (m_ControlHand.RightHand) { pinched |= pinchedR; }
+				m_ControlHand.IsPinching = pinched;
+			}
+			else
+			{
+				bool hold = false;
+				if (m_ControlHand.LeftHand) { hold |= pinchedL; }
+				if (m_ControlHand.RightHand) { hold |= pinchedR; }
 				if (!hold)
 				{
 					m_ControlHand.IsPinching = false;

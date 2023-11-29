@@ -46,7 +46,9 @@ namespace Wave.Essence
 			{
 				if (instance == null)
 				{
-					var gameObject = new GameObject("WaveEssence", typeof(WaveVR_SystemEvent));
+					var gameObject = new GameObject("WaveEssence");
+					// For Compositor, seems like it needs the SystemEvent object to be created before the compositor is created.  This is not OK because the SystemEvent is only created if necessary.  But I keep it here to avoid compositor's protential problem.
+					WaveVR_SystemEvent.CheckInstance();
 					instance = gameObject.AddComponent<WaveEssence>();
 					// This object should survive all scene transitions.
 					DontDestroyOnLoad(instance);

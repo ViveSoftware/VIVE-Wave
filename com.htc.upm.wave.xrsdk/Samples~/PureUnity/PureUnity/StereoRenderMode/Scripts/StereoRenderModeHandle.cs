@@ -121,16 +121,24 @@ public class StereoRenderModeHandle : MonoBehaviour
 	}
 
 	public void OnSinglePassButtonPressed()
-    {
+	{
 		if (display == null) return;
+#if UNITY_2020_1_OR_NEWER
+		display.textureLayout = XRDisplaySubsystem.TextureLayout.Texture2DArray;
+#else
 		display.singlePassRenderingDisabled = false;
+#endif
 		hasChange = 3;
 	}
 
 	public void OnMultiPassButtonPressed()
 	{
 		if (display == null) return;
+#if UNITY_2020_1_OR_NEWER
+		display.textureLayout = XRDisplaySubsystem.TextureLayout.SeparateTexture2Ds;
+#else
 		display.singlePassRenderingDisabled = true;
+#endif
 		hasChange = 3;
 	}
 

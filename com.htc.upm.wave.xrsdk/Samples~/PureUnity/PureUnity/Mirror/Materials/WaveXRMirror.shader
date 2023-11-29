@@ -21,6 +21,8 @@ Shader "Wave/XRMirror"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma target 2.0
+
 			#include "UnityCG.cginc"
 
 			struct appdata
@@ -36,6 +38,7 @@ Shader "Wave/XRMirror"
 				float4 refl : TEXCOORD1;
 				float2 idx : TEXCOORD2;
 				float4 pos : SV_POSITION;
+				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			float4 _MainTex_ST;
@@ -47,7 +50,7 @@ Shader "Wave/XRMirror"
 				v2f o;
 
 				UNITY_SETUP_INSTANCE_ID(v); //Insert
-				UNITY_INITIALIZE_OUTPUT(v2f, o); //Insert
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o); //Insert
 
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);

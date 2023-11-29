@@ -1975,6 +1975,15 @@ namespace Wave.Native
 			return WVR_SetPassthroughImageFocus_Android(focus);
 		}
 
+        [DllImport("wvr_api", EntryPoint = "WVR_SetPassthroughImageRate", CallingConvention = CallingConvention.Cdecl)]
+        public static extern WVR_Result WVR_SetPassthroughImageRate_Android(WVR_PassthroughImageRate rate);
+
+        public override WVR_Result SetPassthroughImageRate(WVR_PassthroughImageRate rate)
+        {
+            return WVR_SetPassthroughImageRate_Android(rate);
+        }
+
+
         [DllImport("wvr_api", EntryPoint = "WVR_EnableHandleDisplayChanged", CallingConvention = CallingConvention.Cdecl)]
         public static extern void WVR_EnableHandleDisplayChanged_Android(bool enable);
         public override void EnableHandleDisplayChanged(bool enable)

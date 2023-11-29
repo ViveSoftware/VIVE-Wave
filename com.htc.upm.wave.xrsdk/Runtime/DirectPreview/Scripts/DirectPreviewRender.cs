@@ -1,107 +1,42 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
+using UnityEngine.XR;
 
 #if UNITY_EDITOR && UNITY_ANDROID
 namespace Wave.XR.DirectPreview
 {
 	public class DirectPreviewRender : MonoBehaviour
 	{
-		private static string TAG = "DirectPreviewRender:";
-
 		[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetRenderImageHandles")]
-		public static extern bool WVR_SetRenderImageHandles(IntPtr[] ttPtr);
+		public static extern bool WVR_SetRenderImageHandles3(IntPtr ttPtr);
 
-		[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetRenderImageHandles2")]
-		public static extern bool WVR_SetRenderImageHandles2();
+		private class RTTask : RenderThreadTask
+		{
+			public RTTask(Receiver render) : base(render) {}
 
-		static bool leftCall = false;
-		static bool rightCall = false;
+			public void IssueEvent(System.IntPtr l, System.IntPtr r)
+			{
+				var rtts = Queue.Obtain<RTTextures>();
+				rtts.left = l;
+				rtts.right = r;
+				Queue.Enqueue(rtts);
+				IssueEvent();
+			}
+		}
+
+		RTTask renderThreadTask;
+
 		static bool isLeftReady = false;
 		static bool isRightReady = false;
-		static RenderTexture rt_L;
-		static RenderTexture rt_R;
-		static IntPtr[] rt = new IntPtr[2];
 		static int mFPS = 60;
 		static long lastUpdateTime = 0;
-		int frame = 0;
-		new Camera camera;
-		//[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_Quit_S")]
-		//public static extern void WVR_Quit_S();
 
-		//public delegate void debugcallback(int l, string z);
-		//[DllImport("wvrunityxr", EntryPoint = "SetPrintCallback")]
-		//public static extern void RegisterDebugCallback(debugcallback callback);
+		Camera cam;
 
-		//[DllImport("wvrunityxr", EntryPoint = "GetFirstEyePtr")]
-		//public static extern IntPtr GetFirstEyePtr();
-
-		//[DllImport("wvrunityxr", EntryPoint = "GetSecondEyePtr")]
-		//public static extern IntPtr GetSecondEyePtr();
-
-		//public static void PrintLog(int l, string msg)
-		//{
-		//	switch (l)
-		//	{
-		//		case 0: // error
-		//			UnityEngine.Debug.LogError(msg);
-		//			break;
-		//		case 1: // assert
-		//			UnityEngine.Debug.LogAssertion(msg);
-		//			break;
-		//		case 2: // warning
-		//			UnityEngine.Debug.LogWarning(msg);
-		//			break;
-		//		case 3: // log
-		//			UnityEngine.Debug.Log(msg);
-		//			break;
-		//		case 4: // exception
-		//			UnityEngine.Debug.LogError(msg);
-		//			break;
-		//		case 5:
-		//			UnityEngine.Debug.Log(msg);
-		//			break;
-		//		default:
-		//			UnityEngine.Debug.Log(msg);
-		//			break;
-		//	}
-
-		//}
-
-		//public enum SIM_InitError
-		//{
-		//	SIM_InitError_None = 0,
-		//	SIM_InitError_WSAStartUp_Failed = 1,
-		//	SIM_InitError_Already_Inited = 2,
-		//	SIM_InitError_Device_Not_Found = 3,
-		//	SIM_InitError_Can_Not_Connect_Server = 4,
-		//	SIM_InitError_IPAddress_Null = 5,
-		//}
-
-		//public enum SIM_ConnectType
-		//{
-		//	SIM_ConnectType_USB = 0,
-		//	SIM_ConnectType_Wifi = 1,
-		//}
-
-		//[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_Init_S")]
-		//public static extern SIM_InitError WVR_Init_S(int a, System.IntPtr ip, bool enablePreview, bool saveLogToFile, bool saveImage);
-
-
-		//bool enablePreview = false;
-		//static bool saveLog = false;
-		//static bool saveImage = false;
-		//static int connectType = 0;  // USB
-
-
-		//public delegate void printcallback(string z);
-
-		//[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetPrintCallback")]
-		//public static extern void WVR_SetPrintCallback_S(printcallback callback);
 
 		public static long getCurrentTimeMillis()
 		{
@@ -109,20 +44,28 @@ namespace Wave.XR.DirectPreview
 			return (long)((DateTime.UtcNow - Jan1st1970).TotalMilliseconds);
 		}
 
-		private static void PrintError(string msg)
-		{
-			Debug.LogError(TAG + ": " + msg);
-		}
-
-		private static void PrintDebug(string msg)
-		{
-			Debug.Log(TAG + ": " + msg);
-		}
 		Material mat;
+		List<XRDisplaySubsystem> subsystems = new List<XRDisplaySubsystem>();
+		XRDisplaySubsystem displaySubsystem;
+        XRDisplaySubsystem GetDisplaySubsystem()
+        {
+            SubsystemManager.GetInstances(subsystems);
+            if (subsystems != null && subsystems.Count > 0)
+            {
+                for (int i = 0; i < subsystems.Count; i++)
+                {
+                    if (subsystems[i].SubsystemDescriptor.id == Constants.k_DisplaySubsystemId)
+                    {
+                        return subsystems[i];
+                    }
+                }
+            }
+            return null;
+        }
 
-		private void Start()
+        private void Start()
 		{
-			camera = GetComponent<Camera>();
+			cam = GetComponent<Camera>();
 			mat = new Material(Shader.Find("Unlit/DP2BlitShader"));
 			lastUpdateTime = 0;
 
@@ -138,109 +81,268 @@ namespace Wave.XR.DirectPreview
 				}
 				UnityEngine.Debug.LogWarning("mFPS is changed to " + mFPS);
 			}
-			RenderPipelineManager.endFrameRendering += OnEndFrameRendering;
+
+			RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+
+			ptrSize = Marshal.SizeOf(typeof(System.IntPtr));
+			// Create Marshal memory for a IntPtr[2] array
+			ptrArray = Marshal.AllocHGlobal(ptrSize * 2);
+
+			renderThreadTask = new RTTask(RenderThreadReceiver);
 		}
 
-		void OnEndFrameRendering(ScriptableRenderContext context, Camera[] cameras)
+		class RTTextures : Message
 		{
-			// Put the code that you want to execute after the camera renders here
-			// If you are using URP or HDRP, Unity calls this method automatically
-			// If you are writing a custom SRP, you must call RenderPipeline.EndCameraRendering
-			long currentTime = getCurrentTimeMillis();
-			if (currentTime - lastUpdateTime >= (1000 / mFPS))
+			public IntPtr left;
+			public IntPtr right;
+		}
+
+		int ptrSize;
+		IntPtr ptrArray;
+
+		void RenderThreadReceiver(PreAllocatedQueue queue)
+		{
+			var msg = queue.Dequeue();
+			if (msg == null) return;
+			var rts = (RTTextures)msg;
+			if (rts != null)
 			{
-				if (WVR_SetRenderImageHandles2())
+				// Assign IntPtr to ptrArray[0]
+				Marshal.WriteIntPtr(ptrArray, 0, rts.left);
+				// Assign IntPtr to ptrArray[1]
+				Marshal.WriteIntPtr(ptrArray, ptrSize, rts.right);
+				// Call native function
+				WVR_SetRenderImageHandles3(ptrArray);
+			}
+		}
+
+		// Use Triple Buffer
+		const int BufferCount = 3;
+		int width = -1, height = -1;
+		int bufferId = -1;
+
+		class FrameBuffer
+		{
+			public readonly RenderTexture[] rt = new RenderTexture[2];
+			public readonly System.IntPtr[] ptr = new IntPtr[2];
+
+			static int id = 0;
+
+			public RenderTexture Left { get { return rt[0]; } }
+			public RenderTexture Right { get { return rt[1]; } }
+			public System.IntPtr LeftPtr { get { return ptr[0]; } }
+			public System.IntPtr RightPtr { get { return ptr[1]; } }
+
+			public void Create(int w, int h)
+			{
+				for (int e = 0; e < 2; e++)
 				{
-					//Debug.LogWarning("callback successfully");
+					rt[e] = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
+					rt[e].name = "DP2_RT_" + (e == 0 ? "L" : "R") + "_" + id;
+					id = ++id % 60;
+					rt[e].Create();
+					ptr[e] = rt[e].GetNativeTexturePtr();
 				}
-				else
+			}
+
+			public bool NeedCreate(int w, int h)
+			{
+				return rt[0] == null || rt[0].width != w || rt[0].height != h;
+			}
+
+			public void Destroy()
+			{
+				for (int e = 0; e < 2; e++)
 				{
-					//UnityEngine.Debug.LogWarning("WVR_SetRenderImageHandles2 fail");
+					if (rt[e] != null)
+						rt[e].Release();
+					rt[e] = null;
+					ptr[e] = System.IntPtr.Zero;
 				}
+			}
+		}
+
+		readonly FrameBuffer[] fbs = new FrameBuffer[BufferCount];
+
+		void CheckRenderTarget(int width, int height)
+		{
+			bool needCreate = this.width != width || this.height != height;
+			needCreate |= fbs[0] == null || fbs[0].NeedCreate(width, height);
+
+			if (!needCreate) return;
+
+			this.width = width;
+			this.height = height;
+
+			for (int bId = 0; bId < BufferCount; bId++)
+			{
+				if (fbs[bId] == null)
+					fbs[bId] = new FrameBuffer();
+				fbs[bId].Destroy();
+				fbs[bId].Create(width, height);
+			}
+		}
+
+		// This only work for universal render pipeline
+		void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+		{
+			if (!DirectPreviewCore.IsDPInited) return;
+
+			if (camera != cam) return;
+			displaySubsystem = GetDisplaySubsystem();
+			if (displaySubsystem == null) return;
+
+			var currentTime = getCurrentTimeMillis();
+			bool doCopy = (currentTime - lastUpdateTime) >= (1000 / mFPS);
+			if (!doCopy) return;
+
+
+			int pc = displaySubsystem.GetRenderPassCount();
+			if (pc == 0) return;
+
+			displaySubsystem.GetRenderPass(0, out var pass);
+			int w = (int)(pass.renderTargetDesc.width / XRSettings.eyeTextureResolutionScale);
+			int h = (int)(pass.renderTargetDesc.height / XRSettings.eyeTextureResolutionScale);
+
+			if (w <= 0 || h <= 0) return;
+
+			// New frame will render on another buffer
+			bufferId = ++bufferId % BufferCount;
+
+			CheckRenderTarget(w, h);
+
+			lastUpdateTime = currentTime;
+
+			bool isSinglePass = displaySubsystem.GetRenderPassCount() == 1;
+			bool isMultiPass = displaySubsystem.GetRenderPassCount() == 2;
+			if (isSinglePass)
+			{
+				var src = pass.renderTarget;
+				var cmdBuf = new CommandBuffer();
+				cmdBuf.name = "RT_to_DP2";
+				cmdBuf.Blit(src, fbs[bufferId].Left, 0, 0);
+				cmdBuf.Blit(src, fbs[bufferId].Right, 1, 0);
+				context.ExecuteCommandBuffer(cmdBuf);
+#if UNITY_2020_3_OR_NEWER
+				if (Time.frameCount > mFPS)
+#endif
+				context.Submit();
+				if (renderThreadTask != null)
+					renderThreadTask.IssueEvent(fbs[bufferId].LeftPtr, fbs[bufferId].RightPtr);
+			}
+
+			if (isMultiPass)
+			{
+				displaySubsystem.GetRenderPass(1, out var passR);
+				var srcL = pass.renderTarget;
+				var srcR = passR.renderTarget;
+
+				var cmdBuf = new CommandBuffer();
+				cmdBuf.name = "RT_to_DP2";
+				cmdBuf.Blit(srcL, fbs[bufferId].Left);
+				cmdBuf.Blit(srcR, fbs[bufferId].Right);
+				context.ExecuteCommandBuffer(cmdBuf);
+#if UNITY_2020_3_OR_NEWER
+				if (Time.frameCount > mFPS)
+#endif
+				context.Submit();
+				if (renderThreadTask != null)
+					renderThreadTask.IssueEvent(fbs[bufferId].LeftPtr, fbs[bufferId].RightPtr);
 			}
 		}
 
 		void OnDestroy()
 		{
-			RenderPipelineManager.endFrameRendering -= OnEndFrameRendering;
+			RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+
+			for (int bId = 0; bId < BufferCount; bId++)
+			{
+				if (fbs == null) continue;
+				fbs[bId].Destroy();
+				fbs[bId] = null;
+			}
+
+			// Free Marshal memory
+			if (ptrArray != IntPtr.Zero);
+				Marshal.FreeHGlobal(ptrArray);
+			ptrArray = IntPtr.Zero;
 		}
 
-		private void Update()
+		bool ShouldCopy(long currentTime)
 		{
-			frame++;
-			//PrintDebug("update: " + frame);
+			return (currentTime - lastUpdateTime) >= (1000 / (mFPS * 1.05f));
 		}
 
-        //public void OnPostRender(Camera cam)
-        //{
-        //	Debug.Log(" native ptr: " + cam.activeTexture.GetNativeTexturePtr());
-        //}
+		bool mpIsRendered = false;
+		int frameCount = 0;
 
-        readonly RenderTexture[] temp = new RenderTexture[2];
-
+		// This only work for standard render pipeline
 		void OnRenderImage(RenderTexture src, RenderTexture dest)
 		{
-			//Debug.Log("vrUsage=" + src.vrUsage + ", width=" + src.width + ", height=" + src.height + ", name=" + src.name + ", frame=" + frame + ", eye=" + camera.stereoActiveEye);
-			//Debug.Log("src native ptr: " + src.GetNativeTexturePtr() + ", eye=" + camera.stereoActiveEye);
-
+			// Copy to editor display output first
 			Graphics.Blit(src, dest);
 
-			//var height = src.height;
-			//if ((height % 2) != 0)
-			//{
-			//	UnityEngine.Debug.LogWarning("RenderTexture height is odd, skip.");
-			//	return;
-			//}
+			if (!DirectPreviewCore.IsDPInited) return;
 
-			long currentTime = getCurrentTimeMillis();
-			if (currentTime - lastUpdateTime >= (1000 / mFPS))
+			// Do DP2 copy
+			var currentTime = getCurrentTimeMillis();
+			bool doCopy = ShouldCopy(currentTime);
+			if (!doCopy) return;
+
+			//if (Camera.current != cam) return;  // always false
+			displaySubsystem = GetDisplaySubsystem();
+			if (displaySubsystem == null) return;
+
+			displaySubsystem.GetRenderPass(0, out var pass);
+			// Not allow to change the resolution scale to DP
+			// TODO: should not allow change renderTargetDesc.width/height in wvrunityxr.dll
+			int w = (int)(pass.renderTargetDesc.width / XRSettings.eyeTextureResolutionScale);
+			int h = (int)(pass.renderTargetDesc.height / XRSettings.eyeTextureResolutionScale);
+			CheckRenderTarget(w, h);
+
+			if (frameCount != Time.frameCount)
 			{
-				if (!isLeftReady && camera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Left)
+				frameCount = Time.frameCount;
+				// New frame will render on another buffer
+				bufferId = ++bufferId % BufferCount;
+
+				isLeftReady = false;
+				isRightReady = false;
+				mpIsRendered = false;
+			}
+
+			bool isSinglePass = displaySubsystem.GetRenderPassCount() == 1;
+			if (isSinglePass)
+			{
+				Graphics.Blit(src, fbs[bufferId].Left, new Vector2(1, -1), new Vector2(0, 1), 0, 0);
+				Graphics.Blit(src, fbs[bufferId].Right, new Vector2(1, -1), new Vector2(0, 1), 1, 0);
+
+				lastUpdateTime = currentTime;
+
+				if (renderThreadTask != null)
+					renderThreadTask.IssueEvent(fbs[bufferId].LeftPtr, fbs[bufferId].RightPtr);
+			}
+			else
+			{
+				if (!isLeftReady && cam.stereoActiveEye == Camera.MonoOrStereoscopicEye.Left)
 				{
-					var desc = src.descriptor;
-					desc.msaaSamples = 1;
-					desc.depthBufferBits = 0;
-					desc.useMipMap = false;
-					temp[0] = RenderTexture.GetTemporary(desc);
-					Graphics.Blit(src, temp[0], mat);
+					Graphics.Blit(src, fbs[bufferId].Left, new Vector2(1, -1), new Vector2(0, 1));
 					isLeftReady = true;
 				}
 
-				if (isLeftReady && !isRightReady && camera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right)
+				if (isLeftReady && !isRightReady && cam.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right)
 				{
-					var desc = src.descriptor;
-					desc.msaaSamples = 1;
-					desc.depthBufferBits = 0;
-					desc.useMipMap = false;
-					temp[1] = RenderTexture.GetTemporary(desc);
-					Graphics.Blit(src, temp[1], mat);
+					Graphics.Blit(src, fbs[bufferId].Right, new Vector2(1, -1), new Vector2(0, 1));
 					isRightReady = true;
 				}
 
-				if (isLeftReady && isRightReady)
+				if (isLeftReady && isRightReady && !mpIsRendered)
 				{
-					rt[0] = temp[0].GetNativeTexturePtr();
-					rt[1] = temp[1].GetNativeTexturePtr();
+					mpIsRendered = true;
 					lastUpdateTime = currentTime;
-					if (WVR_SetRenderImageHandles(rt))
-					{
-						//Debug.LogWarning("callback successfully");
-					}
-					else
-					{
-						//UnityEngine.Debug.LogWarning("WVR_SetRenderImageHandles fail");
-					}
-					isLeftReady = false;
-					isRightReady = false;
-					RenderTexture.ReleaseTemporary(temp[0]);
-					RenderTexture.ReleaseTemporary(temp[1]);
-					temp[0] = null;
-					temp[1] = null;
+					if (renderThreadTask != null)
+						renderThreadTask.IssueEvent(fbs[bufferId].LeftPtr, fbs[bufferId].RightPtr);
 				}
-			}
-
-			if (isLeftReady && isRightReady)
-			{
 			}
 		}
 	}

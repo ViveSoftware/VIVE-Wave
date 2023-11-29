@@ -1,7 +1,7 @@
 {
   "name": "com.htc.upm.wave.xrsdk",
   "displayName": "VIVE Wave XR Plugin",
-  "version": "5.4.0-preview.0",
+  "version": "5.5.0-preview.0",
   "unity": "2019.4",
   "description": "The \u0022VIVE Wave XR Plugin\u0022 package serves as a bridge between VIVE moblile devices and Unity.\nBy communicuating with Unity's \u0022XR Plugin Management\u0022 package, this package allows your application to run on VIVE mobile devices.\n\nView the documentation for additional information.\n\n",
   "keywords": [

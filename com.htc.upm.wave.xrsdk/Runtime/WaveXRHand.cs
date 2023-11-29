@@ -31,7 +31,27 @@ namespace Wave.OpenXR
 			AVAILABLE = 4,
 			UNSUPPORT = 5,
 		}
-		private static UInt32 Id(this TrackingStatus status) { return (UInt32)status; }
+		public enum HandMotion : UInt32
+		{
+			None = 0,//WVR_HandPoseType.WVR_HandPoseType_Invalid,
+			Pinch = 1,//WVR_HandPoseType.WVR_HandPoseType_Pinch,
+			Hold = 2,//WVR_HandPoseType.WVR_HandPoseType_Hold,
+		}
+		public enum HandHoldRole : UInt32
+		{
+			None = 0,//WVR_HandHoldRoleType.WVR_HandHoldRoleType_None,
+			Main = 1,//WVR_HandHoldRoleType.WVR_HandHoldRoleType_MainHold,
+			Side = 2,//WVR_HandHoldRoleType.WVR_HandHoldRoleType_SideHold,
+		}
+		public enum HandHoldType : UInt32
+		{
+			None = 0,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_None,
+			Gun = 1,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_Gun,
+			OCSpray = 2,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_OCSpray,
+			LongGun = 3,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_LongGun,
+			Baton = 4,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_Baton,
+			FlashLight = 5,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_FlashLight,
+		}
 
 		#region Wave XR Interface
 		private const string kNaturalHandStatus = "NaturalHandStatus";
@@ -112,6 +132,26 @@ namespace Wave.OpenXR
 		public const string kHandConfidenceRight = "HandConfidenceRight";
 		public const string kHandScaleLeftX = "HandScaleLeftX", kHandScaleLeftY = "HandScaleLeftY", kHandScaleLeftZ = "HandScaleLeftZ";
 		public const string kHandScaleRightX = "HandScaleRightX", kHandScaleRightY = "HandScaleRightY", kHandScaleRightZ = "HandScaleRightZ";
+		public const string kWristLinearVelocityLeftX = "WristLinearVelocityLeftX", kWristLinearVelocityLeftY = "WristLinearVelocityLeftY", kWristLinearVelocityLeftZ = "WristLinearVelocityLeftZ";
+		public const string kWristLinearVelocityRightX = "WristLinearVelocityRightX", kWristLinearVelocityRightY = "WristLinearVelocityRightY", kWristLinearVelocityRightZ = "WristLinearVelocityRightZ";
+		public const string kWristAngularVelocityLeftX = "WristAngularVelocityLeftX", kWristAngularVelocityLeftY = "WristAngularVelocityLeftY", kWristAngularVelocityLeftZ = "WristAngularVelocityLeftZ";
+		public const string kWristAngularVelocityRightX = "WristAngularVelocityRightX", kWristAngularVelocityRightY = "WristAngularVelocityRightY", kWristAngularVelocityRightZ = "WristAngularVelocityRightZ";
+		public const string kHandMotionLeft = "HandMotionLeft";
+		public const string kHandMotionRight = "HandMotionRight";
+		public const string kHandRoleLeft = "HandRoleLeft";
+		public const string kHandRoleRight = "HandRoleRight";
+		public const string kHandObjectLeft = "HandObjectLeft";
+		public const string kHandObjectRight = "HandObjectRight";
+		public const string kHandOriginLeftX = "HandOriginLeftX", kHandOriginLeftY = "HandOriginLeftY", kHandOriginLeftZ = "HandOriginLeftZ";
+		public const string kHandOriginRightX = "HandOriginRightX", kHandOriginRightY = "HandOriginRightY", kHandOriginRightZ = "HandOriginRightZ";
+		public const string kHandDirectionLeftX = "HandDirectionLeftX", kHandDirectionLeftY = "HandDirectionLeftY", kHandDirectionLeftZ = "HandDirectionLeftZ";
+		public const string kHandDirectionRightX = "HandDirectionRightX", kHandDirectionRightY = "HandDirectionRightY", kHandDirectionRightZ = "HandDirectionRightZ";
+		public const string kHandStrengthLeft = "HandStrengthLeft";
+		public const string kHandStrengthRight = "HandStrengthRight";
+		public const string kHandPinchThreshold = "HandPinchThreshold";
+		public const string kHandPinchOffThreshold = "HandPinchOffThreshold";
+		public const string kHandIsPinchingLeft = "HandIsPinchingLeft";
+		public const string kHandIsPinchingRight = "HandIsPinchingRight";
 
 		/// <summary> Right Tracker Characteristics </summary>
 		public const InputDeviceCharacteristics kRightHandCharacteristics = (
@@ -185,14 +225,28 @@ namespace Wave.OpenXR
 			return false;
 		}
 
-		internal static List<InputDevice> s_InputDevices = new List<InputDevice>();
+		internal static object inputDeviceLock = new object();
+		internal static List<InputDevice> s_UpdatedDevices = new List<InputDevice>();
+		internal static List<InputDevice> s_InputDevices 
+		{
+			get
+			{
+				lock (inputDeviceLock)
+				{
+					return s_UpdatedDevices;
+				}
+			}
+		}
 		internal static int inputDeviceFrame = -1;
 		private static void UpdateInputDevices()
 		{
 			if (inputDeviceFrame != Time.frameCount)
 			{
 				inputDeviceFrame = Time.frameCount;
-				InputDevices.GetDevices(s_InputDevices);
+				lock (inputDeviceLock)
+				{
+					InputDevices.GetDevices(s_UpdatedDevices);
+				}
 			}
 		}
 
@@ -456,6 +510,9 @@ namespace Wave.OpenXR
 		/// <returns></returns>
 		public static bool GetHandScale(bool isLeft, out Vector3 scale)
 		{
+			scale = Vector3.one;
+			if (!IsAvailable()) { return false; }
+
 			float scale_x = 0, scale_y = 0, scale_z = 0;
 			if (isLeft)
 			{
@@ -475,11 +532,7 @@ namespace Wave.OpenXR
 			return true;
 		}
 
-		/// <summary>
-		/// Retrieves the wrist confidence which is a 0~1 float value where 1 means the most accurate.
-		/// </summary>
-		/// <param name="isLeft">Left or right hand.</param>
-		/// <returns></returns>
+		[Obsolete("This function is deprecated. Please use bool GetHandConfidence() instead.")]
 		public static float GetHandConfidence(bool isLeft)
 		{
 			float confidence = 0;
@@ -488,6 +541,272 @@ namespace Wave.OpenXR
 			else
 				SettingsHelper.GetFloat(kHandConfidenceRight, ref confidence);
 			return confidence;
+		}
+		/// <summary>
+		/// Retrieves the wrist confidence which is a 0~1 float value where 1 means the most accurate.
+		/// </summary>
+		/// <param name="isLeft">Left or right hand.</param>
+		/// <param name="confidence">0~1 float value where 1 means the most accurate.</param>
+		/// <returns>True for the confidence is available.</returns>
+		public static bool GetHandConfidence(bool isLeft, out float confidence)
+		{
+			confidence = 0;
+			if (!IsAvailable()) { return false; }
+#pragma warning disable
+			confidence = GetHandConfidence(isLeft);
+#pragma warning enable
+			return true;
+		}
+
+		/// <summary>
+		/// Retrieves the left/right wrist velocity.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="velocity">Velocity in Vector3.</param>
+		/// <returns>True for valid velocity.</returns>
+		public static bool GetWristLinearVelocity(bool isLeft, out Vector3 velocity)
+		{
+			velocity = Vector3.zero;
+			if (!IsAvailable()) { return false; }
+
+			float velocity_x = 0, velocity_y = 0, velocity_z = 0;
+			if (isLeft)
+			{
+				SettingsHelper.GetFloat(kWristLinearVelocityLeftX, ref velocity_x);
+				SettingsHelper.GetFloat(kWristLinearVelocityLeftY, ref velocity_y);
+				SettingsHelper.GetFloat(kWristLinearVelocityLeftZ, ref velocity_z);
+			}
+			else
+			{
+				SettingsHelper.GetFloat(kWristLinearVelocityRightX, ref velocity_x);
+				SettingsHelper.GetFloat(kWristLinearVelocityRightY, ref velocity_y);
+				SettingsHelper.GetFloat(kWristLinearVelocityRightZ, ref velocity_z);
+			}
+			velocity.x = velocity_x;
+			velocity.y = velocity_y;
+			velocity.z = velocity_z;
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the left/right wrist angular velocity.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="velocity">Angular velocity in Vector3.</param>
+		/// <returns>True for valid angular velocity.</returns>
+		public static bool GetWristAngularVelocity(bool isLeft, out Vector3 velocity)
+		{
+			velocity = Vector3.zero;
+			if (!IsAvailable()) { return false; }
+
+			float velocity_x = 0, velocity_y = 0, velocity_z = 0;
+			if (isLeft)
+			{
+				SettingsHelper.GetFloat(kWristAngularVelocityLeftX, ref velocity_x);
+				SettingsHelper.GetFloat(kWristAngularVelocityLeftY, ref velocity_y);
+				SettingsHelper.GetFloat(kWristAngularVelocityLeftZ, ref velocity_z);
+			}
+			else
+			{
+				SettingsHelper.GetFloat(kWristAngularVelocityRightX, ref velocity_x);
+				SettingsHelper.GetFloat(kWristAngularVelocityRightY, ref velocity_y);
+				SettingsHelper.GetFloat(kWristAngularVelocityRightZ, ref velocity_z);
+			}
+			velocity.x = velocity_x;
+			velocity.y = velocity_y;
+			velocity.z = velocity_z;
+			return true;
+		}
+		/// <summary>
+		/// Retrieves current left/right hand motion.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="motion">None, Hold or Pinch.</param>
+		/// <returns>True for valid motion.</returns>
+		public static bool GetHandMotion(bool isLeft, out HandMotion motion)
+		{
+			motion = HandMotion.None;
+			if (!IsAvailable()) { return false; }
+
+			uint motionId = (uint)motion;
+
+			if (isLeft)
+				SettingsHelper.GetInt(kHandMotionLeft, ref motionId);
+			else
+				SettingsHelper.GetInt(kHandMotionRight, ref motionId);
+
+			if (motionId == 1) { motion = HandMotion.Pinch; }
+			if (motionId == 2) { motion = HandMotion.Hold; }
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the role of left/right hand while holding.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="role">Main hold or Side hold.</param>
+		/// <returns>True for valid role.</returns>
+		public static bool GetHandHoldRole(bool isLeft, out HandHoldRole role)
+		{
+			role = HandHoldRole.None;
+			if (!IsAvailable()) { return false; }
+
+			uint roleId = (uint)role;
+
+			if (isLeft)
+				SettingsHelper.GetInt(kHandRoleLeft, ref roleId);
+			else
+				SettingsHelper.GetInt(kHandRoleRight, ref roleId);
+
+			if (roleId == 1) { role = HandHoldRole.Main; }
+			if (roleId == 2) { role = HandHoldRole.Side; }
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the type of left/right handheld object.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="type">See <see cref="HandHoldType">HandHoldType</see>.</param>
+		/// <returns>True for valid type.</returns>
+		public static bool GetHandHoldType(bool isLeft, out HandHoldType type)
+		{
+			type = HandHoldType.None;
+			if (!IsAvailable()) { return false; }
+
+			uint typeId = (uint)type;
+
+			if (isLeft)
+				SettingsHelper.GetInt(kHandObjectLeft, ref typeId);
+			else
+				SettingsHelper.GetInt(kHandObjectRight, ref typeId);
+
+			if (typeId == 1) { type = HandHoldType.Gun; }
+			if (typeId == 2) { type = HandHoldType.OCSpray; }
+			if (typeId == 3) { type = HandHoldType.LongGun; }
+			if (typeId == 4) { type = HandHoldType.Baton; }
+			if (typeId == 5) { type = HandHoldType.FlashLight; }
+			return true;
+		}
+
+		/// <summary>
+		/// Retrieves the origin of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="origin">World space origin in Vector3.</param>
+		/// <returns>True for valid origin.</returns>
+		public static bool GetPinchOrigin(bool isLeft, out Vector3 origin)
+		{
+			origin = Vector3.zero;
+			if (!IsAvailable()) { return false; }
+
+			float origin_x = 0, origin_y = 0, origin_z = 0;
+			if (isLeft)
+			{
+				SettingsHelper.GetFloat(kHandOriginLeftX, ref origin_x);
+				SettingsHelper.GetFloat(kHandOriginLeftY, ref origin_y);
+				SettingsHelper.GetFloat(kHandOriginLeftZ, ref origin_z);
+			}
+			else
+			{
+				SettingsHelper.GetFloat(kHandOriginRightX, ref origin_x);
+				SettingsHelper.GetFloat(kHandOriginRightY, ref origin_y);
+				SettingsHelper.GetFloat(kHandOriginRightZ, ref origin_z);
+			}
+			origin.x = origin_x;
+			origin.y = origin_y;
+			origin.z = origin_z;
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the direction of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="direction">World space direction in Vector3.</param>
+		/// <returns>True for valid direction.</returns>
+		public static bool GetPinchDirection(bool isLeft, out Vector3 direction)
+		{
+			direction = Vector3.forward;
+			if (!IsAvailable()) { return false; }
+
+			float direction_x = 0, direction_y = 0, direction_z = 0;
+			if (isLeft)
+			{
+				SettingsHelper.GetFloat(kHandDirectionLeftX, ref direction_x);
+				SettingsHelper.GetFloat(kHandDirectionLeftY, ref direction_y);
+				SettingsHelper.GetFloat(kHandDirectionLeftZ, ref direction_z);
+			}
+			else
+			{
+				SettingsHelper.GetFloat(kHandDirectionRightX, ref direction_x);
+				SettingsHelper.GetFloat(kHandDirectionRightY, ref direction_y);
+				SettingsHelper.GetFloat(kHandDirectionRightZ, ref direction_z);
+			}
+			direction.x = direction_x;
+			direction.y = direction_y;
+			direction.z = direction_z;
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the strength of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="strength">The strength (0~1) where 1 means the thumb tip and index tip is touching.</param>
+		/// <returns></returns>
+		public static bool GetPinchStrength(bool isLeft, out float strength)
+		{
+			strength = 0;
+			if (!IsAvailable()) { return false; }
+
+			if (isLeft)
+				SettingsHelper.GetFloat(kHandStrengthLeft, ref strength);
+			else
+				SettingsHelper.GetFloat(kHandStrengthRight, ref strength);
+
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the system default threshold always used to judge if a "selection" happens when the pinch strength value is greater than the threshold.
+		/// </summary>
+		/// <param name="threshold">Threshold in float 0~1.</param>
+		/// <returns>True for valid threshold.</returns>
+		public static bool GetPinchThreshold(out float threshold)
+		{
+			threshold = 1; // The pinch strength will never > 1
+			if (!IsAvailable()) { return false; }
+
+			SettingsHelper.GetFloat(kHandPinchThreshold, ref threshold);
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the system default threshold always used to judge if a "release" happens when a hand is pinching and the pinch strength value is less than the threshold.
+		/// Note that the Pinch Off Threshold should NOT be greater than the Pinch Threshold.
+		/// </summary>
+		/// <param name="threshold">Threshold in float 0~1.</param>
+		/// <returns>True for valid threshold.</returns>
+		public static bool GetPinchOffThreshold(out float threshold)
+		{
+			threshold = 1; // The pinch strength will never > 1
+			if (!IsAvailable()) { return false; }
+
+			SettingsHelper.GetFloat(kHandPinchOffThreshold, ref threshold);
+			return true;
+		}
+		/// <summary>
+		/// Checks if a hand is pinching currently.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <returns>True for pinching.</returns>
+		public static bool IsHandPinching(bool isLeft)
+		{
+			bool isPinching = false;
+
+			if (!GetHandMotion(isLeft, out HandMotion motion)) { return false; }
+			if (motion != HandMotion.Pinch) { return false; }
+
+			if (isLeft)
+				SettingsHelper.GetBool(kHandIsPinchingLeft, ref isPinching);
+			else
+				SettingsHelper.GetBool(kHandIsPinchingRight, ref isPinching);
+
+			return isPinching;
 		}
 	}
 }

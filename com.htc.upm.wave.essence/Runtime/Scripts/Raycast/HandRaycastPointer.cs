@@ -39,26 +39,58 @@ namespace Wave.Essence.Raycast
 		private bool m_UseDefaultPinch = false;
 		public bool UseDefaultPinch { get { return m_UseDefaultPinch; } set { m_UseDefaultPinch = value; } }
 
+		private float m_PinchStrengthCustom = .5f;
 		[Tooltip("Pinch strength to trigger events.")]
 		[SerializeField]
 		[Range(0, 1)]
 		private float m_PinchStrength = .5f;
-		public float PinchStrength { get { return m_PinchStrength; } set { m_PinchStrength = value; } }
+		public float PinchStrength {
+			get { return m_PinchStrength; }
+			set {
+				m_PinchStrength = value;
+				m_PinchStrengthCustom = value;
+			}
+		}
 
+		private float m_PinchReleaseCustom = .5f;
 		[Tooltip("Pinch will release when strength < (Pinch Strength - Pinch Release)")]
 		[SerializeField]
 		[Range(0, .9f)]
 		private float m_PinchRelease = .5f;
-		public float PinchRelease { get { return m_PinchRelease; } set { m_PinchRelease = value; } }
+		public float PinchRelease {
+			get { return m_PinchRelease; }
+			set {
+				m_PinchRelease = value;
+				m_PinchReleaseCustom = value;
+			}
+		}
+
+		protected override void Awake()
+		{
+			base.Awake();
+
+			m_PinchStrengthCustom = m_PinchStrength;
+			m_PinchReleaseCustom = m_PinchRelease;
+		}
 
 		const float kPinchThreshold = .5f;
 		private void Validate()
 		{
-			// Checks PinchStrength.
-			if (m_UseDefaultPinch && HandManager.Instance != null) { m_PinchStrength = HandManager.Instance.GetPinchThreshold(); }
-			// Checks PinchRelease
-			if (m_PinchStrength <= kPinchThreshold) { m_PinchRelease = 0; }
+			// Retrieves pinch on/off threshold.
+			if (m_UseDefaultPinch && HandManager.Instance != null)
+			{
+				m_PinchStrength = Mathf.Clamp01(HandManager.Instance.GetPinchThreshold());
+				float pinchOffThreshold = Mathf.Clamp01(HandManager.Instance.GetPinchOffThreshold());
+				if (m_PinchStrength > pinchOffThreshold) { m_PinchRelease = m_PinchStrength - pinchOffThreshold; }
+			}
 			else
+			{
+				m_PinchStrength = m_PinchStrengthCustom;
+				m_PinchRelease = m_PinchReleaseCustom;
+			}
+			// Checks pinch off threshold.
+			if (m_PinchStrength <= kPinchThreshold) { m_PinchRelease = 0; }
+			else // Pinch On Threshold > 0.5f
 			{
 				// m_PinchStrength > kPinchThreshold but
 				// m_PinchStrength < m_PinchRelease thus m_PinchStrength - m_PinchRelease < 0
@@ -132,7 +164,7 @@ namespace Wave.Essence.Raycast
 
 			if (!eligibleForClick)
 			{
-				bool down = HandManager.Instance.GetPinchStrength(m_Hand) > m_PinchStrength;
+				bool down = m_UseDefaultPinch ? HandManager.Instance.IsHandPinching(m_Hand) : HandManager.Instance.GetPinchStrength(m_Hand) > m_PinchStrength;
 				if (down)
 				{
 					eligibleForClick = true;
@@ -144,9 +176,17 @@ namespace Wave.Essence.Raycast
 		}
 		protected override bool OnHold()
 		{
-			float pinchStrength = HandManager.Instance.GetPinchStrength(m_Hand);
-			bool hold = pinchStrength > m_PinchStrength;
-			if (eligibleForClick) { hold = pinchStrength > (m_PinchStrength - m_PinchRelease); }
+			bool hold = false;
+			if (m_UseDefaultPinch)
+			{
+				if (eligibleForClick) { hold = HandManager.Instance.IsHandPinching(m_Hand); }
+			}
+			else
+			{
+				float pinchStrength = HandManager.Instance.GetPinchStrength(m_Hand);
+				hold = pinchStrength > m_PinchStrength;
+				if (eligibleForClick) { hold = pinchStrength > (m_PinchStrength - m_PinchRelease); }
+			}
 			if (!hold)
 				eligibleForClick = false;
 			return hold;

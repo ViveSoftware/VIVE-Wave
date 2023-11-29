@@ -46,6 +46,7 @@ namespace Wave.XR
 			"Wave",
 			"XR",
 			"AndroidManifest",
+			"MRTKSupport",
 		};
 
 		public XRSDKSettingsProvider(string path, SettingsScope scope = SettingsScope.Project)
@@ -62,16 +63,20 @@ namespace Wave.XR
 		public override void OnGUI(string searchContext)
         {
 			bool m_FeatureAndroidManifestImported = Directory.Exists(WaveXRPath + "/Platform/Android");
+			bool m_FeatureMRTKSupportImported = Directory.Exists(WaveXRPath + "/MRTKSupport");
 
 			bool hasKeyword = false;
 			bool showAndroidManifest = false;
+			bool showMRTKSupport = false;
 			showAndroidManifest = searchContext.Contains("AndroidManifest");
-			if(showAndroidManifest)
+			showMRTKSupport = searchContext.Contains("MRTKSupport");
+			if (showAndroidManifest || showMRTKSupport)
 				hasKeyword = true;
 
 			/**
              * GUI layout of features.
              * 1. AndroidManifest
+             * 2. MRTK Support
             **/
 			if (showAndroidManifest || !hasKeyword)
 			{
@@ -84,6 +89,26 @@ namespace Wave.XR
 					GUI.enabled = !m_FeatureAndroidManifestImported;
 					if (GUILayout.Button("Import Feature - Custom Android Manifest", GUILayout.ExpandWidth(false)))
 						ImportModule("wave_xrsdk_androidmanifest.unitypackage");
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+
+			if (showMRTKSupport || !hasKeyword)
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("MRTK Support", EditorStyles.boldLabel);
+					GUILayout.Label("MRTK support is a feature that enables you to run apps built with MRTK on VIVE.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("The feature will be imported at " + WaveXRPath + "/MRTKSupport.", EditorStyles.label);
+					GUILayout.Space(5f);
+					GUI.enabled = !m_FeatureMRTKSupportImported;
+					if (GUILayout.Button("Import Feature - MRTK 2.8.3 Support", GUILayout.ExpandWidth(false)))
+						ImportModule("Packages/com.htc.upm.wave.xrsdk/Runtime/MRTKSupport/2.8.3/wave_xrsdk_mrtksupport.unitypackage", false);
+					GUILayout.Space(5f);
+					if (GUILayout.Button("Import Feature - MRTK 3.0.0 Support", GUILayout.ExpandWidth(false)))
+						ImportModule("Packages/com.htc.upm.wave.xrsdk/Runtime/MRTKSupport/3.0.0/wave_xrsdk_mrtksupport.unitypackage", false);
 					GUILayout.Space(5f);
 					GUI.enabled = true;
 				}
@@ -124,9 +149,9 @@ namespace Wave.XR
 				File.Delete("Assets/Wave.meta");
 		}
 
-		private void ImportModule(string packagePath)
+		private void ImportModule(string packagePath, bool padding = true)
 		{
-			string target = Path.Combine("Packages/com.htc.upm.wave.xrsdk/UnityPackages~", packagePath);
+			string target = padding == true? Path.Combine("Packages/com.htc.upm.wave.xrsdk/UnityPackages~", packagePath) : packagePath;
 			Debug.Log("Import: " + target);
 			AssetDatabase.ImportPackage(target, false);
 		}

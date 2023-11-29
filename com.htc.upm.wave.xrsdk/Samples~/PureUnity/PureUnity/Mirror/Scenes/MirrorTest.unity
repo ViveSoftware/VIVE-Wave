@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 19ac6e6a7b86fbd4bb22831939e541e0, type: 2}
+  m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -20373,6 +20373,23 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 928795329}
     m_Modifications:
+    - target: {fileID: 806842206, guid: 28d6fd7324e3abd41b20a698e6341ed8, type: 3}
+      propertyPath: m_Layer
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2035112057, guid: 28d6fd7324e3abd41b20a698e6341ed8, type: 3}
+      propertyPath: m_FarDistance
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2035112057, guid: 28d6fd7324e3abd41b20a698e6341ed8, type: 3}
+      propertyPath: m_ReflectLayers.m_Bits
+      value: 295
+      objectReference: {fileID: 0}
+    - target: {fileID: 2301286267688977884, guid: 28d6fd7324e3abd41b20a698e6341ed8,
+        type: 3}
+      propertyPath: m_Layer
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 3514312458567729485, guid: 28d6fd7324e3abd41b20a698e6341ed8,
         type: 3}
       propertyPath: m_RootOrder
@@ -20447,6 +20464,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: HandMirror
+      objectReference: {fileID: 0}
+    - target: {fileID: 5702569081058747538, guid: 28d6fd7324e3abd41b20a698e6341ed8,
+        type: 3}
+      propertyPath: m_Layer
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7609472817541659616, guid: 28d6fd7324e3abd41b20a698e6341ed8,
+        type: 3}
+      propertyPath: m_Layer
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28d6fd7324e3abd41b20a698e6341ed8, type: 3}

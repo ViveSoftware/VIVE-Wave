@@ -74,7 +74,7 @@ namespace Wave.XR.Sample.Controller
 			if (!UseInputAction)
 #endif
 			{
-				if (_text != null) { _text.text = binaryButton.ToString(); }
+				if (_text != null) { _text.text = binaryButton.Name(); }
 				if (InputDeviceControl.KeyDown(
 					(isLeft ? InputDeviceControl.ControlDevice.Left : InputDeviceControl.ControlDevice.Right),
 					binaryButton.InputFeature())

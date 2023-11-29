@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SpatialTracking;
@@ -13,6 +14,7 @@ namespace Wave.XR.Sample.KMC
 	// Some code wre copied from Unity's Standard Assets package
 	public class WaveXR_KeyboardMouseControl : MonoBehaviour
 	{
+		private Camera targetCam;
 		private WaveXR_PoseProviderForKMC poseProviderHMD = null;
 		private WaveXR_PoseProviderForKMC poseProviderCtrlL = null;
 		private WaveXR_PoseProviderForKMC poseProviderCtrlR = null;
@@ -259,22 +261,40 @@ namespace Wave.XR.Sample.KMC
 			if (!Application.isEditor)
 				enabled = false;
 
-			// Set as Camera.main's parent
-			kmcObjHMD = new GameObject("KMControlPosition");
-
 #if ENABLE_INPUT_SYSTEM
 			kmcInput.Enable();
 #endif
 		}
 
-		private void Start()
-		{
-			poseCurrent = PoseHMD;
-			CurrentTarget = 0;
-			kmcObjCurrent = kmcObjHMD;
+        private void Start()
+        {
+			StartCoroutine(FindMainCamera());
+        }
 
-			// Wait all object is ready
-			kmcObjHMD.transform.SetParent(Camera.main.transform.parent, false);
+        private IEnumerator FindMainCamera()
+		{
+			targetCam = null;
+
+			while (Camera.main == null)
+			{
+				yield return null;
+			}
+
+			// For some special cases.  For example, VIU's head.
+            yield return new WaitForSeconds(1);
+
+            targetCam = Camera.main;
+
+			// Set as Camera.main's parent
+			if (kmcObjHMD != null)
+				Destroy(kmcObjHMD);
+            kmcObjHMD = new GameObject("KMControlPosition");
+            kmcObjCurrent = kmcObjHMD;
+            poseCurrent = PoseHMD;
+            CurrentTarget = 0;
+
+            // Wait all object is ready
+            kmcObjHMD.transform.SetParent(Camera.main.transform.parent, false);
 			AttachHMDTo(0);
 			ApplyToAllTrackedPoseDriver();
 			KeyboardRotationInit();
@@ -363,17 +383,26 @@ namespace Wave.XR.Sample.KMC
 		private float xAxis = 0, yAxis = 0;
 		private void Update()
 		{
+			if (Camera.main != targetCam)
+			{
+				if (targetCam != null)
+					StartCoroutine(FindMainCamera());
+				return;
+			}
+			if (targetCam == null)
+				return;
+
 			// Toggle cursor lock
-			if (Input.GetKeyUp(KeyCode.G))
+			if (UnityEngine.Input.GetKeyUp(KeyCode.G))
 				Cursor.lockState = Cursor.lockState == CursorLockMode.None ? CursorLockMode.Locked : CursorLockMode.None;
 			//Unlock cursor
-			if (Input.GetKeyUp(KeyCode.Escape))
+			if (UnityEngine.Input.GetKeyUp(KeyCode.Escape))
 				Cursor.lockState = CursorLockMode.None;
 			bool mouseHooked = Cursor.lockState != CursorLockMode.None;
 
 #if ENABLE_LEGACY_INPUT_MANAGER
-			xAxis = Input.GetAxis("Mouse X");
-			yAxis = Input.GetAxis("Mouse Y");
+			xAxis = UnityEngine.Input.GetAxis("Mouse X");
+			yAxis = UnityEngine.Input.GetAxis("Mouse Y");
 #elif ENABLE_INPUT_SYSTEM
 			mouseAxis = kmcInput.mouse.axis.ReadValue<Vector2>() * axisProportion;
 			xAxis = -(mouseAxisEx.x - mouseAxis.x);

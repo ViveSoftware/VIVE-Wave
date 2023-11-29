@@ -206,8 +206,6 @@ namespace Wave.Essence.Events
 
         private void OnEnable()
         {
-			instance = this;
-
             if (PollSystemFrameEvent == null)
                 PollSystemFrameEvent = FunctionsHelper.GetFuncPtr<PollSystemFrameEventDelegate>("PollFrameEvent");
         }
@@ -219,6 +217,9 @@ namespace Wave.Essence.Events
 
         private void Update()
         {
+            // Only one can poll and send the event.
+            if (instance != this) return;
+
             if (PollSystemFrameEvent == null)
             {
                 Log.e("WVRSystemEvent", "PollSystemFrameEvent == null");

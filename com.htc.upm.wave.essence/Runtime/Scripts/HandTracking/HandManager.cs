@@ -17,7 +17,6 @@ using Wave.Native;
 using Wave.Essence.Events;
 using Wave.XR.Function;
 using Wave.XR.Settings;
-using System.Diagnostics;
 using UnityEngine.Profiling;
 
 using Wave.OpenXR;
@@ -263,26 +262,6 @@ namespace Wave.Essence.Hand
 		private delegate void ConvertHandTrackingDataToUnityDelegate(ref WVR_HandJointData_t src, ref HandJointData26 dest);
 
 		private ConvertHandTrackingDataToUnityDelegate ConvertHandTrackingDataToUnity = null;
-
-		#region Wave XR Constants
-		const string kWristLinearVelocityLeftX = "WristLinearVelocityLeftX", kWristLinearVelocityLeftY = "WristLinearVelocityLeftY", kWristLinearVelocityLeftZ = "WristLinearVelocityLeftZ";
-		const string kWristLinearVelocityRightX = "WristLinearVelocityRightX", kWristLinearVelocityRightY = "WristLinearVelocityRightY", kWristLinearVelocityRightZ = "WristLinearVelocityRightZ";
-		const string kWristAngularVelocityLeftX = "WristAngularVelocityLeftX", kWristAngularVelocityLeftY = "WristAngularVelocityLeftY", kWristAngularVelocityLeftZ = "WristAngularVelocityLeftZ";
-		const string kWristAngularVelocityRightX = "WristAngularVelocityRightX", kWristAngularVelocityRightY = "WristAngularVelocityRightY", kWristAngularVelocityRightZ = "WristAngularVelocityRightZ";
-		const string kHandMotionLeft = "HandMotionLeft";
-		const string kHandMotionRight = "HandMotionRight";
-		const string kHandRoleLeft = "HandRoleLeft";
-		const string kHandRoleRight = "HandRoleRight";
-		const string kHandObjectLeft = "HandObjectLeft";
-		const string kHandObjectRight = "HandObjectRight";
-		const string kHandOriginLeftX = "HandOriginLeftX", kHandOriginLeftY = "HandOriginLeftY", kHandOriginLeftZ = "HandOriginLeftZ";
-		const string kHandOriginRightX = "HandOriginRightX", kHandOriginRightY = "HandOriginRightY", kHandOriginRightZ = "HandOriginRightZ";
-		const string kHandDirectionLeftX = "HandDirectionLeftX", kHandDirectionLeftY = "HandDirectionLeftY", kHandDirectionLeftZ = "HandDirectionLeftZ";
-		const string kHandDirectionRightX = "HandDirectionRightX", kHandDirectionRightY = "HandDirectionRightY", kHandDirectionRightZ = "HandDirectionRightZ";
-		const string kHandStrengthLeft = "HandStrengthLeft";
-		const string kHandStrengthRight = "HandStrengthRight";
-		const string kHandPinchThreshold = "HandPinchThreshold";
-		#endregion
 
 		void Awake()
 		{
@@ -1217,6 +1196,34 @@ namespace Wave.Essence.Hand
 		}
 		#endregion
 		#region Confidence
+		public bool GetHandConfidence(TrackerType tracker, bool isLeft, out float confidence)
+		{
+			confidence = 0;
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.GetHandConfidence(isLeft, out confidence);
+			}
+
+			if (tracker == TrackerType.Natural)
+			{
+				if (hasNaturalHandTrackerData && hasNaturalTrackerInfo)
+				{
+					confidence = isLeft ? m_NaturalHandTrackerData.left.confidence : m_NaturalHandTrackerData.right.confidence;
+					return true;
+				}
+			}
+			if (tracker == TrackerType.Electronic)
+			{
+				if (hasElectronicHandTrackerData && hasElectronicTrackerInfo)
+				{
+					confidence = isLeft ? m_ElectronicHandTrackerData.left.confidence : m_ElectronicHandTrackerData.right.confidence;
+					return true;
+				}
+			}
+
+			return false;
+		}
 		/// <summary>
 		/// Retrieves left/right hand's confidence of a <see cref="TrackerType">tracker</see>.
 		/// </summary>
@@ -1225,32 +1232,7 @@ namespace Wave.Essence.Hand
 		/// <returns>A float {0, 1} value where 1 means the most reliable.</returns>
 		public float GetHandConfidence(TrackerType tracker, bool isLeft)
 		{
-			if (UseXRData(tracker))
-			{
-				return InputDeviceHand.GetHandConfidence(isLeft);
-			}
-
-			if (tracker == TrackerType.Natural)
-			{
-				if (hasNaturalHandTrackerData && hasNaturalTrackerInfo)
-				{
-					if (isLeft)
-						return m_NaturalHandTrackerData.left.confidence;
-					else
-						return m_NaturalHandTrackerData.right.confidence;
-				}
-			}
-			if (tracker == TrackerType.Electronic)
-			{
-				if (hasElectronicHandTrackerData && hasElectronicTrackerInfo)
-				{
-					if (isLeft)
-						return m_ElectronicHandTrackerData.left.confidence;
-					else
-						return m_ElectronicHandTrackerData.right.confidence;
-				}
-			}
-
+			if (GetHandConfidence(tracker, isLeft, out float confidence)) { return confidence; }
 			return 0;
 		}
 		public float GetHandConfidence(TrackerType tracker, HandType hand)
@@ -1623,23 +1605,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				float velocity_x = 0, velocity_y = 0, velocity_z = 0;
-				if (isLeft)
-				{
-					SettingsHelper.GetFloat(kWristLinearVelocityLeftX, ref velocity_x);
-					SettingsHelper.GetFloat(kWristLinearVelocityLeftY, ref velocity_y);
-					SettingsHelper.GetFloat(kWristLinearVelocityLeftZ, ref velocity_z);
-				}
-				else
-				{
-					SettingsHelper.GetFloat(kWristLinearVelocityRightX, ref velocity_x);
-					SettingsHelper.GetFloat(kWristLinearVelocityRightY, ref velocity_y);
-					SettingsHelper.GetFloat(kWristLinearVelocityRightZ, ref velocity_z);
-				}
-				velocity.x = velocity_x;
-				velocity.y = velocity_y;
-				velocity.z = velocity_z;
-				return true;
+				return InputDeviceHand.GetWristLinearVelocity(isLeft, out velocity);
 			}
 
 			bool ret = false;
@@ -1711,23 +1677,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				float velocity_x = 0, velocity_y = 0, velocity_z = 0;
-				if (isLeft)
-				{
-					SettingsHelper.GetFloat(kWristAngularVelocityLeftX, ref velocity_x);
-					SettingsHelper.GetFloat(kWristAngularVelocityLeftY, ref velocity_y);
-					SettingsHelper.GetFloat(kWristAngularVelocityLeftZ, ref velocity_z);
-				}
-				else
-				{
-					SettingsHelper.GetFloat(kWristAngularVelocityRightX, ref velocity_x);
-					SettingsHelper.GetFloat(kWristAngularVelocityRightY, ref velocity_y);
-					SettingsHelper.GetFloat(kWristAngularVelocityRightZ, ref velocity_z);
-				}
-				velocity.x = velocity_x;
-				velocity.y = velocity_y;
-				velocity.z = velocity_z;
-				return true;
+				return InputDeviceHand.GetWristAngularVelocity(isLeft, out velocity);
 			}
 
 			bool ret = false;
@@ -1840,16 +1790,12 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				uint motionId = (uint)motion;
-
-				if (isLeft)
-					SettingsHelper.GetInt(kHandMotionLeft, ref motionId);
-				else
-					SettingsHelper.GetInt(kHandMotionRight, ref motionId);
-
-				if (motionId == 1) { motion = HandMotion.Pinch; }
-				if (motionId == 2) { motion = HandMotion.Hold; }
-				return true;
+				if (InputDeviceHand.GetHandMotion(isLeft, out InputDeviceHand.HandMotion xrMotion))
+				{
+					motion = xrMotion.WaveType();
+					return true;
+				}
+				return false;
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -1933,17 +1879,12 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				role = HandHoldRole.None;
-				uint roleId = (uint)role;
-
-				if (isLeft)
-					SettingsHelper.GetInt(kHandRoleLeft, ref roleId);
-				else
-					SettingsHelper.GetInt(kHandRoleRight, ref roleId);
-
-				if (roleId == 1) { role = HandHoldRole.Main; }
-				if (roleId == 2) { role = HandHoldRole.Side; }
-				return true;
+				if (InputDeviceHand.GetHandHoldRole(isLeft, out InputDeviceHand.HandHoldRole xrRole))
+				{
+					role = xrRole.WaveType();
+					return true;
+				}
+				return false;
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -2026,19 +1967,12 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				uint typeId = (uint)type;
-
-				if (isLeft)
-					SettingsHelper.GetInt(kHandObjectLeft, ref typeId);
-				else
-					SettingsHelper.GetInt(kHandObjectRight, ref typeId);
-
-				if (typeId == 1) { type = HandHoldType.Gun; }
-				if (typeId == 2) { type = HandHoldType.OCSpray; }
-				if (typeId == 3) { type = HandHoldType.LongGun; }
-				if (typeId == 4) { type = HandHoldType.Baton; }
-				if (typeId == 5) { type = HandHoldType.FlashLight; }
-				return true;
+				if (InputDeviceHand.GetHandHoldType(isLeft, out InputDeviceHand.HandHoldType xrType))
+				{
+					type = xrType.WaveType();
+					return true;
+				}
+				return false;
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -2119,23 +2053,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				float origin_x = 0, origin_y = 0, origin_z = 0;
-				if (isLeft)
-				{
-					SettingsHelper.GetFloat(kHandOriginLeftX, ref origin_x);
-					SettingsHelper.GetFloat(kHandOriginLeftY, ref origin_y);
-					SettingsHelper.GetFloat(kHandOriginLeftZ, ref origin_z);
-				}
-				else
-				{
-					SettingsHelper.GetFloat(kHandOriginRightX, ref origin_x);
-					SettingsHelper.GetFloat(kHandOriginRightY, ref origin_y);
-					SettingsHelper.GetFloat(kHandOriginRightZ, ref origin_z);
-				}
-				origin.x = origin_x;
-				origin.y = origin_y;
-				origin.z = origin_z;
-				return true;
+				return InputDeviceHand.GetPinchOrigin(isLeft, out origin);
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -2202,23 +2120,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				float direction_x = 0, direction_y = 0, direction_z = 0;
-				if (isLeft)
-				{
-					SettingsHelper.GetFloat(kHandDirectionLeftX, ref direction_x);
-					SettingsHelper.GetFloat(kHandDirectionLeftY, ref direction_y);
-					SettingsHelper.GetFloat(kHandDirectionLeftZ, ref direction_z);
-				}
-				else
-				{
-					SettingsHelper.GetFloat(kHandDirectionRightX, ref direction_x);
-					SettingsHelper.GetFloat(kHandDirectionRightY, ref direction_y);
-					SettingsHelper.GetFloat(kHandDirectionRightZ, ref direction_z);
-				}
-				direction.x = direction_x;
-				direction.y = direction_y;
-				direction.z = direction_z;
-				return true;
+				return InputDeviceHand.GetPinchDirection(isLeft, out direction);
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -2285,12 +2187,9 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				float strength = 0;
-				if (isLeft)
-					SettingsHelper.GetFloat(kHandStrengthLeft, ref strength);
-				else
-					SettingsHelper.GetFloat(kHandStrengthRight, ref strength);
-				return strength;
+				if (InputDeviceHand.GetPinchStrength(isLeft, out float strength))
+					return strength;
+				return 0;
 			}
 
 			if (tracker == TrackerType.Natural)
@@ -2344,31 +2243,129 @@ namespace Wave.Essence.Hand
 		#endregion
 
 		/// <summary> Retrieves the default threshold of Hand Pinch motion. </summary>
-		public float GetPinchThreshold(TrackerType tracker)
+		public bool GetPinchThreshold(TrackerType tracker, out float threshold)
 		{
+			threshold = 1; // The pinch strength will never > 1
+
 			if (UseXRData(tracker))
 			{
-				float threshold = 0;
-				SettingsHelper.GetFloat(kHandPinchThreshold, ref threshold);
-				return threshold;
+				return InputDeviceHand.GetPinchThreshold(out threshold);
 			}
 
 			if ((tracker == TrackerType.Natural) && hasNaturalTrackerInfo)
 			{
-				return m_NaturalTrackerInfo.pinchThreshold;
+				threshold = m_NaturalTrackerInfo.pinchThreshold;
+				return true;
 			}
 			if ((tracker == TrackerType.Electronic) && hasElectronicTrackerInfo)
 			{
-				return m_ElectronicTrackerInfo.pinchThreshold;
+				threshold = m_ElectronicTrackerInfo.pinchThreshold;
+				return true;
 			}
-			return 0;
+
+			return false;
+		}
+		public float GetPinchThreshold(TrackerType tracker)
+		{
+			if (GetPinchThreshold(tracker, out float threshold))
+				return threshold;
+			return 1; // The pinch strength will never > 1
 		}
 		public float GetPinchThreshold()
 		{
 			TrackerType tracker = TrackerType.Natural;
 			if (GetPreferTracker(ref tracker))
 				return GetPinchThreshold(tracker);
-			return 0;
+			return 1; // The pinch strength will never > 1
+		}
+		/// <summary> Retrieves the default threshold of Hand Pinch motion. </summary>
+		public bool GetPinchOffThreshold(TrackerType tracker, out float threshold)
+		{
+			threshold = 1; // The pinch strength will never > 1
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.GetPinchOffThreshold(out threshold);
+			}
+
+			if ((tracker == TrackerType.Natural) && hasNaturalTrackerInfo)
+			{
+				threshold = m_NaturalTrackerInfo.pinchOff;
+				return true;
+			}
+			if ((tracker == TrackerType.Electronic) && hasElectronicTrackerInfo)
+			{
+				threshold = m_ElectronicTrackerInfo.pinchOff;
+				return true;
+			}
+
+			return false;
+		}
+		public float GetPinchOffThreshold(TrackerType tracker)
+		{
+			if (GetPinchOffThreshold(tracker, out float threshold))
+				return threshold;
+			return 1; // The pinch strength will never > 1
+		}
+		public float GetPinchOffThreshold()
+		{
+			TrackerType tracker = TrackerType.Natural;
+			if (GetPreferTracker(ref tracker))
+				return GetPinchOffThreshold(tracker);
+			return 1; // The pinch strength will never > 1
+		}
+		public bool IsHandPinching(TrackerType tracker, bool isLeft)
+		{
+			if (GetHandMotion(tracker, isLeft) != HandMotion.Pinch)
+				return false;
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.IsHandPinching(isLeft);
+			}
+
+			if (tracker == TrackerType.Natural)
+			{
+				if (hasNaturalHandTrackerData && hasNaturalTrackerInfo)
+				{
+					if (isLeft)
+						return m_NaturalHandPoseData.left.pinch.isPinching;
+					else
+						return m_NaturalHandPoseData.right.pinch.isPinching;
+				}
+			}
+			if (tracker == TrackerType.Electronic)
+			{
+				if (hasElectronicHandTrackerData && hasElectronicTrackerInfo)
+				{
+					if (isLeft)
+						return m_ElectronicHandPoseData.left.pinch.isPinching;
+					else
+						return m_ElectronicHandPoseData.right.pinch.isPinching;
+				}
+			}
+
+			return false;
+		}
+		public bool IsHandPinching(bool isLeft)
+		{
+			TrackerType tracker = TrackerType.Natural;
+			if (GetPreferTracker(ref tracker))
+				return IsHandPinching(tracker, isLeft);
+			return false;
+		}
+		public bool IsHandPinching(HandType hand)
+		{
+			return IsHandPinching(hand == HandType.Left);
+		}
+		public bool IsHandPinching(bool isLeft, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return IsHandPinching(isLeft);
+		}
+		public bool IsHandPinching(HandType hand, out long timestamp)
+		{
+			return IsHandPinching(hand == HandType.Left, out timestamp);
 		}
 
 		private bool m_WristPositionFused = false;
@@ -3220,6 +3217,31 @@ namespace Wave.Essence.Hand
 			if (type == HandManager.HandType.Left) { return "Left"; }
 			if (type == HandManager.HandType.Right) { return "Right"; }
 			return "";
+		}
+
+		public static HandManager.HandMotion WaveType(this InputDeviceHand.HandMotion type)
+		{
+			if (type == InputDeviceHand.HandMotion.Hold) { return HandManager.HandMotion.Hold; }
+			if (type == InputDeviceHand.HandMotion.Pinch) { return HandManager.HandMotion.Pinch; }
+
+			return HandManager.HandMotion.None;
+		}
+		public static HandManager.HandHoldRole WaveType(this InputDeviceHand.HandHoldRole type)
+		{
+			if (type == InputDeviceHand.HandHoldRole.Main) { return HandManager.HandHoldRole.Main; }
+			if (type == InputDeviceHand.HandHoldRole.Side) { return HandManager.HandHoldRole.Side; }
+
+			return HandManager.HandHoldRole.None;
+		}
+		public static HandManager.HandHoldType WaveType(this InputDeviceHand.HandHoldType type)
+		{
+			if (type == InputDeviceHand.HandHoldType.Baton) { return HandManager.HandHoldType.Baton; }
+			if (type == InputDeviceHand.HandHoldType.FlashLight) { return HandManager.HandHoldType.FlashLight; }
+			if (type == InputDeviceHand.HandHoldType.Gun) { return HandManager.HandHoldType.Gun; }
+			if (type == InputDeviceHand.HandHoldType.LongGun) { return HandManager.HandHoldType.LongGun; }
+			if (type == InputDeviceHand.HandHoldType.OCSpray) { return HandManager.HandHoldType.OCSpray; }
+
+			return HandManager.HandHoldType.None;
 		}
 	}
 }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using UnityEngine.Rendering;
-using System;
 using System.Collections;
 using System.Text;
 
@@ -13,7 +11,10 @@ public class WaveXRMirror : MonoBehaviour
 	public bool m_DisablePixelLights = true;
 	public int m_TextureSize = 256;
 	public float m_ClipPlaneOffset = 0.07f;
-	public int m_framesNeededToUpdate = 0;
+	public float m_FarDistance = 20.0f;
+    public float m_NearDistance = 0.03f;
+	[Tooltip("Unused now")]
+    public int m_framesNeededToUpdate = 0;
 
 	public LayerMask m_ReflectLayers = -1;
 
@@ -21,16 +22,17 @@ public class WaveXRMirror : MonoBehaviour
 
 	private RenderTexture m_ReflectionTextureLeft = null;
 	private RenderTexture m_ReflectionTextureRight = null;
-	private int m_OldReflectionTextureSize = 0;
+    private RenderTexture m_ReflectionTextureMono = null;
+    private int m_OldReflectionTextureSize = 0;
 
 	private uint m_frameCounter = 0;
 
+	private int frameCount = 0;
 	private static bool s_InsideRendering = false;
 
 	private XRDisplaySubsystem targetDisplay = null;
 
 	private int passCount = 0;
-	private int currentPass = -1;
 
 	private Matrix4x4 worldToCameraMatrixL, worldToCameraMatrixR;
 	private Matrix4x4 projectionMatrixL, projectionMatrixR;
@@ -38,13 +40,15 @@ public class WaveXRMirror : MonoBehaviour
 	[Tooltip("MirrorPlane's forward direction will be going out of the mirror perpendicularly.  MirrorPlane's position should be a point on the mirror's plane.  If empty, use this gameobject as the mirror plane.")]
 	public GameObject mirrorPlaneObj;
 
+	List<XRDisplaySubsystem> displays = new List<XRDisplaySubsystem>();
+
 	private bool GetTargetDisplaySubsystem()
 	{
-		List<XRDisplaySubsystem> displays = new List<XRDisplaySubsystem>();
 		SubsystemManager.GetInstances(displays);
 
 		if (displays.Count == 0)
-			throw new Exception("No XR display provider.");
+			return false;
+			//throw new Exception("No XR display provider.");
 
 		foreach (var d in displays)
 		{
@@ -62,7 +66,9 @@ public class WaveXRMirror : MonoBehaviour
 		XRDisplaySubsystem.XRRenderPass renderPass;
 		XRDisplaySubsystem.XRRenderParameter renderParameter;
 
+		if (!GetTargetDisplaySubsystem()) return false;
 		var display = targetDisplay;
+		if (display == null) return false;
 
 		passCount = display.GetRenderPassCount();
 		if (passCount == 1)
@@ -126,13 +132,12 @@ public class WaveXRMirror : MonoBehaviour
 	{
 		if (mirrorPlaneObj == null)
 			mirrorPlaneObj = gameObject;
-
-		Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
 	}
 
+	bool hasDisplaySubsystem;
 	IEnumerator Start()
 	{
-			// Make sure we got the display provider.
+		// Make sure we got the display provider.
 		while (targetDisplay == null)
 		{
 #pragma warning disable
@@ -142,6 +147,7 @@ public class WaveXRMirror : MonoBehaviour
 			{
 				if (GetTargetDisplaySubsystem())
 				{
+					hasDisplaySubsystem = true;
 					Debug.Log("We got a display provider:" + targetDisplay.SubsystemDescriptor.id);
 					break;
 				}
@@ -149,16 +155,11 @@ public class WaveXRMirror : MonoBehaviour
 			catch
 			{
 				// stop running this script
-				enabled = false;
+				//enabled = false;
 				break;
 			}
 			yield return null;
 		}
-	}
-
-	private void Update()
-	{
-		currentPass = -1;
 	}
 
 	bool NeedUpdate(bool isSinglePass, Camera.MonoOrStereoscopicEye stereoActiveEye)
@@ -197,11 +198,14 @@ public class WaveXRMirror : MonoBehaviour
 		return false;
 	}
 
-	// This is called when it's known that the object will be rendered by some
-	// camera. We render reflections and do other updates here.
-	// Because the script executes in edit mode, reflections for the scene view
-	// camera will just work!
-	public void OnWillRenderObject()
+	string propertyL = "_ReflectionTexLeft";
+    string propertyR = "_ReflectionTexRight";
+
+    // This is called when it's known that the object will be rendered by some
+    // camera. We render reflections and do other updates here.
+    // Because the script executes in edit mode, reflections for the scene view
+    // camera will just work!
+    public void OnWillRenderObject()
 	{
 		var rend = GetComponent<Renderer>();
 		if (!enabled || !rend || !rend.sharedMaterial || !rend.enabled)
@@ -215,46 +219,43 @@ public class WaveXRMirror : MonoBehaviour
 		if (s_InsideRendering)
 			return;
 
-		// Only run on VR camera
-		if (cam != Camera.main || cam.stereoTargetEye != StereoTargetEyeMask.Both)
+		// Only run on VR camera.  Or if a scene view camera try see it, we update it only in editor
+		if (cam.stereoTargetEye != StereoTargetEyeMask.Both)
+		{
+			if (cam == Camera.main && Application.isEditor)
+			{
+				s_InsideRendering = true;
+				RenderCamera(cam, rend, ref m_ReflectionTextureMono);
+				Material[] ms = rend.materials;
+				foreach (Material mat in ms)
+				{
+					if (mat.HasProperty(propertyL))
+						mat.SetTexture(propertyL, m_ReflectionTextureMono);
+					if (mat.HasProperty(propertyR))
+						mat.SetTexture(propertyR, m_ReflectionTextureMono);
+				}
+				s_InsideRendering = false;
+			}
+			return;
+		}
+
+		if (targetDisplay == null)
 			return;
 
+		if (!GetWorldCameraMatrixFromDisplayProvider())
+			return;
+
+		if (frameCount == Time.frameCount)
+			return;
+		frameCount = Time.frameCount;
+
 		s_InsideRendering = true;
-		do
-		{
-			// Only update matrices and currentPass when current pass is no pass.
-			if (currentPass == -1)
-			{
-				if (!GetWorldCameraMatrixFromDisplayProvider())
-					break;
-			}
-			currentPass++;
-			if (currentPass >= passCount)
-				break;
-
-			// SinglePass only render once
-			if (passCount == 1)
-			{
-				RenderCamera(cam, rend, Camera.StereoscopicEye.Left, ref m_ReflectionTextureLeft);
-				RenderCamera(cam, rend, Camera.StereoscopicEye.Right, ref m_ReflectionTextureRight);
-			}
-
-			// MultiPass will enter the OnWillRenderObject twice
-			if (passCount == 2)
-			{
-				// Because the cam.stereoActiveEye is always return Left, use pass to change eye.
-				if (currentPass == 0)
-					RenderCamera(cam, rend, Camera.StereoscopicEye.Left, ref m_ReflectionTextureLeft);
-				if (currentPass == 1)
-					RenderCamera(cam, rend, Camera.StereoscopicEye.Right, ref m_ReflectionTextureRight);
-			}
-		} while (false);
+		RenderCamera(cam, rend, Camera.StereoscopicEye.Left, ref m_ReflectionTextureLeft);
+		RenderCamera(cam, rend, Camera.StereoscopicEye.Right, ref m_ReflectionTextureRight);
 		s_InsideRendering = false;
 
 		// Update material after the render command.
 		Material[] materials = rend.materials;
-		string propertyL = "_ReflectionTex" + Camera.StereoscopicEye.Left;
-		string propertyR = "_ReflectionTex" + Camera.StereoscopicEye.Right;
 		foreach (Material mat in materials)
 		{
 			if (mat.HasProperty(propertyL))
@@ -305,9 +306,13 @@ public class WaveXRMirror : MonoBehaviour
 		}
 */
 	}
+	private void GetMatrixAndPoseOfCamera(Camera cam, out Matrix4x4 worldToCameraMatrix, out Pose cameraPose)
+	{
+        worldToCameraMatrix = cam.worldToCameraMatrix; // GL convension
+        cameraPose = new Pose(cam.transform.position, GetRotation(worldToCameraMatrix));
+    }
 
-
-	private void RenderCamera(Camera cam, Renderer rend, Camera.StereoscopicEye eye, ref RenderTexture reflectionTexture)
+    private void RenderCamera(Camera cam, Renderer rend, Camera.StereoscopicEye eye, ref RenderTexture reflectionTexture)
 	{
 		Camera reflectionCamera;
 		CreateMirrorObjects(cam, eye, out reflectionCamera, ref reflectionTexture);
@@ -373,21 +378,98 @@ public class WaveXRMirror : MonoBehaviour
 		s_InsideRendering = false;
 	}
 
+	// For Mono
+    private void RenderCamera(Camera cam, Renderer rend, ref RenderTexture reflectionTexture)
+    {
+        Camera reflectionCamera;
+        CreateMirrorObjects(cam, out reflectionCamera, ref reflectionTexture);
+        if (reflectionCamera == null)
+            return;
 
-	void OnDisable()
+        Vector3 pos = mirrorPlaneObj.transform.position;
+        Vector3 normal = mirrorPlaneObj.transform.forward;
+        /*
+		Vector3 pos = transform.position;
+		Vector3 normal = transform.up;
+		*/
+
+        int oldPixelLightCount = QualitySettings.pixelLightCount;
+        if (m_DisablePixelLights)
+            QualitySettings.pixelLightCount = 0;
+
+        CopyCameraProperties(cam, reflectionCamera);
+
+
+        float d = -Vector3.Dot(normal, pos) - m_ClipPlaneOffset;
+        Vector4 reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d);
+
+        Matrix4x4 reflection = Matrix4x4.zero;
+        CalculateReflectionMatrix(ref reflection, reflectionPlane);
+
+        Vector3 oldEyePos;
+        Matrix4x4 worldToCameraMatrix;
+        Pose cameraPose;
+        GetMatrixAndPoseOfCamera(cam, out worldToCameraMatrix, out cameraPose);
+        oldEyePos = cameraPose.position;
+
+        reflectionCamera.projectionMatrix = cam.projectionMatrix;
+        Vector3 newEyePos = reflection.MultiplyPoint(oldEyePos);
+        reflectionCamera.transform.position = newEyePos;
+
+        reflectionCamera.worldToCameraMatrix = worldToCameraMatrix * reflection;
+
+        Vector4 clipPlane = CameraSpacePlane(worldToCameraMatrix * reflection, pos, normal, 1.0f);
+
+        Matrix4x4 projectionMatrix = cam.projectionMatrix;
+
+        MakeProjectionMatrixOblique(ref projectionMatrix, clipPlane);
+
+        //projectionMatrix = CalculateObliqueMatrix(reflectionCamera, clipPlane);
+
+        reflectionCamera.projectionMatrix = projectionMatrix;
+        reflectionCamera.cullingMatrix = projectionMatrix * reflectionCamera.worldToCameraMatrix;
+        reflectionCamera.cullingMask = m_ReflectLayers.value;
+        reflectionCamera.targetTexture = reflectionTexture;
+        GL.invertCulling = true;
+        reflectionCamera.Render();
+        reflectionCamera.enabled = false;
+        GL.invertCulling = false;
+
+        if (m_DisablePixelLights)
+            QualitySettings.pixelLightCount = oldPixelLightCount;
+
+        s_InsideRendering = false;
+    }
+
+
+    void OnDisable()
 	{
 		if (m_ReflectionTextureLeft)
 		{
-			DestroyImmediate(m_ReflectionTextureLeft);
+			m_ReflectionTextureLeft.Release();
+			Destroy(m_ReflectionTextureLeft);
 			m_ReflectionTextureLeft = null;
 		}
 		if (m_ReflectionTextureRight)
 		{
-			DestroyImmediate(m_ReflectionTextureRight);
+			m_ReflectionTextureRight.Release();
+			Destroy(m_ReflectionTextureRight);
 			m_ReflectionTextureRight = null;
 		}
+		if (m_ReflectionTextureMono)
+		{
+			m_ReflectionTextureMono.Release();
+			Destroy(m_ReflectionTextureMono);
+			m_ReflectionTextureMono = null;
+		}
 		foreach (var kvp in m_ReflectionCameras)
-			DestroyImmediate(((Camera)kvp.Value).gameObject);
+		{
+			var value = (Camera)kvp.Value;
+			if (value == null) continue;
+			var obj = value.gameObject;
+			if (obj == null) continue;
+			Destroy(obj);
+		}
 		m_ReflectionCameras.Clear();
 	}
 
@@ -395,6 +477,8 @@ public class WaveXRMirror : MonoBehaviour
 	{
 		if (dest == null)
 			return;
+		//dest.clearFlags = CameraClearFlags.Color;
+		//dest.backgroundColor = new Color(.9f, .9f, .9f);
 		dest.clearFlags = src.clearFlags;
 		dest.backgroundColor = src.backgroundColor;
 		if (src.clearFlags == CameraClearFlags.Skybox)
@@ -413,9 +497,9 @@ public class WaveXRMirror : MonoBehaviour
 		}
 
 		//dest.farClipPlane = 30;
-		dest.farClipPlane = src.farClipPlane;
-		dest.nearClipPlane = src.nearClipPlane;
-		dest.orthographic = src.orthographic;
+		dest.farClipPlane = m_FarDistance;  // src.farClipPlane;
+		dest.nearClipPlane = m_NearDistance;  // src.nearClipPlane;
+        dest.orthographic = src.orthographic;
 		dest.fieldOfView = src.fieldOfView;
 		dest.aspect = src.aspect;
 		dest.orthographicSize = src.orthographicSize;
@@ -428,11 +512,13 @@ public class WaveXRMirror : MonoBehaviour
 	{
 		reflectionCamera = null;
 
-
 		if (!reflectionTexture || m_OldReflectionTextureSize != m_TextureSize)
 		{
 			if (reflectionTexture)
+			{
+				reflectionTexture.Release();
 				DestroyImmediate(reflectionTexture);
+			}
 			reflectionTexture = new RenderTexture(m_TextureSize, m_TextureSize, 16);
 			reflectionTexture.name = "__MirrorReflection" + eye.ToString() + GetInstanceID();
 			reflectionTexture.isPowerOfTwo = true;
@@ -455,7 +541,42 @@ public class WaveXRMirror : MonoBehaviour
 		}
 	}
 
-	private Vector4 CameraSpacePlane(Matrix4x4 worldToCameraMatrix, Vector3 pos, Vector3 normal, float sideSign)
+    // For Mono
+	private void CreateMirrorObjects(Camera currentCamera, out Camera reflectionCamera, ref RenderTexture reflectionTexture)
+    {
+        reflectionCamera = null;
+
+
+        if (!reflectionTexture || m_OldReflectionTextureSize != m_TextureSize)
+        {
+            if (reflectionTexture)
+			{
+				reflectionTexture.Release();
+				DestroyImmediate(reflectionTexture);
+			}
+            reflectionTexture = new RenderTexture(m_TextureSize, m_TextureSize, 16);
+            reflectionTexture.name = "__MirrorReflectionMono" + GetInstanceID();
+            reflectionTexture.isPowerOfTwo = true;
+            reflectionTexture.hideFlags = HideFlags.DontSave;
+            m_OldReflectionTextureSize = m_TextureSize;
+        }
+
+        if (!m_ReflectionCameras.TryGetValue(currentCamera, out reflectionCamera))
+        {
+            GameObject go = new GameObject("Mirror Reflection Camera id" + GetInstanceID() + " for " + currentCamera.GetInstanceID(), typeof(Camera), typeof(Skybox));
+            reflectionCamera = go.GetComponent<Camera>();
+            reflectionCamera.enabled = false;
+            reflectionCamera.transform.position = transform.position;
+            reflectionCamera.transform.rotation = transform.rotation;
+            reflectionCamera.gameObject.AddComponent<FlareLayer>();
+            go.hideFlags = HideFlags.DontSave;
+            go.hideFlags = HideFlags.HideInInspector;
+            go.hideFlags = HideFlags.HideInHierarchy;
+            m_ReflectionCameras.Add(currentCamera, reflectionCamera);
+        }
+    }
+
+    private Vector4 CameraSpacePlane(Matrix4x4 worldToCameraMatrix, Vector3 pos, Vector3 normal, float sideSign)
 	{
 		Vector3 offsetPos = pos + normal * m_ClipPlaneOffset;
 		Vector3 cpos = worldToCameraMatrix.MultiplyPoint(offsetPos);

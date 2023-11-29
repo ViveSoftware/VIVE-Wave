@@ -8,6 +8,8 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using UnityEngine;
+using UnityEngine.XR;
 using Wave.Native;
 using Wave.OpenXR;
 
@@ -79,6 +81,7 @@ namespace Wave.Essence.Tracker
 		B = WVR_InputId.WVR_InputId_Alias1_B,
 		X = WVR_InputId.WVR_InputId_Alias1_X,
 		Y = WVR_InputId.WVR_InputId_Alias1_Y,
+		Touchpad = WVR_InputId.WVR_InputId_Alias1_Touchpad,
 		Trigger = WVR_InputId.WVR_InputId_Alias1_Trigger,
 	}
 
@@ -321,6 +324,7 @@ namespace Wave.Essence.Tracker
 			if (button == TrackerButton.B) { return 11; }
 			if (button == TrackerButton.X) { return 12; }
 			if (button == TrackerButton.Y) { return 13; }
+			if (button == TrackerButton.Touchpad) { return 16; }
 			if (button == TrackerButton.Trigger) { return 17; }
 
 			return 31;
@@ -333,9 +337,30 @@ namespace Wave.Essence.Tracker
 			if (button == TrackerButton.B) { return WVR_InputId.WVR_InputId_Alias1_B; }
 			if (button == TrackerButton.X) { return WVR_InputId.WVR_InputId_Alias1_X; }
 			if (button == TrackerButton.Y) { return WVR_InputId.WVR_InputId_Alias1_Y; }
+			if (button == TrackerButton.Touchpad) { return WVR_InputId.WVR_InputId_Alias1_Touchpad; }
 			if (button == TrackerButton.Trigger) { return WVR_InputId.WVR_InputId_Alias1_Trigger; }
 
 			return WVR_InputId.WVR_InputId_Alias1_System;
+		}
+		public static InputFeatureUsage<bool> Usage(this TrackerButton button, WVR_InputType inputType)
+		{
+			if (inputType == WVR_InputType.WVR_InputType_Button)
+			{
+				if (button == TrackerButton.Menu || button == TrackerButton.System) { return XR_Feature.menuButton; }
+				if (button == TrackerButton.A || button == TrackerButton.X) { return XR_Feature.primaryButton; }
+				if (button == TrackerButton.B || button == TrackerButton.Y) { return XR_Feature.secondaryButton; }
+				if (button == TrackerButton.Touchpad) { return XR_Feature.primary2DAxisClick; }
+				if (button == TrackerButton.Trigger) { return XR_Feature.triggerButton; }
+			}
+			if (inputType == WVR_InputType.WVR_InputType_Touch)
+			{
+				if (button == TrackerButton.A || button == TrackerButton.X) { return XR_Feature.primaryTouch; }
+				if (button == TrackerButton.B || button == TrackerButton.Y) { return XR_Feature.secondaryTouch; }
+				if (button == TrackerButton.Touchpad) { return XR_Feature.primary2DAxisTouch; }
+				if (button == TrackerButton.Trigger) { return XR_Feature.triggerTouch; }
+			}
+
+			return new InputFeatureUsage<bool>("");
 		}
 
 		#region Native

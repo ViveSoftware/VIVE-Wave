@@ -58,6 +58,7 @@ namespace Wave.Essence
 		// A binary value representing the Thumbstick touch state.
 		public static readonly InputFeatureUsage<bool> secondary2DAxisTouch = CommonUsages.secondary2DAxisTouch;
 
+		public static readonly InputFeatureUsage<bool> triggerTouch = new InputFeatureUsage<bool>("TriggerTouch");
 		// A float value representing the Trigger axis.
 		public static readonly InputFeatureUsage<float> trigger = CommonUsages.trigger;
 		// A float value representing the Grip axis.
@@ -95,6 +96,8 @@ namespace Wave.Essence
 		public const string gripButtonName = "GripButton";
 		public static readonly InputFeatureUsage<bool> triggerButton = XR_Feature.triggerButton;
 		public const string triggerButtonName = "TriggerButton";
+		public static readonly InputFeatureUsage<bool> triggerTouch = XR_Feature.triggerTouch;
+		public const string triggerTouchName = "TriggerTouch";
 		public static readonly InputFeatureUsage<bool> menuButton = XR_Feature.menuButton;
 		public const string menuButtonName = "MenuButton";
 		public static readonly InputFeatureUsage<bool> primary2DAxisClick = XR_Feature.primary2DAxisClick;

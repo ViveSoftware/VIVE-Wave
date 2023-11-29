@@ -1,3 +1,4 @@
+using AOT;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,10 +31,19 @@ namespace Wave.XR.DirectPreview
 			SIM_ConnectType_Wifi = 1,
 		}
 
-		public delegate void printcallback(string z);
+		public delegate void LogCallbackDelegate(string z);
 
 		[DllImport("wvr_plugins_directpreview", EntryPoint = "WVR_SetPrintCallback")]
-		public static extern void WVR_SetPrintCallback_S(printcallback callback);
+		public static extern void WVR_SetPrintCallback_S(System.IntPtr callback);
+
+		private static IntPtr GetFunctionPointerForDelegate(Delegate del)
+		{
+			return System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(del);
+		}
+
+		private static readonly LogCallbackDelegate handle = new LogCallbackDelegate(NativeLogCallback);
+		private static readonly IntPtr handlePtr = GetFunctionPointerForDelegate(handle);
+
 
 		public static void PrintLog(string msg)
 		{
@@ -54,12 +64,14 @@ namespace Wave.XR.DirectPreview
 
 		//private static string TAG = "DirectPreviewCore:";
 		public static bool EnableDirectPreview = false;
-		private static Camera camera = null;
 
-		private static string LOG_TAG = "DirectPreviewCore";
-		static string wifi_ip_tmp;
-		static string wifi_ip_state = "";
+		private static string TAG = "DirectPreviewCore";
+#pragma warning disable
+		private static Camera camera = null;
 		bool enablePreview = false;
+		static string wifi_ip_tmp;
+#pragma warning enable
+		static string wifi_ip_state = "";
 		static bool saveLog = false;
 		static bool saveImage = false;
 		static int connectType = 0;  // USB
@@ -116,6 +128,8 @@ namespace Wave.XR.DirectPreview
 			EnableDirectPreview = EditorPrefs.GetBool("Wave/DirectPreview/EnableDirectPreview", false);
 			PrintDebug("OnEnterPlayModeMethod: " + EnableDirectPreview);
 
+			EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
 			if (EnableDirectPreview)
 			{
 				PrintDebug("Enable direct preview and add delegate to sceneLoaded");
@@ -128,6 +142,17 @@ namespace Wave.XR.DirectPreview
 			{
 				EnableDP(false, (SIM_ConnectType)SIM_ConnectType.SIM_ConnectType_USB, IntPtr.Zero, false, false, false);
 				PrintDebug("Enable Direct Preview: " + false);
+				IsDPInited = false;
+			}
+		}
+
+		private static void OnPlayModeStateChanged(PlayModeStateChange state)
+		{
+			if (state == PlayModeStateChange.ExitingPlayMode)
+			{
+				EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+				WVR_SetPrintCallback_S(System.IntPtr.Zero);
+				IsDPInited = false;
 			}
 		}
 
@@ -146,6 +171,8 @@ namespace Wave.XR.DirectPreview
 			return flag;
 		}
 
+		public static bool IsDPInited { get; set; } = false;
+
 		public static void DP_Init()
 		{
 			EnableDirectPreview = EditorPrefs.GetBool("Wave/DirectPreview/EnableDirectPreview", false);
@@ -161,7 +188,7 @@ namespace Wave.XR.DirectPreview
 			if (EnableDirectPreview)
 			{
 				PrintDebug("Register direct preview print callback");
-				WVR_SetPrintCallback_S(PrintLog);
+				WVR_SetPrintCallback_S(handlePtr);
 
 				//if (connectType == 1)
 				//{
@@ -173,6 +200,7 @@ namespace Wave.XR.DirectPreview
 
 				EnableDP(true, (SIM_ConnectType)connectType, ptrIPaddr, tPreview, saveLog, saveImage);
 				PrintDebug("Enable Direct Preview: " + true + ", connection: " + connectType + ", IP: " + ipaddr + ", preview: " + tPreview + ", log: " + saveLog + ", image: " + saveImage);
+				IsDPInited = true;
 			}
 		}
 
@@ -323,12 +351,18 @@ namespace Wave.XR.DirectPreview
 
 		private static void PrintError(string msg)
 		{
-			UnityEngine.Debug.LogError(LOG_TAG + ": " + msg);
+			UnityEngine.Debug.LogError(TAG + ": " + msg);
 		}
 
 		private static void PrintDebug(string msg)
 		{
-			UnityEngine.Debug.Log(LOG_TAG + ": " + msg);
+			UnityEngine.Debug.Log(TAG + ": " + msg);
+		}
+
+		[MonoPInvokeCallback(typeof(LogCallbackDelegate))]
+		private static void NativeLogCallback(string msg)
+		{
+			UnityEngine.Debug.Log("DirectPreviewCore(NCB): " + msg);
 		}
 
 		public class DirectPreviewRendererHooker : MonoBehaviour
@@ -357,6 +391,8 @@ namespace Wave.XR.DirectPreview
 		{
 			UnityEngine.Debug.Log("Editor prevented from quitting. --------");
 			SceneManager.sceneLoaded -= OnSceneLoaded;
+
+			IsDPInited = false;
 
 			return true;
 		}

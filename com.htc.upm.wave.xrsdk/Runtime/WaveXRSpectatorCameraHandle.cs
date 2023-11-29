@@ -184,7 +184,7 @@ namespace Wave.XR
             spectatorCamera.clearFlags = main.clearFlags;
             spectatorCamera.cullingMask = hasOverrideCullingMask ? overrideCullingMask : main.cullingMask;
             // No matter what depth we set, the mono camera always run before stereo camera.  See Profiler to check.
-            spectatorCamera.depth = Camera.main.depth += 99;
+            spectatorCamera.depth = Camera.main.depth + 99;
             spectatorCamera.depthTextureMode = main.depthTextureMode;
             spectatorCamera.useOcclusionCulling = main.useOcclusionCulling;
             spectatorCamera.stereoTargetEye = StereoTargetEyeMask.None;
@@ -306,7 +306,7 @@ namespace Wave.XR
                     else
                         onSpectatorStop();
                 }
-                catch (System.Exception e) { }
+                catch (System.Exception) { }
 
                 shouldRenderFrame = false;
                 frameCount = 0;

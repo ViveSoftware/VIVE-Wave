@@ -1194,7 +1194,7 @@ namespace Wave.XR.BuildCheck
 			return true;
 		}
 	}
-
+	/*
 	[InitializeOnLoad]
 	public static class MenuAvatarIKHandler
 	{
@@ -1303,7 +1303,7 @@ namespace Wave.XR.BuildCheck
 			};
 		}
 
-		//[MenuItem(MenuAvatarIKHandler.MENU_NAME, priority = 604)]
+		[MenuItem(MenuAvatarIKHandler.MENU_NAME, priority = 604)]
 		private static void ToggleAction()
 		{
 			/// Toggling action
@@ -1328,12 +1328,13 @@ namespace Wave.XR.BuildCheck
 			MenuAvatarIKHandler.m_Enabled = enabled;
 		}
 
-		//[MenuItem(MenuAvatarIKHandler.MENU_NAME, validate = true, priority = 604)]
+		[MenuItem(MenuAvatarIKHandler.MENU_NAME, validate = true, priority = 604)]
 		private static bool ValidateEnabled()
 		{
 			Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, m_Enabled);
 			return true;
 		}
 	}
+	*/
 }
 #endif

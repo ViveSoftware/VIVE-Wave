@@ -27,7 +27,9 @@ namespace Wave.Essence.Samples.ButtonTest
 				Log.d(LOG_TAG, gameObject.name + " " + msg, true);
 		}
 		bool printIntervalLog = false;
+#pragma warning disable
 		int logFrame = 0;
+#pragma warning enable
 		void INTERVAL(string msg) { if (printIntervalLog && !Application.isEditor) { DEBUG(msg); } }
 
 		public string usageName;
