@@ -20,11 +20,7 @@ namespace Wave.Essence.Samples.PassThrough
 	public class PoseModeSetting : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.PassThrough.PoseModeSetting";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		private Text m_Text = null;
 		private void Awake()

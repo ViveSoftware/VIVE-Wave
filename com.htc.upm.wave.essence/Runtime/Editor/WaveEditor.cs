@@ -19,11 +19,7 @@ namespace Wave.Essence.Editor
 	public class WaveEditor : MonoBehaviour
 	{
 		private static string LOG_TAG = "WaveEditor";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		private void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
 
 		private static WaveEditor m_Instance = null;

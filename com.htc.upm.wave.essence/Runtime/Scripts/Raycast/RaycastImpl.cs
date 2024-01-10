@@ -31,11 +31,7 @@ namespace Wave.Essence.Raycast
 				return m_sb;
 			}
 		}
-		static void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		static void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 		int logFrame = 0;
 		protected bool printIntervalLog = false;
@@ -115,7 +111,16 @@ namespace Wave.Essence.Raycast
 			results.Sort(rrComparator);
 			for (int i = 0; i < results.Count; i++)
 			{
-				if (results[i].isValid)
+				/// When clicking or dragging, it should choice result of eventcamera not null to avoid event not working.
+				if (pointerData.eligibleForClick || pointerData.dragging)
+				{
+					if (results[i].isValid && results[i].module.eventCamera != null)
+					{
+						rr = results[i];
+						break;
+					}
+				}
+				else if (results[i].isValid)
 				{
 					rr = results[i];
 					break;
@@ -218,6 +223,7 @@ namespace Wave.Essence.Raycast
 		}
 		List<RaycastResult> resultAppendList = new List<RaycastResult>();
 		private RaycastResult currentRaycastResult = default;
+		private RaycastResult draggingRaycastResult = default;
 		protected GameObject raycastObject = null;
 		protected List<GameObject> s_raycastObjects = new List<GameObject>();
 		protected GameObject raycastObjectEx = null;
@@ -243,6 +249,12 @@ namespace Wave.Essence.Raycast
 			// --------------- Physics Raycast ---------------
 			Ray ray = new Ray(transform.position, (physicsWorldPosition - transform.position));
 			PhysicsRaycast(ray, m_Camera, resultAppendList);
+			/// When dragging, it should add the raycast result of begin dragging to avoid raycasting failure.
+			if (pointerData.dragging && draggingRaycastResult.isValid &&
+				draggingRaycastResult.module.eventCamera != null)
+			{
+				resultAppendList.Add(draggingRaycastResult);
+			}
 
 			currentRaycastResult = GetFirstRaycastResult(resultAppendList);
 
@@ -519,8 +531,6 @@ namespace Wave.Essence.Raycast
 						}
 						sb.Clear().Append("UpHandler() Send Pointer endDrag to ").Append(pointerData.pointerDrag != null ? pointerData.pointerDrag.name : "null"); DEBUG(sb);
 						ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.endDragHandler);
-
-						pointerData.dragging = false;
 					}
 				}
 			}
@@ -537,6 +547,9 @@ namespace Wave.Essence.Raycast
 			pointerData.clickCount = 0;
 			// Up is processed thus clear the time limitation of Down event.
 			pointerData.clickTime = 0;
+			// Either pointer click or pointer up means end of dragging, so the values should be reset.
+			pointerData.dragging = false;
+			draggingRaycastResult.Clear();
 		}
 
 		// After selecting an object over this duration, the drag action will be taken.
@@ -550,6 +563,7 @@ namespace Wave.Essence.Raycast
 			{
 				sb.Clear().Append("DragHandler() Send BeginDrag to ").Append(pointerData.pointerDrag.name); DEBUG(sb);
 				ExecuteEvents.Execute(pointerData.pointerDrag, pointerData, ExecuteEvents.beginDragHandler);
+				draggingRaycastResult = currentRaycastResult;
 				pointerData.dragging = true;
 			}
 			else

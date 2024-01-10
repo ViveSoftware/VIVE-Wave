@@ -21,11 +21,7 @@ namespace Wave.Essence.Raycast
 	public class RaycastRing : RaycastImpl
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastRing";
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 
 		public enum GazeEvent

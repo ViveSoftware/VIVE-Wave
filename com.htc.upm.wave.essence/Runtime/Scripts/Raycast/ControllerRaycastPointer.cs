@@ -21,11 +21,7 @@ namespace Wave.Essence.Raycast
 	public class ControllerRaycastPointer : RaycastPointer
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.ControllerRaycastPointer";
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 
 		[Serializable]
 		public class ButtonOption

@@ -9,7 +9,6 @@
 // specifications, and documentation provided by HTC to You."
 
 using UnityEngine;
-using Wave.Native;
 
 namespace Wave.Essence.Hand.StaticGesture
 {
@@ -17,13 +16,6 @@ namespace Wave.Essence.Hand.StaticGesture
 					 menuName = "Wave/Single Hand Gesture", order = 250)]
 	public class SingleHandGestureProducer : BaseSingleHandGestureProducer
 	{
-		const string LOG_TAG = "Wave.Essence.Hand.StaticGesture.SingleHandGestureProducer";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-
 		public CustomGestureCondition condition;
 
 		public override void CheckGesture()

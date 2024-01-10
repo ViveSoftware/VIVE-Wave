@@ -213,12 +213,16 @@ namespace Wave.XR.Settings
 
         DisplayGamutPreference displayGamutPreference = null;
 
+        static string PropertyName_debugLogFlagForUnity = "debugLogFlagForUnity";
+        static GUIContent Label_debugLogFlagForUnity = new GUIContent("Log Flag for Unity");
+        SerializedProperty Property_debugLogFlagForUnity;
+
         static string PropertyName_LogFlagForNative = "debugLogFlagForNative";
         static GUIContent Label_LogFlagForNative = new GUIContent("LogFlagForNative");
         SerializedProperty Property_LogFlagForNative;
 
         static string PropertyName_OverrideLogFlag = "overrideLogFlagForNative";
-        static GUIContent Label_OverrideLogFlag = new GUIContent("Override LogFlag");
+        static GUIContent Label_OverrideLogFlag = new GUIContent("Override Log Flag for Native");
         SerializedProperty Property_OverrideLogFlag;
 
         static string PropertyName_UseCMPChecker = "useCMPChecker";
@@ -255,10 +259,16 @@ namespace Wave.XR.Settings
         static string PropertyName_EnableLipExpression = "EnableLipExpression";
         static GUIContent Label_EnableLipExpression = new GUIContent("Enable Lip Expression");
         SerializedProperty Property_EnableLipExpression = null;
-        #endregion
+		#endregion
 
-        #region Scene Perception
-        static string PropertyName_EnableScenePerception = "EnableScenePerception";
+		#region Body
+		static string PropertyName_EnableBodyTracking = "EnableBodyTracking";
+		static GUIContent Label_EnableBodyTracking = new GUIContent("Enable Body Tracking");
+		SerializedProperty Property_EnableBodyTracking = null;
+		#endregion
+
+		#region Scene Perception
+		static string PropertyName_EnableScenePerception = "EnableScenePerception";
         static GUIContent Label_EnableScenePerception = new GUIContent("Enable Scene Perception");
         SerializedProperty Property_EnableScenePerception = null;
 
@@ -322,7 +332,8 @@ namespace Wave.XR.Settings
         bool foldoutTracker = true;
         bool foldoutHand = true;
         bool foldoutEye = true;
-        bool foldoutLipExpression = true;
+		bool foldoutBody = true;
+		bool foldoutLipExpression = true;
         bool foldoutScenePerception = true;
         bool foldoutMarker = true;
         bool foldoutCommon = true;
@@ -371,9 +382,9 @@ namespace Wave.XR.Settings
             if (Property_WaveXRFolder == null) Property_WaveXRFolder = serializedObject.FindProperty(PropertyName_WaveXRFolder);
             if (Property_WaveEssenceFolder == null) Property_WaveEssenceFolder = serializedObject.FindProperty(PropertyName_WaveEssenceFolder);
 
-            if (Property_LogFlagForNative == null) Property_LogFlagForNative = serializedObject.FindProperty(PropertyName_LogFlagForNative);
             if (Property_EnableAutoFallbackForMultiLayer == null) Property_EnableAutoFallbackForMultiLayer = serializedObject.FindProperty(PropertyName_EnableAutoFallbackForMultiLayer);
 
+            if (Property_debugLogFlagForUnity == null) Property_debugLogFlagForUnity = serializedObject.FindProperty(PropertyName_debugLogFlagForUnity);
             if (Property_LogFlagForNative == null) Property_LogFlagForNative = serializedObject.FindProperty(PropertyName_LogFlagForNative);
             if (Property_OverrideLogFlag == null) Property_OverrideLogFlag = serializedObject.FindProperty(PropertyName_OverrideLogFlag);
             if (Property_UseCMPChecker == null) Property_UseCMPChecker = serializedObject.FindProperty(PropertyName_UseCMPChecker);
@@ -397,10 +408,15 @@ namespace Wave.XR.Settings
 
             #region Lip Expression
             if (Property_EnableLipExpression == null) Property_EnableLipExpression = serializedObject.FindProperty(PropertyName_EnableLipExpression);
-            #endregion
+			#endregion
 
-            #region Scene Perception
-            if (Property_EnableScenePerception == null) Property_EnableScenePerception = serializedObject.FindProperty(PropertyName_EnableScenePerception);
+			#region Body
+			// Tracking
+			if (Property_EnableBodyTracking == null) Property_EnableBodyTracking = serializedObject.FindProperty(PropertyName_EnableBodyTracking);
+			#endregion
+
+			#region Scene Perception
+			if (Property_EnableScenePerception == null) Property_EnableScenePerception = serializedObject.FindProperty(PropertyName_EnableScenePerception);
             if (Property_EnableSceneMesh == null) Property_EnableSceneMesh = serializedObject.FindProperty(PropertyName_EnableSceneMesh);
             #endregion
 
@@ -592,10 +608,22 @@ namespace Wave.XR.Settings
             }
 
             EditorGUILayout.Space();
-            #endregion
+			#endregion
 
-            #region Scene Perception
-            foldoutScenePerception = EditorGUILayout.Foldout(foldoutScenePerception, "Scene Perception");
+			#region Body
+			foldoutBody = EditorGUILayout.Foldout(foldoutBody, "Body");
+			if (foldoutBody)
+			{
+				EditorGUI.indentLevel++;
+				EditorGUILayout.PropertyField(Property_EnableBodyTracking, Label_EnableBodyTracking);
+				EditorGUI.indentLevel--;
+			}
+
+			EditorGUILayout.Space();
+			#endregion
+
+			#region Scene Perception
+			foldoutScenePerception = EditorGUILayout.Foldout(foldoutScenePerception, "Scene Perception");
             if (foldoutScenePerception)
             {
                 EditorGUI.indentLevel++;
@@ -800,6 +828,10 @@ namespace Wave.XR.Settings
             }
         }
 
+        static string[] s_LogTitleUnity = { "Warning", "Info", "Debug", "Verbose" };
+        static int[] s_TitleLengthUnity = { 70, 40, 60, 70 };
+        static bool foldoutLogUnity = false;
+
         static string[] LogTitleList =
         {
             "Basic", "Debug", "Lifecyle", "Render", "Input",
@@ -808,8 +840,31 @@ namespace Wave.XR.Settings
 
         void LogFlagGUI()
         {
+            foldoutLogUnity = EditorGUILayout.Foldout(foldoutLogUnity, "Log Flag for Unity");
+            if (foldoutLogUnity)
+            {
+                int flags = Property_debugLogFlagForUnity.intValue;
+
+                EditorGUILayout.BeginHorizontal();
+                for (int i = 0; i < s_LogTitleUnity.Length; i++)
+                {
+                    EditorGUILayout.LabelField(s_LogTitleUnity[i], GUILayout.Width(s_TitleLengthUnity[i]));
+
+                    int bit = 4 + i;
+                    int mask = 1 << bit;
+                    bool flag = (flags & mask) > 0;
+                    bool ret = GUILayout.Button(flag ? "X" : " ", GUILayout.Width(20));
+                    if (ret)
+                        flags = !flag ? (flags | mask) : (flags & ~mask);
+                }
+                EditorGUILayout.EndHorizontal();
+
+                Property_debugLogFlagForUnity.intValue = flags;
+                EditorGUILayout.PropertyField(Property_debugLogFlagForUnity, Label_debugLogFlagForUnity);
+            }
+
             EditorGUILayout.PropertyField(Property_OverrideLogFlag, Label_OverrideLogFlag);
-            foldoutLog = EditorGUILayout.Foldout(foldoutLog, "LogFlag");
+            foldoutLog = EditorGUILayout.Foldout(foldoutLog, "Log Flag for Native");
             if (foldoutLog)
             {
                 EditorGUI.indentLevel++;

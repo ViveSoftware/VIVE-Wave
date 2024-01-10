@@ -21,11 +21,7 @@ namespace Wave.Essence.Samples.Raycast
 	sealed class EyeDropDown : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.Raycast.EyeDropDown";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		public GazeRaycastRing GazeRing = null;
 

@@ -491,7 +491,7 @@ namespace Wave.Generic.Sample.Editor
 		static void BuildApk64()
 		{
 			CustomizedCommandLine();
-			BuildApk(_destinationPath + "/arm64", false, false, true, false, true);
+			BuildApk(_destinationPath, false, false, true, false, true);
 		}
 
 		[MenuItem("Wave/Build VRTestApp/Build+Run 32+64bit", priority = 520)]
@@ -509,7 +509,7 @@ namespace Wave.Generic.Sample.Editor
 		[MenuItem("Wave/Build VRTestApp/Build+Run 64bit", priority = 520)]
 		static void BuildAndRunApk64()
 		{
-			BuildApk("arm64", true, false, true, false, true);
+			BuildApk(null, true, false, true, false, true);
 		}
 
 		[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 32+64bit", priority = 520)]
@@ -527,7 +527,7 @@ namespace Wave.Generic.Sample.Editor
 		[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 64bit", priority = 520)]
 		static void BuildDevAndRunApk64()
 		{
-			BuildApk("arm64", true, true, true, false, true);
+			BuildApk(null, true, true, true, false, true);
 		}
 
 		//[MenuItem("Wave/Build Windows Exe/Build+Run wvr_unity_vrtestapp.exe")]

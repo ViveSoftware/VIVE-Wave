@@ -23,11 +23,7 @@ namespace Wave.Essence.Samples.PassThrough
 		public Text statusIF;
 		public Text statusIR;
 
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		bool showUnderlay = false;
 

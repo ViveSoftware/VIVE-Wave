@@ -20,11 +20,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public class TrackingStateText : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.ButtonTest.TrackingStateText";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_TrackingDevice + " " + msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, m_TrackingDevice + " " + msg, true); }
 
 		public enum DeviceTypes
 		{

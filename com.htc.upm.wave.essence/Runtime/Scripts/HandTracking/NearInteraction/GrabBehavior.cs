@@ -18,11 +18,7 @@ namespace Wave.Essence.Hand.NearInteraction
 	public class GrabBehavior : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Hand.NearInteraction.GrabBehavior";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, (m_IsLeftHand ? "Left" : "Right") + ", " + msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, (m_IsLeftHand ? "Left" : "Right") + ", " + msg, true); }
 
 		#region Inspector
 		[SerializeField]

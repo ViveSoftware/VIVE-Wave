@@ -12,7 +12,6 @@ using UnityEngine;
 using UnityEngine.XR;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -698,6 +697,7 @@ namespace Wave.Native
 		}
 	}
 
+	[Obsolete("Please directly compare the struct by == or != instead of using this helper class.")]
 	public static class WVRStructCompare
 	{
 		/// <summary>
@@ -708,37 +708,24 @@ namespace Wave.Native
 		/// <returns>
 		/// true if the Uuids are the identical, false if they are not.
 		/// </returns>
+		[Obsolete("Please directly compare the uuids by == or != instead of using this function.")]
 		public static bool IsUUIDEqual(WVR_Uuid uuid1, WVR_Uuid uuid2)
 		{
-			if (uuid1.data == null || uuid2.data == null || uuid1.data.Length != uuid2.data.Length) return false;
-
-			Byte[] uuid1Data = uuid1.data;
-			Byte[] uuid2Data = uuid2.data;
-
-			return uuid1Data.SequenceEqual(uuid2Data);
+			return uuid1.Equals(uuid2);
 		}
 
+		[Obsolete("Please directly compare the pose by == or != instead of using this function.")]
 		public static bool WVRPoseEqual(WVR_Pose_t pose1, WVR_Pose_t pose2)
 		{
-			WVR_Vector3f_t Pose1Position = pose1.position;
-			WVR_Vector3f_t Pose2Position = pose2.position;
-			WVR_Quatf_t Pose1Rotation = pose1.rotation;
-			WVR_Quatf_t Pose2Rotation = pose2.rotation;
-
-			return (Pose1Position.v0 == Pose2Position.v0 &&
-					Pose1Position.v1 == Pose2Position.v1 &&
-					Pose1Position.v2 == Pose2Position.v2 &&
-					Pose1Rotation.w == Pose2Rotation.w &&
-					Pose1Rotation.x == Pose2Rotation.x &&
-					Pose1Rotation.y == Pose2Rotation.y &&
-					Pose1Rotation.z == Pose2Rotation.z);
+			return pose1 == pose2;
 		}
 
+		[Obsolete("Please directly compare the pose by == or != instead of using this function.")]
 		public class MarkerIdComparer : IEqualityComparer<WVR_Uuid> //For using WVR_Uuid as key in Dictionary
 		{
 			public bool Equals(WVR_Uuid uuid1, WVR_Uuid uuid2)
 			{
-				return IsUUIDEqual(uuid1, uuid2);
+				return uuid1 == uuid2;
 			}
 
 			public int GetHashCode(WVR_Uuid uuid)

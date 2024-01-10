@@ -891,7 +891,9 @@ namespace Wave.Essence.Editor
 				{
 					GUILayout.Label("Body Tracking", EditorStyles.boldLabel);
 					GUILayout.Label(
-						"The Body Tracking feature depends on Humanoid VRM plugin.",
+						"The Body Tracking feature depends on Humanoid VRM plugin.\n" +
+						"You can import the Humanoid VRM package (VRM-0.109.0_7aff.unitypackage) at\n" +
+						"Library > PackageCache > com.htc.upm.wave.essence > UnityPackages~",
 						new GUIStyle(EditorStyles.label) { wordWrap = true });
 					GUILayout.Label(
 						"Note: Must using Unity Editor 2020.3.30f1 or newer version.",
@@ -909,7 +911,7 @@ namespace Wave.Essence.Editor
 					{
 						if (GUILayout.Button("Import Feature - Body Tracking", GUILayout.ExpandWidth(false)))
 						{
-							ImportModule(kVrm1Package);
+							//ImportModule(kVrm1Package);
 							ImportModule(kBodyTrackingPackage);
 						}
 					}

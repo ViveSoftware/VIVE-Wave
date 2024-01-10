@@ -10,7 +10,6 @@
 
 using UnityEngine;
 using UnityEngine.UI;
-using Wave.Native;
 using Wave.Essence.Eye;
 
 namespace Wave.Essence.Samples.Raycast
@@ -19,13 +18,6 @@ namespace Wave.Essence.Samples.Raycast
 	[RequireComponent(typeof(Text))]
 	public class EyeDataText : MonoBehaviour
 	{
-		const string LOG_TAG = "Wave.Essence.Samples.Raycast.EyeDataText";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-
 		public bool IsLeft = false;
 
 		private Text m_Text = null;

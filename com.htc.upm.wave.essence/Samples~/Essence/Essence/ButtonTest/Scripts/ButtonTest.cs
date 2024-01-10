@@ -20,11 +20,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public class ButtonTest : MonoBehaviour
 	{
 		private const string LOG_TAG = "ButtonTest";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, this.DeviceType + " " + msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, this.DeviceType + " " + msg, true); }
 
 		public XR_Device DeviceType = XR_Device.Dominant;
 

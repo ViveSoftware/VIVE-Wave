@@ -20,11 +20,7 @@ namespace Wave.Essence.LipExpression
 	public class LipExpManager : MonoBehaviour
 	{
 		private const string LOG_TAG = "Wave.Essence.LipExp.LipExpManager";
-		private static void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private static void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		private static void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
 
 		public enum LipExpStatus

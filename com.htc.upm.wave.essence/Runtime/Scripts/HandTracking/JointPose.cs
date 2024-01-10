@@ -15,13 +15,6 @@ namespace Wave.Essence.Hand
 {
 	public class JointPose : MonoBehaviour
 	{
-		const string LOG_TAG = "Wave.Essence.Hand.JointPose";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_Joint + " " + msg, true);
-		}
-
 		#region Customized Settings
 		[SerializeField]
 		private bool m_IsLeft = false;

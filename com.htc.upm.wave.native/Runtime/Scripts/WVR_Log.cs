@@ -17,11 +17,29 @@ using System.Runtime.InteropServices;
 using System.IO;
 #endif
 using UnityEngine;
+using Wave.XR;
+using Wave.XR.Settings;
 
 namespace Wave.Native
 {
 	public class Log
 	{
+		private static WaveXRSettings m_WaveXRSettings = null;
+		private enum DebugFlag : uint
+		{
+			WARNING = 1 << Constants.DebugLogFlag.Debug1,
+			INFO = 1 << Constants.DebugLogFlag.Debug2,
+			DEBUG = 1 << Constants.DebugLogFlag.Debug3,
+			VERBOSE = 1 << Constants.DebugLogFlag.Debug4,
+		}
+		private static bool LogEnabled(DebugFlag flag)
+		{
+			if (m_WaveXRSettings == null) { m_WaveXRSettings = WaveXRSettings.GetInstance(); }
+			if (m_WaveXRSettings == null) { return true; }
+			if ((m_WaveXRSettings.debugLogFlagForUnity & (uint)flag) == 0) { return false; }
+			return true;
+		}
+		[Obsolete("This variable is deprecated. Please use Project Settings > WaveXRSettings > Log Flag for Unity instead.")]
 		public static bool EnableDebugLog = true;
 		private const int LOG_VERBOSE = 2;
 		private const int LOG_DEBUG = 3;
@@ -74,6 +92,7 @@ namespace Wave.Native
 
 		public static void v(string tag, string message, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.VERBOSE)) { return; }
 			__log_print(LOG_VERBOSE, tag, message, System.IntPtr.Zero);
 #if UNITY_EDITOR
 			if (logInEditor)
@@ -83,6 +102,7 @@ namespace Wave.Native
 
 		public static void d(string tag, string message, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.DEBUG)) { return; }
 			__log_print(LOG_DEBUG, tag, message, System.IntPtr.Zero);
 #if UNITY_EDITOR
 			if (logInEditor)
@@ -91,6 +111,7 @@ namespace Wave.Native
 		}
 		public static void i(string tag, string message, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.INFO)) { return; }
 			__log_print(LOG_INFO, tag, message, System.IntPtr.Zero);
 #if UNITY_EDITOR
 			if (logInEditor)
@@ -99,6 +120,7 @@ namespace Wave.Native
 		}
 		public static void w(string tag, string message, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.WARNING)) { return; }
 			__log_print(LOG_WARN, tag, message, System.IntPtr.Zero);
 #if UNITY_EDITOR
 			if (logInEditor)
@@ -117,18 +139,22 @@ namespace Wave.Native
 		// StringBuilders
 		public static void v(string tag, StringBuilder sb, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.VERBOSE)) { return; }
 			v(tag, sb.ToString(), logInEditor);
 		}
 		public static void d(string tag, StringBuilder sb, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.DEBUG)) { return; }
 			d(tag, sb.ToString(), logInEditor);
 		}
 		public static void i(string tag, StringBuilder sb, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.INFO)) { return; }
 			i(tag, sb.ToString(), logInEditor);
 		}
 		public static void w(string tag, StringBuilder sb, bool logInEditor = false)
 		{
+			if (!LogEnabled(DebugFlag.WARNING)) { return; }
 			w(tag, sb.ToString(), logInEditor);
 		}
 		public static void e(string tag, StringBuilder sb, bool logInEditor = false)

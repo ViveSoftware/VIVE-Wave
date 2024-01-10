@@ -18,11 +18,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public class DemoButtonGazePointer : MonoBehaviour
 	{
 		private const string LOG_TAG = "DemoButtonGazePointer";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		// ----------- Width of ring -----------
 		private const float DEF_RING_WIDTH = 0.005f;

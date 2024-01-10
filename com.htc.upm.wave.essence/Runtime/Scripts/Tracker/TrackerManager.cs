@@ -33,11 +33,7 @@ namespace Wave.Essence.Tracker
 				return m_sb;
 			}
 		}
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 		int logFrame = 0;
 		bool printIntervalLog = false;
 		private void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }

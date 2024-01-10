@@ -8,6 +8,8 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -39,6 +41,16 @@ namespace Wave.OpenXR
 		private Text m_Text = null;
 		private InputDeviceTracker.TrackerId m_Tracker = InputDeviceTracker.TrackerId.Tracker0;
 		private bool isInit = false;
+
+		readonly Dictionary<InputFeatureUsage<bool>, string> s_ButtonsBinding = new Dictionary<InputFeatureUsage<bool>, string>()
+		{
+			{CommonUsages.menuButton, "MenuButton"},
+			{CommonUsages.primaryButton, "PrimaryButton"},
+			{CommonUsages.secondaryButton, "SecondaryButton"},
+			{CommonUsages.primary2DAxisClick, "Touchpad"},
+			{CommonUsages.triggerButton, "TriggerButton"}
+		};
+
 
 		private void Awake()
 		{
@@ -152,22 +164,16 @@ namespace Wave.OpenXR
 		private void TextPress()
 		{
 			m_Text.text = "Pressed:";
-			if (InputDeviceTracker.ButtonDown(m_Tracker, UnityEngine.XR.CommonUsages.menuButton, out bool menuButtonDown))
+			for(int i=0; i<s_ButtonsBinding.Count; i++)
 			{
-				if (menuButtonDown)
+				var button = s_ButtonsBinding.ElementAt(i);
+				if (InputDeviceTracker.ButtonDown(m_Tracker, button.Key, out bool value))
 				{
-					m_Text.text += " menuButton";
-					InputDeviceTracker.HapticPulse(m_Tracker);
-					return;
-				}
-			}
-			if (InputDeviceTracker.ButtonDown(m_Tracker, UnityEngine.XR.CommonUsages.primaryButton, out bool primaryButtonDown))
-			{
-				if (primaryButtonDown)
-				{
-					m_Text.text += " primaryButton";
-					InputDeviceTracker.HapticPulse(m_Tracker);
-					return;
+					if (value)
+					{
+						m_Text.text += $" {button.Value} ";
+						InputDeviceTracker.HapticPulse(m_Tracker);
+					}
 				}
 			}
 		}

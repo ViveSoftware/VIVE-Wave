@@ -562,6 +562,12 @@ namespace Wave.Native
 				return new WVR_Vector3f_t(0, 0, 0);
 			}
 		}
+
+		// No coordination conversion
+		public Vector3 ToVector3()
+		{
+			return new Vector3(v0, v1, v2);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -622,6 +628,12 @@ namespace Wave.Native
 			get {
 				return new WVR_Quatf_t(0, 0, 0, 1);
 			}
+		}
+
+		// No coordination conversion
+		public Quaternion ToQuaternion()
+		{
+			return new Quaternion(x, y, z, w);
 		}
 	}
 
@@ -819,12 +831,19 @@ namespace Wave.Native
 			position = in_pos;
 			rotation = in_rot;
 		}
+
 		public static WVR_Pose_t Identity
 		{
 			get
 			{
 				return new WVR_Pose_t(WVR_Vector3f_t.Zero, WVR_Quatf_t.Identity);
 			}
+		}
+
+		// No coordination conversion
+		public Pose ToPose()
+		{
+			return new Pose(position.ToVector3(), rotation.ToQuaternion());
 		}
 	}
 
@@ -1446,6 +1465,17 @@ namespace Wave.Native
 	}
 
 	/**
+	 * @brief The grasp state
+	 * @version API Level 16
+	 */
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_HandGraspState_t
+	{
+		public bool isGrasp;     /**< A grasp is happening or not, the binary version of strength. */
+		public float strength;   /**< Value from 0 to 1, with 1 represents a fully grasp. */
+	}
+
+	/**
 	 * @brief The data structure of one hand.
 	 * @version API Level 6
 	 * C++ armeabi-v7a type size:
@@ -1503,6 +1533,7 @@ namespace Wave.Native
 		public WVR_Vector3f_t scale; /**< defualt is 1. */
 		public WVR_Vector3f_t wristLinearVelocity;
 		public WVR_Vector3f_t wristAngularVelocity;
+		public WVR_HandGraspState_t grasp;
 	}
 
     [StructLayout(LayoutKind.Sequential)]
@@ -1690,7 +1721,47 @@ namespace Wave.Native
 	public struct WVR_Uuid
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-		public Byte[] data; //WVR_UUID_SIZE 16
+		public byte[] data; //WVR_UUID_SIZE 16
+
+		public override bool Equals(object rhs)
+		{
+			var other = (WVR_Uuid)rhs;
+			if (data == null || other.data == null || data.Length != other.data.Length) return false;
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i] != other.data[i]) return false;
+			}
+			return true;
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hash = 17;
+				foreach (byte byteData in data)
+				{
+					hash = hash * 31 + byteData.GetHashCode();
+				}
+
+				return hash;
+			}
+		}
+
+		public static bool operator ==(WVR_Uuid lhs, WVR_Uuid rhs)
+		{
+			return lhs.Equals(rhs);
+		}
+
+		public static bool operator !=(WVR_Uuid lhs, WVR_Uuid rhs)
+		{
+			return !lhs.Equals(rhs);
+		}
+
+		public override string ToString()
+		{
+			return BitConverter.ToString(data).Replace("-", "");
+		}
 	}
 
 	#region Scene Perception
@@ -1768,6 +1839,42 @@ namespace Wave.Native
 	{
 		public float width;
 		public float height;
+
+		// No coordination conversion
+		public Vector3 ToVector2()
+		{
+			return new Vector3(width, height);
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_Extent3Df
+	{
+		public float width;  // X
+		public float height;  // Y
+		public float depth;  // Z
+
+		// No coordination conversion
+		public Vector3 ToVector3()
+		{
+			return new Vector3(width, height, depth);
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SemanticLabelName
+	{
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+		public char[] name; //WVR_MAX_SEMANTIC_LABEL_NAME_SIZE 256
+
+		public override string ToString()
+		{
+			// C#'s new String(name[256]).Length will return 256, which is not correct.
+			int nullTerminatorIndex = Array.IndexOf(name, '\0');
+			if (nullTerminatorIndex <= 0)
+				return "";
+			return new string(name, 0, nullTerminatorIndex);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1780,6 +1887,18 @@ namespace Wave.Native
 		public WVR_Extent2Df extent;
 		public WVR_ScenePlaneType planeType;
 		public WVR_ScenePlaneLabel planeLabel;
+		public WVR_SemanticLabelName semanticName;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_SceneObject
+	{
+		public WVR_Uuid uuid;
+		public WVR_Uuid parentUuid;
+		public UInt64 meshBufferId;
+		public WVR_Pose_t pose;
+		public WVR_Extent3Df extent;
+		public WVR_SemanticLabelName semanticName;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1820,6 +1939,29 @@ namespace Wave.Native
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
 		public char[] name; //WVR_MAX_SPATIAL_ANCHOR_NAME_SIZE 256
+
+		public override string ToString()
+		{
+			// C#'s new String(name[256]).Length will return 256, which is not correct.
+			int nullTerminatorIndex = Array.IndexOf(name, '\0');
+			if (nullTerminatorIndex <= 0)
+				return "";
+			return new string(name, 0, nullTerminatorIndex);
+		}
+
+		public WVR_SpatialAnchorName(string nameStr)
+		{
+			name = new char[256];
+			var strLen = 0;
+			if (nameStr != null)
+			{
+				strLen = nameStr.Length;
+				nameStr.CopyTo(0, name, 0, Math.Min(strLen, name.Length));
+			}
+			// Make sure the rest element in the array are all zero.  Native may not think this is a null-terminated string.
+			for (int i = strLen; i < name.Length; i++)
+				name[i] = '\0';
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1875,6 +2017,15 @@ namespace Wave.Native
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
 		public char[] name;   //WVR_MAX_MARKER_NAME_SIZE 256
+
+		public override string ToString()
+		{
+			// C#'s new String(name[256]).Length will return 256, which is not correct.
+			int nullTerminatorIndex = Array.IndexOf(name, '\0');
+			if (nullTerminatorIndex <= 0)
+				return "";
+			return new string(name, 0, nullTerminatorIndex);
+		}
 	}
 
 	public enum WVR_MarkerTrackingState
@@ -2589,6 +2740,12 @@ namespace Wave.Native
 		{
 			return WVR_Base.Instance.GetSceneMeshBuffer(meshBufferId, originModel, ref sceneMeshBuffer);
 		}
+
+		public static WVR_Result WVR_GetSceneObjects(UInt32 objectCapacityInput, out UInt32 objectCountOutput, WVR_PoseOriginModel originModel, IntPtr objects /* WVR_SceneObject* */)
+		{
+			return WVR_Base.Instance.GetSceneObjects(objectCapacityInput, out objectCountOutput, originModel, objects);
+		}
+
 
 		public static WVR_Result WVR_CreateSpatialAnchor([In, Out] WVR_SpatialAnchorCreateInfo[] createInfo /* WVR_SpatialAnchorCreateInfo* */, out UInt64 anchor /* WVR_SpatialAnchor* */)
 		{
@@ -3840,7 +3997,11 @@ namespace Wave.Native
 
 			public virtual WVR_Result StartScene()
 			{
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual void StopScene()
@@ -3850,34 +4011,69 @@ namespace Wave.Native
 
 			public virtual WVR_Result StartScenePerception(WVR_ScenePerceptionTarget target)
 			{
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result StopScenePerception(WVR_ScenePerceptionTarget target)
 			{
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result GetScenePerceptionState( WVR_ScenePerceptionTarget target, ref WVR_ScenePerceptionState state /* WVR_ScenePerceptionState* */)
 			{
+#if UNITY_EDITOR
+				state = WVR_ScenePerceptionState.WVR_ScenePerceptionState_Completed;
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result GetScenePlanes([In, Out] WVR_ScenePlaneFilter[] planeFilter /* WVR_ScenePlaneFilter*,nullptr if no need filter. */, UInt32 planeCapacityInput, out UInt32 planeCountOutput /* uint32_t* */, WVR_PoseOriginModel originModel, IntPtr planes /* WVR_ScenePlane* */)
 			{
 				planeCountOutput = 0;
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result GetSceneMeshes(WVR_SceneMeshType meshType, UInt32 meshCapacityInput, out UInt32 meshCountOutput /* uint32_t* */, IntPtr meshes /* WVR_SceneMesh* */)
 			{
 				meshCountOutput = 0;
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result GetSceneMeshBuffer(UInt64 meshBufferId, WVR_PoseOriginModel originModel, ref WVR_SceneMeshBuffer sceneMeshBuffer /* WVR_SceneMeshBuffer* */)
 			{
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
 				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
+			}
+
+			public virtual WVR_Result GetSceneObjects(UInt32 objectCapacityInput, out UInt32 objectCountOutput, WVR_PoseOriginModel originModel, IntPtr objects /* WVR_SceneObject* */)
+			{
+				objectCountOutput = 0;
+#if UNITY_EDITOR
+				return WVR_Result.WVR_Success;
+#else
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+#endif
 			}
 
 			public virtual WVR_Result CreateSpatialAnchor([In, Out] WVR_SpatialAnchorCreateInfo[] createInfo /* WVR_SpatialAnchorCreateInfo* */, out UInt64 anchor /* WVR_SpatialAnchor* */)
@@ -3989,7 +4185,7 @@ namespace Wave.Native
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
 
-			#endregion
+#endregion
 
 			#region Trackable Marker
 
@@ -4750,7 +4946,7 @@ namespace Wave.Native
                 return;
             }
 
-            #region Internal
+			#region Internal
             public virtual string DeployRenderModelAssets(int deviceIndex, string renderModelName)
 			{
 				return "";

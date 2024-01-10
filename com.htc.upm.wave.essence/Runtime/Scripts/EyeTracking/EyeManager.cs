@@ -26,16 +26,8 @@ namespace Wave.Essence.Eye
 	public sealed class EyeManager : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Eye.EyeManager";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-		void DEBUG(StringBuilder sb)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, sb, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
+		void DEBUG(StringBuilder sb) { Log.d(LOG_TAG, sb, true); }
 		bool printIntervalLog = false;
 		int logFrame = 0;
 		void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }

@@ -152,6 +152,10 @@ namespace Wave.OpenXR
 		public const string kHandPinchOffThreshold = "HandPinchOffThreshold";
 		public const string kHandIsPinchingLeft = "HandIsPinchingLeft";
 		public const string kHandIsPinchingRight = "HandIsPinchingRight";
+		public const string kHandGraspStrengthLeft = "HandGraspStrengthLeft";
+		public const string kHandGraspStrengthRight = "HandGraspStrengthRight";
+		public const string kHandIsGraspingLeft = "HandIsGraspingLeft";
+		public const string kHandIsGraspingRight = "HandIsGraspingRight";
 
 		/// <summary> Right Tracker Characteristics </summary>
 		public const InputDeviceCharacteristics kRightHandCharacteristics = (
@@ -808,5 +812,40 @@ namespace Wave.OpenXR
 
 			return isPinching;
 		}
+		/// <summary>
+		/// Retrieves the strength of left/right hand grasp.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="strength">The strength (0~1) where 1 means the hand is grasping.</param>
+		/// <returns></returns>
+		public static bool GetGraspStrength(bool isLeft, out float strength)
+		{
+			strength = 0;
+			if (!IsAvailable()) { return false; }
+
+			if (isLeft)
+				SettingsHelper.GetFloat(kHandGraspStrengthLeft, ref strength);
+			else
+				SettingsHelper.GetFloat(kHandGraspStrengthRight, ref strength);
+
+			return true;
+		}
+		/// <summary>
+		/// Checks if a hand is grasping currently.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <returns>True for grasping.</returns>
+		public static bool IsHandGrasping(bool isLeft)
+		{
+			bool isGrasping = false;
+
+			if (isLeft)
+				SettingsHelper.GetBool(kHandIsGraspingLeft, ref isGrasping);
+			else
+				SettingsHelper.GetBool(kHandIsGraspingRight, ref isGrasping);
+
+			return isGrasping;
+		}
+
 	}
 }

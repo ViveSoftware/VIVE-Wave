@@ -33,11 +33,7 @@ namespace Wave.Essence
 				return m_sb;
 			}
 		}
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 
 		private static WaveEssence instance = null;
 		public static WaveEssence Instance
@@ -154,15 +150,6 @@ namespace Wave.Essence
 
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceTableStaticLocked, OnTableStaticLocked);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceTableStaticUnlocked, OnTableStaticUnlocked);
-
-#if UNITY_EDITOR
-			if (!DummyPose.ToUpdatePose)
-			{
-				DummyPose.ToUpdatePose = true;
-				DummyPose.Origin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnHead;
-				StartCoroutine(DummyPose.UpdatePoses());
-			}
-#endif
 		}
 		private void OnDisable()
 		{
@@ -186,14 +173,6 @@ namespace Wave.Essence
 
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceTableStaticLocked, OnTableStaticLocked);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceTableStaticUnlocked, OnTableStaticUnlocked);
-
-#if UNITY_EDITOR
-			if (DummyPose.ToUpdatePose)
-			{
-				StopCoroutine(DummyPose.UpdatePoses());
-				DummyPose.ToUpdatePose = false;
-			}
-#endif
 		}
 		void Update()
 		{

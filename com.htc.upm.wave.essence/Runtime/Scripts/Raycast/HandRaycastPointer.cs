@@ -18,11 +18,7 @@ namespace Wave.Essence.Raycast
 	public class HandRaycastPointer : RaycastPointer
 	{
 		const string LOG_TAG = "Wave.Essence.Raycast.HandRaycastPointer";
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 
 		#region Inspector
 		[SerializeField]
@@ -105,6 +101,26 @@ namespace Wave.Essence.Raycast
 		[SerializeField]
 		private bool m_AlwaysEnable = false;
 		public bool AlwaysEnable { get { return m_AlwaysEnable; } set { m_AlwaysEnable = value; } }
+
+		[SerializeField]
+		private bool m_EnablePinchArea = true;
+		public bool EnablePinchArea { get { return m_EnablePinchArea; } set { m_EnablePinchArea = value; } }
+		[SerializeField]
+		[Range(0, .5f)]
+		private float m_LeftInteractive = 0.3f;
+		public float LeftInteractive { get { return m_LeftInteractive; } set { m_LeftInteractive = value; } }
+		[SerializeField]
+		[Range(.5f, 1)]
+		private float m_RightInteractive = 0.7f;
+		public float RightInteractive { get { return m_RightInteractive; } set { m_RightInteractive = value; } }
+		[SerializeField]
+		[Range(.5f, 1)]
+		private float m_TopInteractive = 0.7f;
+		public float TopInteractive { get { return m_TopInteractive; } set { m_TopInteractive = value; } }
+		[SerializeField]
+		[Range(0, .5f)]
+		private float m_ButtomInteractive = 0.3f;
+		public float ButtomInteractive { get { return m_ButtomInteractive; } set { m_ButtomInteractive = value; } }
 		#endregion
 
 		private Vector3 origin = Vector3.zero, direction = Vector3.zero;
@@ -157,6 +173,17 @@ namespace Wave.Essence.Raycast
 			return m_Interactable;
 		}
 
+		private bool IsInteractiveArea()
+		{
+			if (m_EnablePinchArea)
+			{
+				Vector3 pixelPosition = Camera.main.WorldToViewportPoint(Pointer.transform.position);
+				return pixelPosition.x > m_LeftInteractive && pixelPosition.x < m_RightInteractive &&
+					pixelPosition.y > m_ButtomInteractive && pixelPosition.y < m_TopInteractive;
+			}
+			return true;
+		}
+
 		bool eligibleForClick = false;
 		protected override bool OnDown()
 		{
@@ -165,7 +192,7 @@ namespace Wave.Essence.Raycast
 			if (!eligibleForClick)
 			{
 				bool down = m_UseDefaultPinch ? HandManager.Instance.IsHandPinching(m_Hand) : HandManager.Instance.GetPinchStrength(m_Hand) > m_PinchStrength;
-				if (down)
+				if (down && IsInteractiveArea())
 				{
 					eligibleForClick = true;
 					return true;

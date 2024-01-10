@@ -31,18 +31,22 @@ namespace Wave.Essence.Samples.Raycast
 		ISubmitHandler
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.Raycast.CubeEventHandler";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
 		private Vector3 m_Position = Vector3.zero;
 		private float fDistanceInMeter = 0;
+		private int raycastID = 0;
+		private bool IsDragging => raycastID != 0;
 		void OnEnable()
 		{
 			fDistanceInMeter = transform.position.z;
+			StartCoroutine("TrackPointer");
+		}
+
+		void OnDisable()
+		{
+			StopCoroutine("TrackPointer");
 		}
 
 		private void TeleportRandomly()
@@ -73,21 +77,25 @@ namespace Wave.Essence.Samples.Raycast
 		public void OnPointerUp(PointerEventData eventData)
 		{
 			DEBUG("OnPointerUp()");
+			ResetRaycastID(eventData.enterEventCamera);
 		}
 
 		public void OnBeginDrag(PointerEventData eventData)
 		{
+			Camera _cam = eventData.enterEventCamera;
+			if (_cam != null)
+			{
+				raycastID = _cam.GetInstanceID();
+			}
 			m_Position = transform.position;
 
 			DEBUG("OnBeginDrag() position: " + m_Position);
-
-			StartCoroutine("TrackPointer");
 		}
 
 		public void OnDrag(PointerEventData eventData)
 		{
 			Camera _cam = eventData.enterEventCamera;
-			if (_cam != null)
+			if (_cam != null && _cam.GetInstanceID() == raycastID)
 			{
 				m_Position = _cam.ScreenToWorldPoint(new Vector3(eventData.position.x, eventData.position.y, fDistanceInMeter));
 				DEBUG("OnDrag() position: " + m_Position);
@@ -97,8 +105,6 @@ namespace Wave.Essence.Samples.Raycast
 		public void OnEndDrag(PointerEventData eventData)
 		{
 			DEBUG("OnEndDrag() position: " + m_Position);
-
-			StopCoroutine("TrackPointer");
 		}
 
 		public void OnDrop(PointerEventData eventData)
@@ -123,13 +129,12 @@ namespace Wave.Essence.Samples.Raycast
 		private uint cubeColorIndex = 0;
 		public void OnPointerClick(PointerEventData eventData)
 		{
-			if (eventData.enterEventCamera != null)
+			if (eventData.enterEventCamera != null && !IsDragging)
 			{
 				m_Position = eventData.enterEventCamera.ScreenToWorldPoint(new Vector3(eventData.position.x, eventData.position.y, fDistanceInMeter));
 				DEBUG("OnPointerClick() position: " + m_Position);
 			}
 
-			StopCoroutine("TrackPointer");
 			//TeleportRandomly();
 		}
 
@@ -143,6 +148,17 @@ namespace Wave.Essence.Samples.Raycast
 		{
 			GetComponent<Renderer>().material.color = cubeColors[(cubeColorIndex++ % cubeColors.Length)];
 		}
+
+		private void ResetRaycastID(Camera camera)
+		{
+			if (camera != null)
+			{
+				if (camera.GetInstanceID() == raycastID)
+				{
+					raycastID = 0;
+				}
+			}
+		}
 		#endregion
 
 		IEnumerator TrackPointer()
@@ -151,7 +167,10 @@ namespace Wave.Essence.Samples.Raycast
 			{
 				yield return waitForEndOfFrame;
 
-				transform.position = m_Position;
+				if (IsDragging)
+				{
+					transform.position = m_Position;
+				}
 			}
 		}
 

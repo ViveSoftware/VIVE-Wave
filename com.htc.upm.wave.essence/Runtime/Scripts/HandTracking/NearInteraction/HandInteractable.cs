@@ -16,11 +16,7 @@ namespace Wave.Essence.Hand.NearInteraction
 	public class HandInteractable : BaseInteractable
 	{
 		const string LOG_TAG = "Wave.Essence.Hand.NearInteraction.HandInteractable";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, actable.name + ", " + msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, actable.name + ", " + msg, true); }
 
 		#region Inspector
 		[SerializeField]

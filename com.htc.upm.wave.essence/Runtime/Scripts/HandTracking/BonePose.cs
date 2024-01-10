@@ -19,11 +19,7 @@ namespace Wave.Essence.Hand
 	sealed class BonePose : IBonePose
 	{
 		private const string LOG_TAG = "Wave.Essence.Hand.BonePose";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_BoneType + ", " + msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, m_BoneType + ", " + msg, true); }
 
 		[Tooltip("The bone type.")]
 		[SerializeField]

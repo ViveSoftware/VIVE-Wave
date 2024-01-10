@@ -17,11 +17,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public class SwipeTest : MonoBehaviour
 	{
 		private const string LOG_TAG = "SwipeTest";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, m_DeviceType + " " + msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, m_DeviceType + " " + msg, true); }
 
 		[SerializeField]
 		private XR_Device m_DeviceType = XR_Device.Dominant;

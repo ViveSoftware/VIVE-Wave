@@ -17,11 +17,7 @@ namespace Wave.Essence.Hand
 	public sealed class HandInputSwitch : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Hand.HandInputSwitch";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		#region Inspector
 		[Tooltip("True for only one input from one hand. False for double inputs from double hands.")]

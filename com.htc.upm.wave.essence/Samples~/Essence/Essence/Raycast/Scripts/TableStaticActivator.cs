@@ -22,11 +22,7 @@ namespace Wave.Essence.Samples.Raycast
 	public class TableStaticActivator : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.Raycast.TableStaticActivator";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		public ControllerRaycastPointer CRPLeft = null;
 		public ControllerRaycastPointer CRPRight = null;

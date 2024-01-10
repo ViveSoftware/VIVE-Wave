@@ -650,11 +650,7 @@ namespace Wave.Essence
 	public static class NotifyDevice
 	{
 		const string LOG_TAG = "Wave.Essence.NotifyDevice";
-		static void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		static void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		static void ERROR(string msg) { Log.e(LOG_TAG, msg, true); }
 
 		const UInt32 MAX_DATA_LENGTH = 64;

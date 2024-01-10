@@ -18,11 +18,7 @@ namespace Wave.Essence.Raycast
     public sealed class RaycastSwitch : MonoBehaviour
     {
 		const string LOG_TAG = "Wave.Essence.Raycast.RaycastSwitch";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
 
 		[Serializable]

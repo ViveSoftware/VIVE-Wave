@@ -19,11 +19,7 @@ namespace Wave.Essence.Editor
 	{
 		private static string LOG_TAG = "DummyButton";
 		private void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		/// <summary> Wave defined buttons. </summary>
 		public enum WButton

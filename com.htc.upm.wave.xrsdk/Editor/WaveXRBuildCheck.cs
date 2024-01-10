@@ -40,6 +40,12 @@ namespace Wave.XR.BuildCheck
 		const string AndroidManifestScriptCreatedPath = "Assets/Plugins/Android/AndroidManifest.IsCreatedByScript";
 		const string Aar2017PathDest = "Assets/Plugins/Android/wvr_unity_plugin_2017.aar";
 		const string Aar2022PathDest = "Assets/Plugins/Android/wvr_unity_plugin_2022.aar";
+		const string CustomGradle1Src = "Packages/" + Constants.SDKPackageName + "/Runtime/Android/launcherTemplate.gradle";
+		const string CustomGradle2Src = "Packages/" + Constants.SDKPackageName + "/Runtime/Android/mainTemplate.gradle";
+		const string CustomGradle1Dest = "Assets/Plugins/Android/launcherTemplate.gradle";
+		const string CustomGradle1CreatedPath = "Assets/Plugins/Android/launcherTemplate.IsCreatedByScript";
+		const string CustomGradle2Dest = "Assets/Plugins/Android/mainTemplate.gradle";
+		const string CustomGradle2CreatedPath = "Assets/Plugins/Android/mainTemplate.IsCreatedByScript";
 		const string ForceBuildWVR = "ForceBuildWVR.txt";
 
 		internal static void AddHandTrackingAndroidManifest()
@@ -146,6 +152,33 @@ namespace Wave.XR.BuildCheck
 					appendFile(
 						filename: WaveXRPath + CustomAndroidManifestPathSrc,
 						eyetracking: true);
+				}
+			}
+		}
+
+		internal static void AddBodyTrackingAndroidManifest()
+		{
+			WaveXRSettings settings;
+			EditorBuildSettings.TryGetConfigObject(Constants.k_SettingsKey, out settings);
+			if (settings != null)
+				WaveXRPath = settings.waveXRFolder;
+
+			if (File.Exists(AndroidManifestPathDest))
+			{
+				if (!checkBodyTrackingFeature(AndroidManifestPathDest))
+				{
+					appendFile(
+						filename: AndroidManifestPathDest,
+						bodytracking: true);
+				}
+			}
+			if (File.Exists(WaveXRPath + CustomAndroidManifestPathSrc))
+			{
+				if (!checkBodyTrackingFeature(WaveXRPath + CustomAndroidManifestPathSrc))
+				{
+					appendFile(
+						filename: WaveXRPath + CustomAndroidManifestPathSrc,
+						bodytracking: true);
 				}
 			}
 		}
@@ -264,14 +297,18 @@ namespace Wave.XR.BuildCheck
 			if (isAndroidManifestCreatedByScript)
 			{
 				File.Delete(AndroidManifestScriptCreatedPath);
+				File.Delete(AndroidManifestScriptCreatedPath + ".meta");
 				if (File.Exists(AndroidManifestPathDest))
+				{
 					File.Delete(AndroidManifestPathDest);
+					File.Delete(AndroidManifestPathDest + ".meta");
+				}
 			}
 		}
 
 		static void RemoveWaveAARs()
         {
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
 			if (File.Exists(Aar2022PathDest))
 				File.Delete(Aar2022PathDest);
 			if (File.Exists(Aar2022PathDest + ".meta"))
@@ -283,6 +320,32 @@ namespace Wave.XR.BuildCheck
 				File.Delete(Aar2017PathDest + ".meta");
 #endif
 			AssetDatabase.Refresh();
+		}
+
+		static void RemoveGradles()
+		{
+#if !UNITY_2020_1_OR_NEWER
+			bool isCustomGradle1CreatedPath = File.Exists(CustomGradle1CreatedPath);
+			if (isCustomGradle1CreatedPath)
+			{
+				File.Delete(CustomGradle1CreatedPath);
+				File.Delete(CustomGradle1CreatedPath + ".meta");
+				if (File.Exists(CustomGradle1Dest))
+					File.Delete(CustomGradle1Dest);
+				if (File.Exists(CustomGradle1Dest + ".meta"))
+					File.Delete(CustomGradle1Dest + ".meta");
+			}
+			bool isCustomGradle2CreatedPath = File.Exists(CustomGradle2CreatedPath);
+			if (isCustomGradle2CreatedPath)
+			{
+				File.Delete(CustomGradle2CreatedPath);
+				File.Delete(CustomGradle2CreatedPath + ".meta");
+				if (File.Exists(CustomGradle2Dest))
+					File.Delete(CustomGradle2Dest);
+				if (File.Exists(CustomGradle2Dest + ".meta"))
+					File.Delete(CustomGradle2Dest + ".meta");
+			}
+#endif
 		}
 
 		static void CopyAndroidManifest()
@@ -326,6 +389,7 @@ namespace Wave.XR.BuildCheck
 			bool addHandTracking  = false;
 			bool addTracker	      = false;
 			bool addEyeTracking	  = false;
+			bool addBodyTracking = false;
 			bool addLipExpression = false;
 			bool addScenePerception = false;
 			bool addSceneMesh = false;
@@ -337,6 +401,7 @@ namespace Wave.XR.BuildCheck
 				addHandTracking = (settings.EnableNaturalHand || settings.EnableElectronicHand) && !checkHandtrackingFeature(AndroidManifestPathDest);
 				addTracker = settings.EnableTracker && !checkTrackerFeature(AndroidManifestPathDest);
 				addEyeTracking = settings.EnableEyeTracking && !checkEyeTrackingFeature(AndroidManifestPathDest);
+				addBodyTracking = settings.EnableBodyTracking && !checkBodyTrackingFeature(AndroidManifestPathDest);
 				addLipExpression = settings.EnableLipExpression && !checkLipExpressionFeature(AndroidManifestPathDest);
 				addScenePerception = settings.EnableScenePerception && !checkScenePerceptionFeature(AndroidManifestPathDest);
 				addMarker = settings.EnableMarker && !checkMarkerFeature(AndroidManifestPathDest);
@@ -349,6 +414,7 @@ namespace Wave.XR.BuildCheck
 					tracker: addTracker,
 					simultaneous_interaction: addSimultaneousInteraction,
 					eyetracking: addEyeTracking,
+					bodytracking: addBodyTracking,
 					lipexpression: addLipExpression,
 					scenePerception: addScenePerception,
 					sceneMesh: addSceneMesh,
@@ -362,6 +428,7 @@ namespace Wave.XR.BuildCheck
 					tracker: addTracker,
 					simultaneous_interaction: addSimultaneousInteraction,
 					eyetracking: addEyeTracking,
+					bodytracking: addBodyTracking,
 					lipexpression: addLipExpression,
 					scenePerception: addScenePerception,
 					sceneMesh: addSceneMesh,
@@ -371,7 +438,7 @@ namespace Wave.XR.BuildCheck
 
 		static void CopyWaveAARs()
         {
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
 			if (!File.Exists(Aar2022PathDest))
 				File.Copy(Aar2022PathSrc, Aar2022PathDest, false);
 			if (File.Exists(Aar2017PathDest))
@@ -396,12 +463,29 @@ namespace Wave.XR.BuildCheck
 #endif
 		}
 
+		static void CopyGradles()
+		{
+#if !UNITY_2020_1_OR_NEWER
+			if (!File.Exists(CustomGradle1Dest))
+			{
+				File.Create(CustomGradle1CreatedPath).Dispose();
+				File.Copy(CustomGradle1Src, CustomGradle1Dest, false);
+			}
+			if (!File.Exists(CustomGradle2Dest))
+			{
+				File.Create(CustomGradle2CreatedPath).Dispose();
+				File.Copy(CustomGradle2Src, CustomGradle2Dest, false);
+			}
+#endif
+		}
+
 		static void appendFile(string filename
 			, bool handtracking = false
 			, WaveXRSettings.SupportedFPS supportedFPS = WaveXRSettings.SupportedFPS.HMD_Default
 			, bool tracker = false
 			, bool simultaneous_interaction = false
 			, bool eyetracking = false
+			, bool bodytracking = false
 			, bool lipexpression = false
 			, bool scenePerception = false
 			, bool sceneMesh = false
@@ -434,6 +518,10 @@ namespace Wave.XR.BuildCheck
 				if (line.Contains("</manifest>") && eyetracking)
 				{
 					file2.WriteLine("	<uses-feature android:name=\"wave.feature.eyetracking\" android:required=\"true\" />");
+				}
+				if (line.Contains("</manifest>") && bodytracking)
+				{
+					file2.WriteLine("	<uses-feature android:name=\"wave.feature.bodytracking\" android:required=\"true\" />");
 				}
 				if (line.Contains("</manifest>") && lipexpression)
 				{
@@ -514,6 +602,26 @@ namespace Wave.XR.BuildCheck
 					string required = metadataNode.Attributes["android:required"].Value;
 
 					if (name != null && name.Equals("wave.feature.eyetracking"))
+						return true;
+				}
+			}
+			return false;
+		}
+
+		static bool checkBodyTrackingFeature(string filename)
+		{
+			XmlDocument doc = new XmlDocument();
+			doc.Load(filename);
+			XmlNodeList metadataNodeList = doc.SelectNodes("/manifest/uses-feature");
+
+			if (metadataNodeList != null)
+			{
+				foreach (XmlNode metadataNode in metadataNodeList)
+				{
+					string name = metadataNode.Attributes["android:name"].Value;
+					string required = metadataNode.Attributes["android:required"].Value;
+
+					if (name != null && name.Equals("wave.feature.bodytracking"))
 						return true;
 				}
 			}
@@ -793,6 +901,7 @@ namespace Wave.XR.BuildCheck
 				// Remove any script created files before build
 				{
 					RemoveCreatedAndroidManifest();
+					RemoveGradles();
 					RemoveWaveAARs();
 				}
 
@@ -823,12 +932,14 @@ namespace Wave.XR.BuildCheck
 					AddSceneMeshAndroidManifest();
 					AddMarkerAndroidManifest();
 					CopyAndroidManifest();
+					CopyGradles();
 					CopyWaveAARs();
 					return;
 				}
 				else if (report.summary.platform == BuildTarget.Android && CheckIsBuildingWave())
 				{
 					CopyAndroidManifest();
+					CopyGradles();
 					CopyWaveAARs();
 					return;
 				}
@@ -842,6 +953,7 @@ namespace Wave.XR.BuildCheck
             public void OnPostprocessBuild(BuildReport report)
             {
 				RemoveCreatedAndroidManifest();
+				RemoveGradles();
 				RemoveWaveAARs();
 			}
         }

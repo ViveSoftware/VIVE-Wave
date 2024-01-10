@@ -24,11 +24,7 @@ namespace Wave.Essence.Hand.NearInteraction
 		};
 
 		const string LOG_TAG = "Wave.Essence.Hand.NearInteraction.GrabClassifier";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, (m_Behavior.IsLeftHand ? "Left" : "Right") + ", " + msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, (m_Behavior.IsLeftHand ? "Left" : "Right") + ", " + msg, true); }
 		const bool grabLog = false;
 		void VERBOSE(string msg)
 		{

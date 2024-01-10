@@ -82,7 +82,7 @@ namespace Wave.XR.Settings
             uint logFlagForNative = appSettings.overrideLogFlagForNative ?
                 appSettings.debugLogFlagForNative : (uint)DebugLogFlag.Default;
             SetInt(NameDebugLogFlagForNative, logFlagForNative);
-            GetInt(NameDebugLogFlagForUnity, ref appSettings.debugLogFlagForUnity);
+            //GetInt(NameDebugLogFlagForUnity, ref appSettings.debugLogFlagForUnity);
             //Debug.Log("WaveXRSettingsHelper: Process development build: " + Debug.isDebugBuild);
             if (Debug.isDebugBuild)
             {

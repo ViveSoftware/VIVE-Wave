@@ -24,6 +24,8 @@ namespace Wave.Essence.Raycast.Editor
 		SerializedProperty m_ShowRay, m_RayStartWidth, m_RayEndWidth, m_RayMaterial, m_Pointer;
 		/// HandRaycastPointer options
 		SerializedProperty m_Hand, m_UsePose, m_PinchStrength, m_PinchRelease, m_AlwaysEnable;
+		/// Interactive area options
+		SerializedProperty m_EnablePinchArea, m_LeftInteractive, m_RightInteractive, m_TopInteractive, m_ButtomInteractive;
 
 		private void OnEnable()
 		{
@@ -43,8 +45,13 @@ namespace Wave.Essence.Raycast.Editor
 			m_PinchStrength = serializedObject.FindProperty("m_PinchStrength");
 			m_PinchRelease = serializedObject.FindProperty("m_PinchRelease");
 			m_AlwaysEnable = serializedObject.FindProperty("m_AlwaysEnable");
+			m_EnablePinchArea = serializedObject.FindProperty("m_EnablePinchArea");
+			m_LeftInteractive = serializedObject.FindProperty("m_LeftInteractive");
+			m_RightInteractive = serializedObject.FindProperty("m_RightInteractive");
+			m_TopInteractive = serializedObject.FindProperty("m_TopInteractive");
+			m_ButtomInteractive = serializedObject.FindProperty("m_ButtomInteractive");
 		}
-		bool PhysicsRaycasterOptions = false, RayOptions = true, HandOptions = true;
+		bool PhysicsRaycasterOptions = false, RayOptions = true, HandOptions = true, AreaOptions = true;
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
@@ -96,6 +103,20 @@ namespace Wave.Essence.Raycast.Editor
 				}
 			}
 
+			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+			AreaOptions = EditorGUILayout.Foldout(AreaOptions, "Interactive Area Settings");
+			if (AreaOptions)
+			{
+				EditorGUILayout.HelpBox(
+					"Set the Interactive area for raycast.",
+					MessageType.Info);
+				EditorGUILayout.PropertyField(m_EnablePinchArea);
+				EditorGUILayout.PropertyField(m_LeftInteractive);
+				EditorGUILayout.PropertyField(m_RightInteractive);
+				EditorGUILayout.PropertyField(m_TopInteractive);
+				EditorGUILayout.PropertyField(m_ButtomInteractive);
+			}
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
 			EditorGUILayout.PropertyField(m_AlwaysEnable);

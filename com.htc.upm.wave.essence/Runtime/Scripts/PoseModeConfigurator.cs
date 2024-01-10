@@ -20,11 +20,7 @@ namespace Wave.Essence
 	sealed public class PoseModeConfigurator : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.PoseModeConfigurator";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		#region Customized Settings
 		private XR_ControllerPoseMode m_RightControllerModeEx = XR_ControllerPoseMode.Raw;

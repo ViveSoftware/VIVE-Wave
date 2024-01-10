@@ -700,6 +700,13 @@ namespace Wave.Native
 			return WVR_GetSceneMeshBuffer(meshBufferId, originModel, ref sceneMeshBuffer);
 		}
 
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetSceneObjects", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetSceneObjects(UInt32 objectCapacityInput, out UInt32 objectCountOutput, WVR_PoseOriginModel originModel, IntPtr objects /* WVR_SceneObject* */);
+		public override WVR_Result GetSceneObjects(UInt32 objectCapacityInput, out UInt32 objectCountOutput, WVR_PoseOriginModel originModel, IntPtr objects)
+		{
+			return WVR_GetSceneObjects(objectCapacityInput, out objectCountOutput, originModel, objects);
+		}
+
 		#endregion
 
 		#region wvr_anchor.h

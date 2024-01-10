@@ -19,11 +19,6 @@ namespace Wave.Essence.Hand.NearInteraction
 	public abstract class BaseInteractor : MonoBehaviour, IInteractor
 	{
 		const string LOG_TAG = "Wave.Essence.Hand.NearInteraction.BaseInteractor";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
 		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
 
 		#region IInteractor

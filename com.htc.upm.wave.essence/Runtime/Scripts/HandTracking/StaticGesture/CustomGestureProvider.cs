@@ -18,11 +18,7 @@ namespace Wave.Essence.Hand.StaticGesture
 	public class CustomGestureProvider : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Hand.StaticGesture.CustomGestureProvider";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		#region Inspector
 		public List<BaseSingleHandGestureProducer> SingleHandCustomGestures = new List<BaseSingleHandGestureProducer>();

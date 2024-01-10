@@ -20,15 +20,8 @@ namespace Wave.Native
 	public class WVR_EditorImpl : MonoBehaviour
 	{
 		private const string LOG_TAG = "WVR_EditorImpl";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-		private void ERROR(string msg)
-		{
-			Log.e(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
+		private void ERROR(string msg) { Log.e(LOG_TAG, msg, true); }
 
 		public static WVR_EditorImpl Instance
 		{

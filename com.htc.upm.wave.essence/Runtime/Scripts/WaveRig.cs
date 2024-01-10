@@ -24,11 +24,7 @@ namespace Wave.Essence
 		public static WaveRig Instance => _instance;
 		
 		const string TAG = "Wave.Essence.WaveRig";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(TAG, msg, true);
-		}
+		void DEBUG(string msg) { Log.d(TAG, msg, true); }
 
 		[SerializeField]
 		private GameObject m_CameraOffset = null;

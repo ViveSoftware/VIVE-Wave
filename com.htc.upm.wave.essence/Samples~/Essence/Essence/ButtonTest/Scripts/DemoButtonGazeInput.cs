@@ -28,11 +28,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public sealed class DemoButtonGazeInput : PointerInputModule
 	{
 		const string LOG_TAG = "Wave.Essence.Sample.DemoButtonGazeInput";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		#region Public Declaration
 		public enum GazeEvent

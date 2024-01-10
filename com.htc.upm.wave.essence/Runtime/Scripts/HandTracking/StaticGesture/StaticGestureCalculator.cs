@@ -8,21 +8,12 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
-using UnityEngine;
 using System.Collections.Generic;
-using Wave.Native;
 
 namespace Wave.Essence.Hand.StaticGesture
 {
 	public class StaticGestureCalculator
 	{
-		const string LOG_TAG = "Wave.Essence.Hand.StaticGesture.StaticGestureCalculator";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
-
 		private CustomGestureCondition Point = new CustomGestureCondition();
 		private CustomGestureCondition Fist = new CustomGestureCondition();
 		private CustomGestureCondition OK = new CustomGestureCondition();

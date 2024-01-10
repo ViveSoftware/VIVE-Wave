@@ -144,7 +144,6 @@ namespace Wave.Generic.Sample
 
 				new SceneData(Entry, "327 Scene Perception", "ScenePerceptionDemoEntrance", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "ScenePerceptionDemo(PlaneSpatialAnchor)", NoHelp, NotForPC),
-				//new SceneData(NotEntry, NoTitle, "ScenePerceptionDemo(PlaneAnchor)", NoHelp, NotForPC),
 				new SceneData(NotEntry, NoTitle, "ScenePerceptionDemo(SceneMeshAnchor)", NoHelp, NotForPC),
 
 				new SceneData(Entry, "328 Aruco Marker", "TrackableMarkerDemo(Aruco)", NoHelp, NotForPC),

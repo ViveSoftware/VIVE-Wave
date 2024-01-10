@@ -35,11 +35,7 @@ namespace Wave.Essence.Hand
 				return m_sb;
 			}
 		}
-		private void DEBUG(StringBuilder msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 		bool printIntervalLog = false;
 		int logFrame = 0;
 		private void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
@@ -1261,6 +1257,127 @@ namespace Wave.Essence.Hand
 			return GetHandConfidence(isLeft);
 		}
 		#endregion
+		#region Grasp Strength
+		public bool GetGraspStrength(TrackerType tracker, bool isLeft, out float strength)
+		{
+			strength = 0;
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.GetGraspStrength(isLeft, out strength);
+			}
+
+			if (tracker == TrackerType.Natural)
+			{
+				if (hasNaturalHandTrackerData && hasNaturalTrackerInfo)
+				{
+					strength = isLeft ? m_NaturalHandTrackerData.left.grasp.strength : m_NaturalHandTrackerData.right.grasp.strength;
+					return true;
+				}
+			}
+			if (tracker == TrackerType.Electronic)
+			{
+				if (hasElectronicHandTrackerData && hasElectronicTrackerInfo)
+				{
+					strength = isLeft ? m_ElectronicHandTrackerData.left.grasp.strength : m_ElectronicHandTrackerData.right.grasp.strength;
+					return true;
+				}
+			}
+
+			return false;
+		}
+		/// <summary>
+		/// Retrieves left/right hand's grasp strength of a <see cref="TrackerType">tracker</see>.
+		/// </summary>
+		/// <param name="tracker">Natural or electronic tracker.</param>
+		/// <param name="isLeft">True for left hand.</param>
+		public float GetGraspStrength(TrackerType tracker, bool isLeft)
+		{
+			if (GetGraspStrength(tracker, isLeft, out float strength)) { return strength; }
+			return 0;
+		}
+		public float GetGraspStrength(TrackerType tracker, HandType hand)
+		{
+			return GetGraspStrength(tracker, hand == HandType.Left ? true : false);
+		}
+		public float GetGraspStrength(bool isLeft)
+		{
+			TrackerType tracker = TrackerType.Electronic;
+			if (GetPreferTracker(ref tracker))
+				return GetGraspStrength(tracker, isLeft);
+			return 0;
+		}
+		public float GetGraspStrength(HandType hand)
+		{
+			return GetGraspStrength(hand == HandType.Left ? true : false);
+		}
+		public float GetGraspStrength(TrackerType tracker, bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(tracker, out timestamp);
+			return GetGraspStrength(tracker, isLeft);
+		}
+		public float GetGraspStrength(bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetGraspStrength(isLeft);
+		}
+		#endregion
+		#region Hand Grasp
+		/// <summary>
+		/// Retrieves left/right hand's grasp status of a <see cref="TrackerType">tracker</see>.
+		/// </summary>
+		/// <param name="tracker">Natural or electronic tracker.</param>
+		/// <param name="isLeft">True for left hand.</param>
+		public bool IsHandGrasping(TrackerType tracker, bool isLeft)
+		{
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.IsHandGrasping(isLeft);
+			}
+
+			if (tracker == TrackerType.Natural)
+			{
+				if (hasNaturalHandTrackerData && hasNaturalTrackerInfo)
+				{
+					return isLeft ? m_NaturalHandTrackerData.left.grasp.isGrasp : m_NaturalHandTrackerData.right.grasp.isGrasp;
+				}
+			}
+			if (tracker == TrackerType.Electronic)
+			{
+				if (hasElectronicHandTrackerData && hasElectronicTrackerInfo)
+				{
+					return isLeft ? m_ElectronicHandTrackerData.left.grasp.isGrasp : m_ElectronicHandTrackerData.right.grasp.isGrasp; ;
+				}
+			}
+
+			return false;
+		}
+		public bool IsHandGrasping(TrackerType tracker, HandType hand)
+		{
+			return IsHandGrasping(tracker, hand == HandType.Left ? true : false);
+		}
+		public bool IsHandGrasping(bool isLeft)
+		{
+			TrackerType tracker = TrackerType.Electronic;
+			if (GetPreferTracker(ref tracker))
+				return IsHandGrasping(tracker, isLeft);
+			return false;
+		}
+		public bool IsHandGrasping(HandType hand)
+		{
+			return IsHandGrasping(hand == HandType.Left ? true : false);
+		}
+		public bool IsHandGrasping(TrackerType tracker, bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(tracker, out timestamp);
+			return IsHandGrasping(tracker, isLeft);
+		}
+		public bool IsHandGrasping(bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return IsHandGrasping(isLeft);
+		}
+		#endregion
 		#region Joint Position
 		/// <summary> @position will not be updated when no position. </summary>
 		public bool GetJointPosition(TrackerType tracker, HandJoint joint, ref Vector3 position, bool isLeft)
@@ -2439,8 +2556,8 @@ namespace Wave.Essence.Hand
 
 					sb.Clear().Append("GetHandJointCount() ").Append(tracker)
 						.Append(", joint count: ").Append(m_NaturalTrackerInfo.jointCount)
-						.Append(", right (").Append(m_NaturalHandTrackerData.right.isValidPose).Append(", ").Append(m_NaturalHandTrackerData.right.confidence).Append(", ").Append(m_NaturalHandTrackerData.right.jointCount).Append(")")
-						.Append(", left (").Append(m_NaturalHandTrackerData.left.isValidPose).Append(", ").Append(m_NaturalHandTrackerData.left.confidence).Append(", ").Append(m_NaturalHandTrackerData.left.jointCount).Append(")");
+						.Append(", right (").Append(m_NaturalHandTrackerData.right.isValidPose).Append(", ").Append(m_NaturalHandTrackerData.right.confidence).Append(", ").Append(m_NaturalHandTrackerData.right.jointCount).Append(", ").Append(m_NaturalHandTrackerData.right.grasp.strength).Append(", ").Append(m_NaturalHandTrackerData.right.grasp.isGrasp).Append(")")
+						.Append(", left (").Append(m_NaturalHandTrackerData.left.isValidPose).Append(", ").Append(m_NaturalHandTrackerData.left.confidence).Append(", ").Append(m_NaturalHandTrackerData.left.jointCount).Append(", ").Append(m_NaturalHandTrackerData.left.grasp.strength).Append(", ").Append(m_NaturalHandTrackerData.left.grasp.isGrasp).Append(")");
 					DEBUG(sb);
 				}
 			}
@@ -2467,8 +2584,8 @@ namespace Wave.Essence.Hand
 
 					sb.Clear().Append("GetHandJointCount() ").Append(tracker.Name())
 						.Append(", joint count: ").Append(m_ElectronicTrackerInfo.jointCount)
-						.Append(", right (").Append(m_ElectronicHandTrackerData.right.isValidPose).Append(", ").Append(m_ElectronicHandTrackerData.right.confidence).Append(", ").Append(m_ElectronicHandTrackerData.right.jointCount).Append(")")
-						.Append(", left (").Append(m_ElectronicHandTrackerData.left.isValidPose).Append(", ").Append(m_ElectronicHandTrackerData.left.confidence).Append(", ").Append(m_ElectronicHandTrackerData.left.jointCount).Append(")");
+						.Append(", right (").Append(m_ElectronicHandTrackerData.right.isValidPose).Append(", ").Append(m_ElectronicHandTrackerData.right.confidence).Append(", ").Append(m_ElectronicHandTrackerData.right.jointCount).Append(", ").Append(m_ElectronicHandTrackerData.right.grasp.strength).Append(", ").Append(m_ElectronicHandTrackerData.right.grasp.isGrasp).Append(")")
+						.Append(", left (").Append(m_ElectronicHandTrackerData.left.isValidPose).Append(", ").Append(m_ElectronicHandTrackerData.left.confidence).Append(", ").Append(m_ElectronicHandTrackerData.left.jointCount).Append(", ").Append(m_ElectronicHandTrackerData.left.grasp.strength).Append(", ").Append(m_ElectronicHandTrackerData.left.grasp.isGrasp).Append(")");
 					DEBUG(sb);
 				}
 			}
@@ -2656,6 +2773,8 @@ namespace Wave.Essence.Hand
 		{
 			handJointData.isValidPose = false;
 			handJointData.confidence = 0;
+			handJointData.grasp.isGrasp = false;
+			handJointData.grasp.strength = 0;
 			handJointData.jointCount = count;
 
 			WVR_Pose_t wvr_pose_type = default(WVR_Pose_t);
@@ -2843,9 +2962,13 @@ namespace Wave.Essence.Hand
 								.Append(", left valid? ").Append(m_NaturalHandTrackerData.left.isValidPose)
 								.Append(", left confidence: ").Append(m_NaturalHandTrackerData.left.confidence)
 								.Append(", left count: ").Append(m_NaturalHandTrackerData.left.jointCount)
+								.Append(", left grasp strength: ").Append(m_NaturalHandTrackerData.left.grasp.strength)
+								.Append(", left grasp isGrasp: ").Append(m_NaturalHandTrackerData.left.grasp.isGrasp)
 								.Append(", right valid? ").Append(m_NaturalHandTrackerData.right.isValidPose)
 								.Append(", right confidence: ").Append(m_NaturalHandTrackerData.right.confidence)
-								.Append(", right count: ").Append(m_NaturalHandTrackerData.right.jointCount);
+								.Append(", right count: ").Append(m_NaturalHandTrackerData.right.jointCount)
+								.Append(", right grasp strength: ").Append(m_NaturalHandTrackerData.right.grasp.strength)
+								.Append(", right grasp isGrasp: ").Append(m_NaturalHandTrackerData.right.grasp.isGrasp);
 
 							if (m_NaturalHandPoseData.left.state.type == WVR_HandPoseType.WVR_HandPoseType_Pinch)
 							{
@@ -2890,8 +3013,12 @@ namespace Wave.Essence.Hand
 
 						m_NaturalHandTrackerData.left.isValidPose = false;
 						m_NaturalHandTrackerData.left.confidence = 0;
+						m_NaturalHandTrackerData.left.grasp.isGrasp = false;
+						m_NaturalHandTrackerData.left.grasp.strength = 0;
 						m_NaturalHandTrackerData.right.isValidPose = false;
 						m_NaturalHandTrackerData.right.confidence = 0;
+						m_NaturalHandTrackerData.right.grasp.isGrasp = false;
+						m_NaturalHandTrackerData.right.grasp.strength = 0;
 					}
 				}
 				else
@@ -2947,9 +3074,13 @@ namespace Wave.Essence.Hand
 								.Append(", left valid? ").Append(m_ElectronicHandTrackerData.left.isValidPose)
 								.Append(", left confidence: ").Append(m_ElectronicHandTrackerData.left.confidence)
 								.Append(", left count: ").Append(m_ElectronicHandTrackerData.left.jointCount)
+								.Append(", left grasp strength: ").Append(m_ElectronicHandTrackerData.left.grasp.strength)
+								.Append(", left grasp isGrasp: ").Append(m_ElectronicHandTrackerData.left.grasp.isGrasp)
 								.Append(", right valid? ").Append(m_ElectronicHandTrackerData.right.isValidPose)
 								.Append(", right confidence: ").Append(m_ElectronicHandTrackerData.right.confidence)
-								.Append(", right count: ").Append(m_ElectronicHandTrackerData.right.jointCount);
+								.Append(", right count: ").Append(m_ElectronicHandTrackerData.right.jointCount)
+								.Append(", right grasp strength: ").Append(m_ElectronicHandTrackerData.right.grasp.strength)
+								.Append(", right grasp isGrasp: ").Append(m_ElectronicHandTrackerData.right.grasp.isGrasp);
 							DEBUG(sb);
 						}
 
@@ -2970,8 +3101,12 @@ namespace Wave.Essence.Hand
 
 						m_ElectronicHandTrackerData.left.isValidPose = false;
 						m_ElectronicHandTrackerData.left.confidence = 0;
+						m_ElectronicHandTrackerData.left.grasp.isGrasp = false;
+						m_ElectronicHandTrackerData.left.grasp.strength = 0;
 						m_ElectronicHandTrackerData.right.isValidPose = false;
 						m_ElectronicHandTrackerData.right.confidence = 0;
+						m_ElectronicHandTrackerData.right.grasp.isGrasp = false;
+						m_ElectronicHandTrackerData.right.grasp.strength = 0;
 					}
 				}
 				else

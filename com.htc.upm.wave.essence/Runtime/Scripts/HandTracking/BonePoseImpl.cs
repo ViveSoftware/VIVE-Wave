@@ -17,11 +17,7 @@ namespace Wave.Essence.Hand
 	public class BonePoseImpl
 	{
 		private const string LOG_TAG = "Wave.Essence.Hand.BonePoseImpl";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		public enum Bones
 		{
 			ROOT = 0,

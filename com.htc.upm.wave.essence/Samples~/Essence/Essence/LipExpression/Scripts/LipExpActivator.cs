@@ -19,11 +19,7 @@ namespace Wave.Essence.Samples.LipExpression
 	public class LipExpActivator : MonoBehaviour
 	{
 		private const string LOG_TAG = "Wave.Essence.Samples.LipExpression.LipExpActivator";
-		private static void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, msg, true);
-		}
+		private static void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 
 		[SerializeField]
 		private Text m_Text = null;

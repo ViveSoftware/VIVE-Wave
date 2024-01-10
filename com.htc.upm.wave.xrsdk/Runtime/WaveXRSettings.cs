@@ -150,7 +150,7 @@ namespace Wave.XR.Settings
         public uint debugLogFlagForNative = (uint)(DebugLogFlag.BasicMask | DebugLogFlag.LifecycleMask | DebugLogFlag.RenderMask | DebugLogFlag.InputMask);
 
         [SerializeField, Tooltip("Debug log flag which Unity Player should follow.")]
-        public uint debugLogFlagForUnity = (uint)(DebugLogFlag.BasicMask | DebugLogFlag.LifecycleMask | DebugLogFlag.RenderMask | DebugLogFlag.InputMask);
+        public uint debugLogFlagForUnity = (uint)(1 << (int)DebugLogFlag.Debug1 | 1 << (int)DebugLogFlag.Debug2 | 1 << (int)DebugLogFlag.Debug3);
 
         #region common
         [SerializeField, Tooltip("Override the LogFlag for native.")]
@@ -228,10 +228,16 @@ namespace Wave.XR.Settings
         [SerializeField, Tooltip("Select to enable the Lip Expression feature when AP starts.")]
         public bool EnableLipExpression = false;
         public const string EnableLipExpressionText = "EnableLipExpression";
-        #endregion
+		#endregion
 
-        #region Scene Perception
-        [SerializeField, Tooltip("Select to enable the Scene Perception feature.")]
+		#region Body
+		// Tracking
+		[SerializeField, Tooltip("Select to enable the Body Tracking feature when AP starts.")]
+		public bool EnableBodyTracking = false;
+		#endregion
+
+		#region Scene Perception
+		[SerializeField, Tooltip("Select to enable the Scene Perception feature.")]
         public bool EnableScenePerception = false;
 
         [SerializeField, Tooltip("Enable this option if you need to use Scene Mesh.")]
@@ -253,7 +259,7 @@ namespace Wave.XR.Settings
 
         void Awake()
         {
-            Debug.Log("WaveXRSettings.Awake()");
+            Debug.Log("Wave.XR.Settings.WaveXRSettings Awake() debugLogFlagForUnity: " + debugLogFlagForUnity);
 #if UNITY_EDITOR
             if (Application.isEditor)
                 return;

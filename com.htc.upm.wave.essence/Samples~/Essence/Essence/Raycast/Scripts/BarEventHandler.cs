@@ -29,11 +29,7 @@ namespace Wave.Essence.Samples.Raycast
 		ISubmitHandler
 	{
 		private const string LOG_TAG = "Wave.Essence.Samples.Raycast.BarEventHandler";
-		private void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, gameObject.name + " " + msg, true);
-		}
+		private void DEBUG(string msg) { Log.d(LOG_TAG, gameObject.name + " " + msg, true); }
 
 		private Text m_Text = null;
 		void OnEnable()

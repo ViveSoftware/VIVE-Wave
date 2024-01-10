@@ -21,11 +21,7 @@ namespace Wave.Essence.Samples.ButtonTest
 	public class TouchUsage : MonoBehaviour
 	{
 		const string LOG_TAG = "Wave.Essence.Samples.ButtonTest.TouchUsage";
-		void DEBUG(string msg)
-		{
-			if (Log.EnableDebugLog)
-				Log.d(LOG_TAG, gameObject.name + " " + msg, true);
-		}
+		void DEBUG(string msg) { Log.d(LOG_TAG, gameObject.name + " " + msg, true); }
 		bool printIntervalLog = false;
 #pragma warning disable
 		int logFrame = 0;
