@@ -16,7 +16,7 @@ namespace Wave.Essence.Samples.Raycast
 		private Image image;
 		private RectTransform rectTransform;
 		private float m_Left = 0;
-		private float m_Buttom = 0;
+		private float m_Bottom = 0;
 		private float m_Right = 0;
 		private float m_Top = 0;
 		private bool isShowArea = false;
@@ -29,7 +29,7 @@ namespace Wave.Essence.Samples.Raycast
 			if (leftHandRay != null || rightHandRay != null)
 			{
 				m_Left = leftHandRay.LeftInteractive < rightHandRay.LeftInteractive ? leftHandRay.LeftInteractive : rightHandRay.LeftInteractive;
-				m_Buttom = leftHandRay.ButtomInteractive < rightHandRay.ButtomInteractive ? leftHandRay.ButtomInteractive : rightHandRay.ButtomInteractive;
+				m_Bottom = leftHandRay.BottomInteractive < rightHandRay.BottomInteractive ? leftHandRay.BottomInteractive : rightHandRay.BottomInteractive;
 				m_Right = leftHandRay.RightInteractive > rightHandRay.RightInteractive ? leftHandRay.RightInteractive : rightHandRay.RightInteractive;
 				m_Top = leftHandRay.TopInteractive > rightHandRay.TopInteractive ? leftHandRay.TopInteractive : rightHandRay.TopInteractive;
 			}
@@ -44,7 +44,7 @@ namespace Wave.Essence.Samples.Raycast
 				return;
 			}
 
-			rectTransform.anchorMin = new Vector2(m_Left, m_Buttom);
+			rectTransform.anchorMin = new Vector2(m_Left, m_Bottom);
 			rectTransform.anchorMax = new Vector2(m_Right, m_Top);
 			rectTransform.offsetMin = Vector2.zero;
 			rectTransform.offsetMax = Vector2.zero;
@@ -58,9 +58,9 @@ namespace Wave.Essence.Samples.Raycast
 		{
 			leftHandRay.LeftInteractive = rightHandRay.LeftInteractive = m_Left = vlaue;
 		}
-		public void OnButtomValueChange(float vlaue)
+		public void OnBottomValueChange(float vlaue)
 		{
-			leftHandRay.ButtomInteractive = rightHandRay.ButtomInteractive = m_Buttom = vlaue;
+			leftHandRay.BottomInteractive = rightHandRay.BottomInteractive = m_Bottom = vlaue;
 		}
 		public void OnRightValueChange(float vlaue)
 		{
@@ -74,9 +74,9 @@ namespace Wave.Essence.Samples.Raycast
 		{
 			text.text = m_Left.ToString("F2");
 		}
-		public void OnButtomValueChange(Text text)
+		public void OnBottomValueChange(Text text)
 		{
-			text.text = m_Buttom.ToString("F2");
+			text.text = m_Bottom.ToString("F2");
 		}
 		public void OnRightValueChange(Text text)
 		{

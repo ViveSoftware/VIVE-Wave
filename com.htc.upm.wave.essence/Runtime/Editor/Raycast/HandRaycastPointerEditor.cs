@@ -25,7 +25,7 @@ namespace Wave.Essence.Raycast.Editor
 		/// HandRaycastPointer options
 		SerializedProperty m_Hand, m_UsePose, m_PinchStrength, m_PinchRelease, m_AlwaysEnable;
 		/// Interactive area options
-		SerializedProperty m_EnablePinchArea, m_LeftInteractive, m_RightInteractive, m_TopInteractive, m_ButtomInteractive;
+		SerializedProperty m_EnablePinchArea, m_LeftInteractive, m_RightInteractive, m_TopInteractive, m_BottomInteractive;
 
 		private void OnEnable()
 		{
@@ -49,7 +49,7 @@ namespace Wave.Essence.Raycast.Editor
 			m_LeftInteractive = serializedObject.FindProperty("m_LeftInteractive");
 			m_RightInteractive = serializedObject.FindProperty("m_RightInteractive");
 			m_TopInteractive = serializedObject.FindProperty("m_TopInteractive");
-			m_ButtomInteractive = serializedObject.FindProperty("m_ButtomInteractive");
+			m_BottomInteractive = serializedObject.FindProperty("m_BottomInteractive");
 		}
 		bool PhysicsRaycasterOptions = false, RayOptions = true, HandOptions = true, AreaOptions = true;
 		public override void OnInspectorGUI()
@@ -115,7 +115,7 @@ namespace Wave.Essence.Raycast.Editor
 				EditorGUILayout.PropertyField(m_LeftInteractive);
 				EditorGUILayout.PropertyField(m_RightInteractive);
 				EditorGUILayout.PropertyField(m_TopInteractive);
-				EditorGUILayout.PropertyField(m_ButtomInteractive);
+				EditorGUILayout.PropertyField(m_BottomInteractive);
 			}
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 

@@ -1,10 +1,10 @@
 using UnityEngine;
 
-namespace Wave.XR {
-
+namespace Wave.XR
+{
     public sealed class WaveXRSpectatorCamera : MonoBehaviour
     {
-        WaveXRSpectatorCameraHandle handle;
+        private WaveXRSpectatorCameraHandle handle;
 
         public void SetHandle(WaveXRSpectatorCameraHandle handle)
         {

@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 using Wave.XR.Function;
 
@@ -9,211 +8,187 @@ namespace Wave.XR
 {
     public sealed class WaveXRSpectatorCameraHandle : MonoBehaviour
     {
-        static readonly string TAG = "WXRSpecCamH";
-        static WaveXRSpectatorCameraHandle instance;
-        uint frameCount = 0;
-        bool changedST = false;  // change start
-        bool changedSR = false;  // change should render
-        bool run = false;
-        bool shouldRenderFrame = false;
-        Camera spectatorCamera;
-        GameObject spectatorCameraObject;
-        WaveXRSpectatorCamera spectatorCameraComponent;
-        StringBuilder sb = new StringBuilder(300);
-
-        System.IntPtr textureId;
-        RenderTexture renderTexture;
-        Material debugMaterial;
-
         // These fields is used to control spectator in editor
         public bool debugStartCamera = false;
         public bool debugRenderFrame = false;
-        public float debugAccTime = 0;
         public int debugFPS = 30;
+        private float debugAccTime = 0;
+        private Material debugMaterial;
 
+        private static WaveXRSpectatorCameraHandle instance;
+
+        // Camera state
+        private bool changedST = false; // change start
+        private bool changedSR = false; // change should render
+        private bool run = false; // camera is running or not
+        private bool shouldRenderFrame = false; // should render the frame in current time
+
+        // Unity component
+        private Camera spectatorCamera;
+        private GameObject spectatorCameraObject;
+        private WaveXRSpectatorCamera spectatorCameraComponent;
+        private readonly StringBuilder sb = new StringBuilder(300);
+
+        // Texture
+        private System.IntPtr textureId;
+        private RenderTexture renderTexture;
+
+        // Override pose variables
         private bool hasOverridePose = false;
         private Vector3 overridePosition;
         private Quaternion overrideRotation;
 
+        // Override fov variables
         private bool hasOverrideFov = false;
         private float overrideFov = 90.0f;
 
+        // Override culling mask variables
         private bool hasOverrideCullingMask = false;
         private int overrideCullingMask = 0x0;
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RenderParametersNative
-        {
-            public bool isStarted;
-            public bool shouldRender;
-            public bool isParametersValid;
-            public bool hasPose;
-            public uint width;
-            public uint height;
-            public float l;
-            public float r;
-            public float t;
-            public float b;
-            public Vector3 position;
-            public Quaternion rotation;
-        }
+        // Current frame render parameters of the spectator
+        private RenderParameters renderParameters = new RenderParameters();
 
-        public struct RenderParameters
-        {
-            public bool isStarted;
-            public bool shouldRender;
-            public bool isParametersValid;
-            public bool hasPose;
-            public int width;
-            public int height;
-            public float l;
-            public float r;
-            public float t;
-            public float b;
-            public Vector3 position;
-            public Quaternion rotation;
-            public float n;
-            public float f;
-            public Matrix4x4 proj;
-
-            public void Set(RenderParametersNative na)
+        // Render thread task
+        private readonly RenderThreadTask task = new RenderThreadTask(
+            // receiver
+            (queue) =>
             {
-                isStarted = na.isStarted;
-                shouldRender= na.shouldRender;
-                isParametersValid = na.isParametersValid;
-                hasPose = na.hasPose;
-                width = (int)na.width;
-                height = (int)na.height;
-                l = na.l;
-                r = na.r;
-                t = na.t;
-                b = na.b;
-                proj = WaveXRSpectatorCameraHandle.Frustum(l, r, t, b, n, f);
+                //Debug.Log("RunInRenderThread");
+                System.IntPtr nativeTexId;
+                lock (queue)
+                {
+                    // Run in RenderThread
+                    var msg = (RTData)queue.Dequeue();
+                    nativeTexId = msg.TextureId;
+                    queue.Release(msg);
+                }
+#if UNITY_EDITOR
+                if (Application.isEditor) return;
+#endif
+                setSpectatorTexture(nativeTexId);
             }
+        );
 
-            public void CalculateProj(float near, float far)
-            {
-                n = near;
-                f = far;
-                if (this.isParametersValid)
-                    proj = WaveXRSpectatorCameraHandle.Frustum(l, r, t, b, n, f);
-            }
-        }
+        // Callback function when spectator start/stop
+        public OnSpectatorStartDelegate OnSpectatorStart;
+        public OnSpectatorStopDelegate OnSpectatorStop;
 
-        RenderParameters renderParameters = new RenderParameters();
+        private static IsSpectatorStartedDelegate isSpectatorStarted;
+        private static ShouldSpectatorRenderFrameDelegate shouldSpectatorRenderFrame;
+        private static SetSpectatorTextureDelegate setSpectatorTexture;
+        private static GetSpectatorRenderParametersDelegate getSpectatorRenderParameters;
 
+        // Shader property
+        private static readonly int MainTex = Shader.PropertyToID("_MainTex");
+
+        #region Public function of spectator handler
+        
+        /// <summary>
+        /// Get the instance of WaveXRSpectatorCameraHandle
+        /// </summary>
+        /// <returns>WaveXRSpectatorCameraHandle component</returns>
         public static WaveXRSpectatorCameraHandle GetInstance()
         {
             return instance;
         }
 
-        private static void InitCheck()
+        /// <summary>
+        /// Get spectator camera
+        /// </summary>
+        /// <returns>Camera component</returns>
+        public Camera GetCamera()
         {
-            if (instance != null) return;
+            return spectatorCamera;
+        }
+
+        /// <summary>
+        /// The event function that Unity calls after spectator camera renders the scene.
+        /// This will update the spectator camera texture and then submit to the render thread.
+        /// </summary>
+        public void OnCameraPostRender()
+        {
+            if (textureId == System.IntPtr.Zero && renderTexture != null)
+            {
+                textureId = renderTexture.GetNativeTexturePtr();
+            }
+
+            SubmitInRenderThread();
+        }
+
+        /// <summary>
+        /// Set the spectator camera pose by specific input position and rotation.
+        /// </summary>
+        /// <param name="position">The position you want to set to the spectator camera.</param>
+        /// <param name="rotation">The rotation you want to set to the spectator camera.</param>
+        public void SetFixedPose(Vector3 position, Quaternion rotation)
+        {
+            hasOverridePose = true;
+            overridePosition = position;
+            overrideRotation = rotation;
+        }
+
+        /// <summary>
+        /// Reset the spectator camera pose and set it to the main camera pose.
+        /// </summary>
+        public void ClearFixedPose()
+        {
+            hasOverridePose = false;
+        }
+
+        /// <summary>
+        /// Set the spectator camera fov by specific input value.
+        /// </summary>
+        /// <param name="fov">The FOV value you want to set to the spectator camera.</param>
+        public void SetFixedFOV(float fov)
+        {
+            hasOverrideFov = true;
+            overrideFov = Mathf.Clamp(fov, 5, 130);
+        }
+
+        /// <summary>
+        /// Reset the spectator camera fov value.
+        /// </summary>
+        public void ClearFixedFOV()
+        {
+            hasOverrideFov = false;
+        }
+
+        /// <summary>
+        /// Set the spectator camera culling mask by specific input value.
+        /// </summary>
+        /// <param name="cullingMask">The culling mask you want to set to the spectator camera.</param>
+        public void SetCullingMask(int cullingMask)
+        {
+            hasOverrideCullingMask = true;
+            overrideCullingMask = cullingMask;
+        }
+
+        /// <summary>
+        /// Reset the spectator camera culling mask.
+        /// </summary>
+        public void ClearCullingMask()
+        {
+            hasOverrideCullingMask = false;
+        }
+        
+        #endregion Public function of spectator handler
+
+        #region Private function of spectator handler internal usage in its lifecycle
+
+        private static void Init()
+        {
+            if (instance != null)
+            {
+                return;
+            }
+
             var initOnLoad = WaveXRRuntimeInitializeOnLoad.GetInstance();
             instance = initOnLoad.gameObject.AddComponent<WaveXRSpectatorCameraHandle>();
+
             if (!GetFunctions())
+            {
                 instance.enabled = false;
-        }
-
-        public static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            InitCheck();
-        }
-
-        private void OnApplicationPause(bool pause)
-        {
-            if (pause)
-            {
-                ReleaseResource();
-            }
-            else
-            {
-            }
-        }
-
-        public void OnEnable()
-        {
-            // This only available if you put this material in Resources folder.  We put it in our sample.
-            debugMaterial = Resources.Load<Material>("Spectator/SpectatorCaptured");
-        }
-
-        public void OnDisable()
-        {
-            ReleaseResource();
-        }
-
-
-        // Update is called once per frame
-        void Update()
-        {
-            StatusCheck();
-            if (!run) return;
-            // Prepare camera before rending
-            if (!CheckCamera()) return;  // No main camera found
-            spectatorCamera.enabled = false;
-            if (!shouldRenderFrame) return;  // this frame skipped.
-            UpdateRenderParameters();
-            frameCount++;
-        }
-
-        private void OnDestroy()
-        {
-            ReleaseResource();
-        }
-
-        private void CopyMainCameraParameters()
-        {
-            Camera main = Camera.main;
-            if (hasOverridePose)
-            {
-                spectatorCamera.transform.position = overridePosition;
-                spectatorCamera.transform.rotation = overrideRotation;
-            }
-            else
-            {
-                spectatorCamera.transform.position = main.transform.position;
-                spectatorCamera.transform.rotation = main.transform.rotation;
-            }
-            spectatorCamera.farClipPlane = main.farClipPlane;
-            spectatorCamera.nearClipPlane = main.nearClipPlane;
-            spectatorCamera.allowHDR = false;
-            spectatorCamera.allowDynamicResolution = false;
-            spectatorCamera.allowMSAA = main.allowMSAA;
-            spectatorCamera.backgroundColor = main.backgroundColor;
-            spectatorCamera.clearFlags = main.clearFlags;
-            spectatorCamera.cullingMask = hasOverrideCullingMask ? overrideCullingMask : main.cullingMask;
-            // No matter what depth we set, the mono camera always run before stereo camera.  See Profiler to check.
-            spectatorCamera.depth = Camera.main.depth + 99;
-            spectatorCamera.depthTextureMode = main.depthTextureMode;
-            spectatorCamera.useOcclusionCulling = main.useOcclusionCulling;
-            spectatorCamera.stereoTargetEye = StereoTargetEyeMask.None;
-        }
-
-        // Called when parameters are validate.
-        private void CheckTexture()
-        {
-            var rp = renderParameters;
-            bool changed = false;
-            if (renderTexture != null)
-            {
-                changed = renderTexture.width != rp.width || renderTexture.height != rp.height;
-                if (changed)
-                    DestroyRenderTexture();
-            }
-
-            if (renderTexture == null)
-            {
-                renderTexture = new RenderTexture(rp.width, rp.height, 32);
-                changed = true;
-            }
-
-            if (!renderTexture.IsCreated())
-            {
-                textureId = System.IntPtr.Zero;
-                renderTexture.Create();
-                if (debugMaterial)
-                    debugMaterial.SetTexture("_MainTex", renderTexture);
             }
         }
 
@@ -225,12 +200,17 @@ namespace Wave.XR
                 Destroy(renderTexture, 0.5f);
                 renderTexture = null;
             }
+
             textureId = System.IntPtr.Zero;
         }
 
         private void DestroyCamera()
         {
-            if (spectatorCamera == null) return;
+            if (spectatorCamera == null)
+            {
+                return;
+            }
+
             spectatorCamera.targetTexture = null;
             spectatorCamera = null;
             spectatorCameraComponent = null;
@@ -243,7 +223,9 @@ namespace Wave.XR
             DestroyRenderTexture();
             DestroyCamera();
             if (debugMaterial)
-                debugMaterial.SetTexture("_MainTex", null);
+            {
+                debugMaterial.SetTexture(MainTex, null);
+            }
         }
 
         private bool CheckCamera()
@@ -251,8 +233,11 @@ namespace Wave.XR
             if (Camera.main == null)
             {
                 if (spectatorCamera == null)
-                return false;
+                {
+                    return false;
+                }
             }
+
             if (spectatorCamera == null)
             {
                 spectatorCameraObject = new GameObject("Spectator");
@@ -265,10 +250,42 @@ namespace Wave.XR
 
                 CopyMainCameraParameters();
             }
+
             return true;
         }
 
-        private void StatusCheck()
+        // Called when parameters are validate.
+        private void CheckTexture()
+        {
+            var rp = renderParameters;
+            if (renderTexture != null)
+            {
+                bool changed = renderTexture.width != (int)rp.RenderParametersNative.width ||
+                               renderTexture.height != (int)rp.RenderParametersNative.height;
+                if (changed)
+                {
+                    DestroyRenderTexture();
+                }
+            }
+
+            if (renderTexture == null)
+            {
+                renderTexture = new RenderTexture((int)rp.RenderParametersNative.width,
+                    (int)rp.RenderParametersNative.height, 32);
+            }
+
+            if (!renderTexture.IsCreated())
+            {
+                textureId = System.IntPtr.Zero;
+                renderTexture.Create();
+                if (debugMaterial)
+                {
+                    debugMaterial.SetTexture(MainTex, renderTexture);
+                }
+            }
+        }
+
+        private void CheckStatus()
         {
 #if UNITY_EDITOR
             if (Application.isEditor)
@@ -285,15 +302,27 @@ namespace Wave.XR
                     debugAccTime += Time.unscaledDeltaTime;
                     if (debugAccTime > (1.0f / debugFPS))
                     {
+                        // This frame should render
                         shouldRenderFrame = true;
                         debugAccTime = 0;
                     }
+                    else
+                    {
+                        // This frame should not render due to fps setting
+                        shouldRenderFrame = false;
+                    }
                 }
+                else
+                {
+                    // This frame should not render due to the "fps" flag statement (equal to false)
+                    shouldRenderFrame = false;
+                }
+
                 return;
             }
 #endif
 
-            bool isStarted = IsSpectatorStarted();
+            bool isStarted = isSpectatorStarted();
             changedST = run != isStarted;
             changedSR = false;
             run = isStarted;
@@ -302,21 +331,31 @@ namespace Wave.XR
                 try
                 {
                     if (isStarted)
-                        onSpectatorStart();
+                    {
+                        OnSpectatorStart();
+                    }
                     else
-                        onSpectatorStop();
+                    {
+                        OnSpectatorStop();
+                    }
                 }
-                catch (System.Exception) { }
+                catch
+                {
+                    // ignored
+                }
 
                 shouldRenderFrame = false;
-                frameCount = 0;
             }
+
             if (changedST && !run)
+            {
+                // state change to stop
                 ReleaseResource();
+            }
 
             if (run)
             {
-                bool shouldRender = ShouldSpectatorRenderFrame();
+                bool shouldRender = shouldSpectatorRenderFrame();
                 changedSR = shouldRenderFrame != shouldRender;
                 shouldRenderFrame = shouldRender;
             }
@@ -334,8 +373,8 @@ namespace Wave.XR
             }
         }
 
-        // The Matrix4x4.Frustum will imply the z-flip matrix.  Use custom projection instead.
-        static Matrix4x4 Frustum(float left, float right, float top, float bottom, float near, float far)
+        // The Matrix4x4.Frustum will imply the z-flip matrix. Use custom projection instead.
+        private static Matrix4x4 Frustum(float left, float right, float top, float bottom, float near, float far)
         {
             float x = 2.0F / (right - left);
             float y = 2.0F / (top - bottom);
@@ -364,44 +403,46 @@ namespace Wave.XR
             return m;
         }
 
-        // Set pose in world space
-        public void SetFixedPose(Vector3 position, Quaternion rotation)
+        private void CopyMainCameraParameters()
         {
-            hasOverridePose = true;
-            overridePosition = position;
-            overrideRotation = rotation;
-        }
+            Camera main = Camera.main;
+            if (hasOverridePose)
+            {
+                var spectatorCameraTransform = spectatorCamera.transform;
 
-        public void ClearFixedPose()
-        {
-            hasOverridePose = false;
-        }
+                spectatorCameraTransform.position = overridePosition;
+                spectatorCameraTransform.rotation = overrideRotation;
+            }
+            else
+            {
+                if (!(main is null))
+                {
+                    var mainCameraTransform = main.transform;
+                    var spectatorCameraTransform = spectatorCamera.transform;
 
-        public void SetFixedFOV(float fov)
-        {
-            hasOverrideFov = true;
-            overrideFov = Mathf.Clamp(fov, 5, 130);
-        }
+                    spectatorCameraTransform.position = mainCameraTransform.position;
+                    spectatorCameraTransform.rotation = mainCameraTransform.rotation;
+                }
+            }
 
-        public void ClearFixedFOV()
-        {
-            hasOverrideFov = false;
-        }
+            if (!(main is null))
+            {
+                spectatorCamera.farClipPlane = main.farClipPlane;
+                spectatorCamera.nearClipPlane = main.nearClipPlane;
+                spectatorCamera.allowMSAA = main.allowMSAA;
+                spectatorCamera.backgroundColor = main.backgroundColor;
+                spectatorCamera.clearFlags = main.clearFlags;
+                spectatorCamera.depth =
+                    main.depth +
+                    99; // No matter what depth we set, the mono camera always run before stereo camera. See Profiler to check.
+                spectatorCamera.depthTextureMode = main.depthTextureMode;
+                spectatorCamera.useOcclusionCulling = main.useOcclusionCulling;
+                spectatorCamera.cullingMask = hasOverrideCullingMask ? overrideCullingMask : main.cullingMask;
+            }
 
-        public void SetCullingMask(int cullingMask)
-        {
-            hasOverrideCullingMask = true;
-            overrideCullingMask = cullingMask;
-        }
-
-        public void ClearCullingMask()
-        {
-            hasOverrideCullingMask = false;
-        }
-
-        public RenderParameters GetRenderParameters()
-        {
-            return renderParameters;
+            spectatorCamera.allowHDR = false;
+            spectatorCamera.allowDynamicResolution = false;
+            spectatorCamera.stereoTargetEye = StereoTargetEyeMask.None;
         }
 
         private void UpdateRenderParameters()
@@ -419,8 +460,15 @@ namespace Wave.XR
             n.width = 1920;
             n.height = 1080;
             if (!Application.isEditor)
+            {
 #endif
-                n.isParametersValid = GetSpectatorRenderParameters(ref n.width, ref n.height, ref n.l, ref n.r, ref n.t, ref n.b);
+                // Get the render parameters from native
+                n.isParametersValid =
+                    getSpectatorRenderParameters(ref n.width, ref n.height, ref n.l, ref n.r, ref n.t, ref n.b);
+#if UNITY_EDITOR
+            }
+#endif
+
             renderParameters.Set(n);
 
             if (changedSR)
@@ -439,48 +487,83 @@ namespace Wave.XR
                 Application.SetStackTraceLogType(LogType.Log, t);
             }
 
-            if (renderParameters.isParametersValid)
+            if (renderParameters.RenderParametersNative.isParametersValid)
             {
                 CheckTexture();
                 CopyMainCameraParameters();
                 if (hasOverrideFov)
                 {
-                    float aspect = renderParameters.width / (float)renderParameters.height;
-                    spectatorCamera.projectionMatrix = Matrix4x4.Perspective(overrideFov, aspect, spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
+                    float aspect = renderParameters.RenderParametersNative.width /
+                                   (float)renderParameters.RenderParametersNative.height;
+                    spectatorCamera.projectionMatrix = Matrix4x4.Perspective(overrideFov, aspect,
+                        spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
                 }
                 else
                 {
                     renderParameters.CalculateProj(spectatorCamera.nearClipPlane, spectatorCamera.farClipPlane);
-                    spectatorCamera.projectionMatrix = renderParameters.proj;
+                    spectatorCamera.projectionMatrix = renderParameters.Proj;
                 }
+
                 spectatorCamera.targetTexture = renderTexture;
                 spectatorCamera.enabled = true;
             }
         }
 
-        // Callback from Camera
-        public void OnCameraPostRender()
+        private RenderParameters GetRenderParameters()
         {
-            if (textureId == System.IntPtr.Zero && renderTexture != null)
+            return renderParameters;
+        }
+
+        private static bool GetFunctions()
+        {
+#if UNITY_EDITOR
+            if (Application.isEditor)
+                return true;
+#endif
+            bool error = true;
+            do
             {
-                Profiler.BeginSample("SpecTexGetNativePtr");
-                textureId = renderTexture.GetNativeTexturePtr();
-                Profiler.EndSample();
-            }
-            SubmitInRenderThread();
+                var ptr = FunctionsHelper.GetFuncPtr("IsSpectatorStarted");
+                if (Equals(ptr, default(System.IntPtr)) || ptr == System.IntPtr.Zero)
+                {
+                    break;
+                }
+
+                isSpectatorStarted = Marshal.GetDelegateForFunctionPointer<IsSpectatorStartedDelegate>(ptr);
+
+                ptr = FunctionsHelper.GetFuncPtr("ShouldSpectatorRenderFrame");
+                if (Equals(ptr, default(System.IntPtr)) || ptr == System.IntPtr.Zero)
+                {
+                    break;
+                }
+
+                shouldSpectatorRenderFrame =
+                    Marshal.GetDelegateForFunctionPointer<ShouldSpectatorRenderFrameDelegate>(ptr);
+
+                ptr = FunctionsHelper.GetFuncPtr("SetSpectatorTexture");
+                if (Equals(ptr, default(System.IntPtr)) || ptr == System.IntPtr.Zero)
+                {
+                    break;
+                }
+
+                setSpectatorTexture = Marshal.GetDelegateForFunctionPointer<SetSpectatorTextureDelegate>(ptr);
+
+                ptr = FunctionsHelper.GetFuncPtr("GetSpectatorRenderParameters");
+                if (Equals(ptr, default(System.IntPtr)) || ptr == System.IntPtr.Zero)
+                {
+                    break;
+                }
+
+                getSpectatorRenderParameters =
+                    Marshal.GetDelegateForFunctionPointer<GetSpectatorRenderParametersDelegate>(ptr);
+
+                error = false;
+            } while (false);
+
+            return !error;
         }
 
-        public Camera GetCamera()
-        {
-            return spectatorCamera;
-        }
-
-
-#region render_thread_submit
-        internal class RTData : Message
-        {
-            public System.IntPtr textureId;
-        }
+        #region Render thread submit
 
         private void SubmitInRenderThread()
         {
@@ -499,83 +582,172 @@ namespace Wave.XR
             lock (queue)
             {
                 var msg = queue.Obtain<RTData>();
-                msg.textureId = textureId;
+                msg.TextureId = textureId;
                 queue.Enqueue(msg);
             }
 
             task.IssueEvent();
         }
 
-        RenderThreadTask task = new RenderThreadTask(
-            // receiver
-            (queue) => {
-                //Debug.Log("RunInRenderThread");
-                System.IntPtr nativeTexId;
-                lock (queue)
-                {
-                    // Run in RenderThread
-                    var msg = (RTData)queue.Dequeue();
-                    nativeTexId = msg.textureId;
-                    queue.Release(msg);
-                }
-#if UNITY_EDITOR
-                if (Application.isEditor) return;
-#endif
-                SetSpectatorTexture(nativeTexId);
-            }
-        );
-#endregion render_thread_submit
+        #endregion Render thread submit
 
-#region callback
+        #endregion Private function of spectator handler internal usage in its lifecycle
+        
+        #region Public callback function
+        
+        /// <summary>
+        /// The callback function registration when the spectator camera is started.
+        /// </summary>
         public delegate void OnSpectatorStartDelegate();
+
+        /// <summary>
+        /// The callback function registration when the spectator camera is stopped.
+        /// </summary>
         public delegate void OnSpectatorStopDelegate();
+        
+        #endregion Public callback function
 
-        public OnSpectatorStartDelegate onSpectatorStart;
-        public OnSpectatorStopDelegate onSpectatorStop;
-#endregion
+        #region Callback function for internal usage of spectator handler
+        
+        private delegate bool IsSpectatorStartedDelegate();
 
+        private delegate bool ShouldSpectatorRenderFrameDelegate();
 
-#region functions
-        delegate bool IsSpectatorStartedDelegate();
-        delegate bool ShouldSpectatorRenderFrameDelegate();
-        delegate void SetSpectatorTextureDelegate(System.IntPtr ptr);
-        delegate bool GetSpectatorRenderParametersDelegate(ref uint w, ref uint h, ref float l, ref float r, ref float t, ref float b);
+        private delegate void SetSpectatorTextureDelegate(System.IntPtr ptr);
 
-        static IsSpectatorStartedDelegate IsSpectatorStarted;
-        static ShouldSpectatorRenderFrameDelegate ShouldSpectatorRenderFrame;
-        static SetSpectatorTextureDelegate SetSpectatorTexture;
-        static GetSpectatorRenderParametersDelegate GetSpectatorRenderParameters;
+        private delegate bool GetSpectatorRenderParametersDelegate(
+            ref uint w,
+            ref uint h,
+            ref float l,
+            ref float r,
+            ref float t,
+            ref float b);
 
-        static bool GetFunctions()
+        #endregion Callback function for internal usage of spectator handler
+
+        #region Unity Lifecycle functions
+
+        private void OnEnable()
         {
-#if UNITY_EDITOR
-            if (Application.isEditor)
-                return true;
-#endif
-            bool error = true;
-            do
-            {
-                System.IntPtr ptr;
-                ptr = FunctionsHelper.GetFuncPtr("IsSpectatorStarted");
-                if (ptr == null) break;
-                IsSpectatorStarted = Marshal.GetDelegateForFunctionPointer<IsSpectatorStartedDelegate>(ptr);
-
-                ptr = FunctionsHelper.GetFuncPtr("ShouldSpectatorRenderFrame");
-                if (ptr == null) break;
-                ShouldSpectatorRenderFrame = Marshal.GetDelegateForFunctionPointer<ShouldSpectatorRenderFrameDelegate>(ptr);
-
-                ptr = FunctionsHelper.GetFuncPtr("SetSpectatorTexture");
-                if (ptr == null) break;
-                SetSpectatorTexture = Marshal.GetDelegateForFunctionPointer<SetSpectatorTextureDelegate>(ptr);
-
-                ptr = FunctionsHelper.GetFuncPtr("GetSpectatorRenderParameters");
-                if (ptr == null) break;
-                GetSpectatorRenderParameters = Marshal.GetDelegateForFunctionPointer<GetSpectatorRenderParametersDelegate>(ptr);
-
-                error = false;
-            } while (false);
-            return !error;
+            // This only available if you put this material in Resources folder.  We put it in our sample.
+            debugMaterial = Resources.Load<Material>("Spectator/SpectatorCaptured");
         }
-#endregion functions
+
+        private void OnDisable()
+        {
+            ReleaseResource();
+        }
+
+        // Update is called once per frame
+        private void Update()
+        {
+            CheckStatus();
+
+            if (!run)
+            {
+                return;
+            }
+
+            // Prepare camera before rendering
+            if (!CheckCamera())
+            {
+                // No main camera found
+                return;
+            }
+
+            spectatorCamera.enabled = false;
+
+            // Check if we need to render this frame (related to fps setting)
+            if (!shouldRenderFrame)
+            {
+                // This frame skipped if "fps" flag is false
+                return;
+            }
+
+            UpdateRenderParameters();
+        }
+
+        private void OnApplicationPause(bool pause)
+        {
+            if (pause)
+            {
+                ReleaseResource();
+            }
+        }
+
+        public static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Init();
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseResource();
+        }
+
+        #endregion Unity Lifecycle functions
+
+        #region Structrue/Class definition
+
+        private class RTData : Message
+        {
+            public System.IntPtr TextureId;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RenderParametersNative
+        {
+            public bool isStarted;
+            public bool shouldRender;
+            public bool isParametersValid;
+            public bool hasPose;
+            public uint width;
+            public uint height;
+            public float l;
+            public float r;
+            public float t;
+            public float b;
+            public Vector3 position;
+            public Quaternion rotation;
+        }
+
+        private struct RenderParameters
+        {
+            public RenderParametersNative RenderParametersNative;
+            public Matrix4x4 Proj;
+
+            private float _n;
+            private float _f;
+
+            public void Set(RenderParametersNative na)
+            {
+                RenderParametersNative = na;
+                Proj = WaveXRSpectatorCameraHandle.Frustum(
+                    RenderParametersNative.l,
+                    RenderParametersNative.r,
+                    RenderParametersNative.t,
+                    RenderParametersNative.b,
+                    _n,
+                    _f);
+            }
+
+            public void CalculateProj(float near, float far)
+            {
+                _n = near;
+                _f = far;
+                if (RenderParametersNative.isParametersValid)
+                {
+                    Proj = WaveXRSpectatorCameraHandle.Frustum(
+                        RenderParametersNative.l,
+                        RenderParametersNative.r,
+                        RenderParametersNative.t,
+                        RenderParametersNative.b,
+                        _n,
+                        _f);
+                }
+            }
+        }
+
+        #endregion Structrue/Class definition
     }
 }

@@ -119,8 +119,8 @@ namespace Wave.Essence.Raycast
 		public float TopInteractive { get { return m_TopInteractive; } set { m_TopInteractive = value; } }
 		[SerializeField]
 		[Range(0, .5f)]
-		private float m_ButtomInteractive = 0.3f;
-		public float ButtomInteractive { get { return m_ButtomInteractive; } set { m_ButtomInteractive = value; } }
+		private float m_BottomInteractive = 0.3f;
+		public float BottomInteractive { get { return m_BottomInteractive; } set { m_BottomInteractive = value; } }
 		#endregion
 
 		private Vector3 origin = Vector3.zero, direction = Vector3.zero;
@@ -179,7 +179,7 @@ namespace Wave.Essence.Raycast
 			{
 				Vector3 pixelPosition = Camera.main.WorldToViewportPoint(Pointer.transform.position);
 				return pixelPosition.x > m_LeftInteractive && pixelPosition.x < m_RightInteractive &&
-					pixelPosition.y > m_ButtomInteractive && pixelPosition.y < m_TopInteractive;
+					pixelPosition.y > m_BottomInteractive && pixelPosition.y < m_TopInteractive;
 			}
 			return true;
 		}
