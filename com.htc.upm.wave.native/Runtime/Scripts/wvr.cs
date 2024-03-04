@@ -1536,7 +1536,23 @@ namespace Wave.Native
 		public WVR_HandGraspState_t grasp;
 	}
 
-    [StructLayout(LayoutKind.Sequential)]
+	/**
+	 * @brief The data structure of one hand that copy from WVR_HandTrackingData_t since DP not support hand grasp.
+	 * @version API Level 6
+	 */
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_DPHandJointData_t
+	{
+		public bool isValidPose;     /**< The label of valid(true)/invalid(false) pose. */
+		public float confidence;     /**< The hand confidence value. */
+		public uint jointCount;      /**< Specify the size of the @ref WVR_Pose_t array. */
+		public IntPtr joints;        /**< The array of the @ref WVR_Pose_t. */
+		public WVR_Vector3f_t scale; /**< defualt is 1. */
+		public WVR_Vector3f_t wristLinearVelocity;
+		public WVR_Vector3f_t wristAngularVelocity;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
     public struct HandJointData26
     {
         public bool isValidPose;
@@ -1583,6 +1599,18 @@ namespace Wave.Native
 		public long timestamp;
 		public WVR_HandJointData_t right;    /**< The hand tracker data of right hand, refer to @ref WVR_HandJointData_t. */
 		public WVR_HandJointData_t left;     /**< The hand tracker data of left hand, refer to @ref WVR_HandJointData_t. */
+	}
+
+	/**
+	 * @brief The data structure of the hand tracker data that copy from WVR_HandTrackingData_t since DP not support hand grasp.
+	 * @version API Level 6
+	 */
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_DPHandTrackingData_t
+	{
+		public long timestamp;
+		public WVR_DPHandJointData_t right;    /**< The hand tracker data of right hand, refer to @ref WVR_HandJointData_t. */
+		public WVR_DPHandJointData_t left;     /**< The hand tracker data of left hand, refer to @ref WVR_HandJointData_t. */
 	}
 	#endregion
 
