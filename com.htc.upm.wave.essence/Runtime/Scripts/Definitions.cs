@@ -45,10 +45,16 @@ namespace Wave.Essence
 		public static readonly InputFeatureUsage<bool> secondaryTouch = CommonUsages.secondaryTouch;
 		// A binary value representing the Grip press state.
 		public static readonly InputFeatureUsage<bool> gripButton = CommonUsages.gripButton;
+		// A binary value representing the Grip touch state.
+		public static readonly InputFeatureUsage<bool> gripTouch = new InputFeatureUsage<bool>("GripTouch");
 		// A binary value representing the Trigger press state.
 		public static readonly InputFeatureUsage<bool> triggerButton = CommonUsages.triggerButton;
+		// A binary value representing the Trigger touch state.
+		public static readonly InputFeatureUsage<bool> triggerTouch = new InputFeatureUsage<bool>("TriggerTouch");
 		// A binary value representing the Menu press state.
 		public static readonly InputFeatureUsage<bool> menuButton = CommonUsages.menuButton;
+		// A binary value representing the Menu touch state.
+		public static readonly InputFeatureUsage<bool> menuTouch = new InputFeatureUsage<bool>("MenuTouch");
 		// A binary value representing the Touchpad or Thumbstick press state.
 		public static readonly InputFeatureUsage<bool> primary2DAxisClick = CommonUsages.primary2DAxisClick;
 		// A binary value representing the Touchpad or Thumbstick touch state.
@@ -58,7 +64,6 @@ namespace Wave.Essence
 		// A binary value representing the Thumbstick touch state.
 		public static readonly InputFeatureUsage<bool> secondary2DAxisTouch = CommonUsages.secondary2DAxisTouch;
 
-		public static readonly InputFeatureUsage<bool> triggerTouch = new InputFeatureUsage<bool>("TriggerTouch");
 		// A float value representing the Trigger axis.
 		public static readonly InputFeatureUsage<float> trigger = CommonUsages.trigger;
 		// A float value representing the Grip axis.

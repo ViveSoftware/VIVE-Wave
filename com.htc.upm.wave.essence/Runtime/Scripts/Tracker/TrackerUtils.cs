@@ -75,8 +75,9 @@ namespace Wave.Essence.Tracker
 
 	public enum TrackerButton
 	{
-		System = WVR_InputId.WVR_InputId_0,
+		System = WVR_InputId.WVR_InputId_Alias1_System,
 		Menu = WVR_InputId.WVR_InputId_Alias1_Menu,
+		Grip = WVR_InputId.WVR_InputId_Alias1_Grip,
 		A = WVR_InputId.WVR_InputId_Alias1_A,
 		B = WVR_InputId.WVR_InputId_Alias1_B,
 		X = WVR_InputId.WVR_InputId_Alias1_X,
@@ -320,6 +321,7 @@ namespace Wave.Essence.Tracker
 		{
 			if (button == TrackerButton.System) { return 0; }
 			if (button == TrackerButton.Menu) { return 1; }
+			if (button == TrackerButton.Grip) { return 2; }
 			if (button == TrackerButton.A) { return 10; }
 			if (button == TrackerButton.B) { return 11; }
 			if (button == TrackerButton.X) { return 12; }
@@ -333,6 +335,7 @@ namespace Wave.Essence.Tracker
 		{
 			if (button == TrackerButton.System) { return WVR_InputId.WVR_InputId_Alias1_System; }
 			if (button == TrackerButton.Menu) { return WVR_InputId.WVR_InputId_Alias1_Menu; }
+			if (button == TrackerButton.Grip) { return WVR_InputId.WVR_InputId_Alias1_Grip; }
 			if (button == TrackerButton.A) { return WVR_InputId.WVR_InputId_Alias1_A; }
 			if (button == TrackerButton.B) { return WVR_InputId.WVR_InputId_Alias1_B; }
 			if (button == TrackerButton.X) { return WVR_InputId.WVR_InputId_Alias1_X; }
@@ -346,7 +349,8 @@ namespace Wave.Essence.Tracker
 		{
 			if (inputType == WVR_InputType.WVR_InputType_Button)
 			{
-				if (button == TrackerButton.Menu || button == TrackerButton.System) { return XR_Feature.menuButton; }
+				if (button == TrackerButton.Menu) { return XR_Feature.menuButton; }
+				if (button == TrackerButton.Grip) { return XR_Feature.gripButton; }
 				if (button == TrackerButton.A || button == TrackerButton.X) { return XR_Feature.primaryButton; }
 				if (button == TrackerButton.B || button == TrackerButton.Y) { return XR_Feature.secondaryButton; }
 				if (button == TrackerButton.Touchpad) { return XR_Feature.primary2DAxisClick; }
@@ -354,6 +358,8 @@ namespace Wave.Essence.Tracker
 			}
 			if (inputType == WVR_InputType.WVR_InputType_Touch)
 			{
+				if (button == TrackerButton.Menu) { return XR_Feature.menuTouch; }
+				if (button == TrackerButton.Grip) { return XR_Feature.gripTouch; }
 				if (button == TrackerButton.A || button == TrackerButton.X) { return XR_Feature.primaryTouch; }
 				if (button == TrackerButton.B || button == TrackerButton.Y) { return XR_Feature.secondaryTouch; }
 				if (button == TrackerButton.Touchpad) { return XR_Feature.primary2DAxisTouch; }

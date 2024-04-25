@@ -25,13 +25,22 @@ namespace Wave.Essence.Eye
 	[DisallowMultipleComponent]
 	public sealed class EyeManager : MonoBehaviour
 	{
+		#region Log
 		const string LOG_TAG = "Wave.Essence.Eye.EyeManager";
 		void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
-		void DEBUG(StringBuilder sb) { Log.d(LOG_TAG, sb, true); }
+		StringBuilder m_sb = null;
+		StringBuilder sb {
+			get {
+				if (m_sb == null) { m_sb = new StringBuilder(); }
+				return m_sb;
+			}
+		}
+		void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
 		bool printIntervalLog = false;
 		int logFrame = 0;
 		void INTERVAL(string msg) { if (printIntervalLog) { DEBUG(msg); } }
 		void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
+		void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 
 		private StringBuilder m_EyeManagerStringBuilder = null;
 		internal StringBuilder EyeManagerStringBuilder {
@@ -40,6 +49,7 @@ namespace Wave.Essence.Eye
 				return m_EyeManagerStringBuilder;
 			}
 		}
+		#endregion
 
 		private static EyeManager m_Instance = null;
 		public static EyeManager Instance { get { return m_Instance; } }
@@ -52,6 +62,7 @@ namespace Wave.Essence.Eye
 			Right,
 			Left
 		}
+		public delegate void EyeTrackingResultDelegate(object sender, bool result);
 		public enum EyeTrackingStatus
 		{
 			// Initial, can call Start API in this state.
@@ -76,7 +87,7 @@ namespace Wave.Essence.Eye
 		#endregion
 
 		#region Inspector
-		private bool m_EnableEyeTrackingEx = true;
+		private bool m_EnableEyeTrackingEx = false;
 		[Tooltip("Enables or disables the eye tracking.")]
 		[SerializeField]
 		private bool m_EnableEyeTracking = true;
@@ -120,24 +131,18 @@ namespace Wave.Essence.Eye
 				SetEyeTrackingStatus(EyeTrackingStatus.UNSUPPORT);
 			}
 		}
-		private bool mEnabled = false;
 		private void OnEnable()
 		{
-			if (!mEnabled)
-			{
-				m_EnableEyeTrackingEx = m_EnableEyeTracking;
-				if (m_EnableEyeTracking)
-					StartEyeTracking();
-
-				mEnabled = true;
-			}
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceConnected, OnDeviceConnected);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_DeviceDisconnected, OnDeviceDisconnected);
 		}
 		private void OnDisable()
 		{
-			if (mEnabled)
-			{
-				mEnabled = false;
-			}
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceConnected, OnDeviceConnected);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_DeviceDisconnected, OnDeviceDisconnected);
+
+			// We don't stop eye tracking in this function since OnDisable may be called when ap is stopping.
+			// AP would crash if the ap process ended before the stop thread finished.
 		}
 		void Update()
 		{
@@ -185,7 +190,39 @@ namespace Wave.Essence.Eye
 				}
 			}
 		}
+
+		private bool m_EyeTrackingDeviceConnected = false;
+
+		private void Start()
+		{
+			m_EyeTrackingDeviceConnected = Interop.WVR_IsDeviceConnected(WVR_DeviceType.WVR_DeviceType_EyeTracking);
+			sb.Clear().Append("Start() m_EyeTrackingDeviceConnected: ").Append(m_EyeTrackingDeviceConnected); INFO(sb);
+		}
+		void OnApplicationPause(bool pauseStatus)
+		{
+			sb.Clear().Append("OnApplicationPause() pauseStatus: ").Append(pauseStatus); INFO(sb);
+			if (!pauseStatus)
+			{
+				m_EyeTrackingDeviceConnected = Interop.WVR_IsDeviceConnected(WVR_DeviceType.WVR_DeviceType_EyeTracking);
+				sb.Clear().Append("OnApplicationPause() m_EyeTrackingDeviceConnected: ").Append(m_EyeTrackingDeviceConnected); INFO(sb);
+			}
+		}
 		#endregion
+
+		private void OnDeviceConnected(WVR_Event_t systemEvent)
+		{
+			WVR_DeviceType device = systemEvent.device.type;
+			sb.Clear().Append("OnDeviceConnected() ").Append(device.Name()); DEBUG(sb);
+			if (device == WVR_DeviceType.WVR_DeviceType_EyeTracking)
+				m_EyeTrackingDeviceConnected = true;
+		}
+		private void OnDeviceDisconnected(WVR_Event_t systemEvent)
+		{
+			WVR_DeviceType device = systemEvent.device.type;
+			sb.Clear().Append("OnDeviceDisconnected() ").Append(device.Name()); DEBUG(sb);
+			if (device == WVR_DeviceType.WVR_DeviceType_EyeTracking)
+				m_EyeTrackingDeviceConnected = false;
+		}
 
 		#region Eye Tracking Lifecycle
 		private EyeTrackingStatus m_EyeTrackingStatus = EyeTrackingStatus.NOT_START;
@@ -230,19 +267,24 @@ namespace Wave.Essence.Eye
 			return false;
 		}
 
-		public delegate void EyeTrackingResultDelegate(object sender, bool result);
+		private uint m_EyeTrackingRefCount = 0;
 		private object m_EyeTrackingThreadLock = new object();
 		private event EyeTrackingResultDelegate m_EyeTrackingResultCB = null;
 		private void StartEyeTrackingLock()
 		{
+			if (!CanStartEyeTracking()) { return; }
+
 			if (UseXRData())
 			{
 				DEBUG("StartEyeTrackingLock() XR");
+
+				#region Input Device
 				InputDeviceEye.ActivateEyeTracking(true);
+				#endregion
+
+				if (m_EyeTrackingResultCB != null) { m_EyeTrackingResultCB = null; } // Don't support callback when using XR data.
 				return;
 			}
-			if (!CanStartEyeTracking())
-				return;
 
 			SetEyeTrackingStatus(EyeTrackingStatus.STARTING);
 			WVR_Result result = Interop.WVR_StartEyeTracking();
@@ -280,9 +322,16 @@ namespace Wave.Essence.Eye
 		private void StartEyeTracking()
 		{
 			if (!CanStartEyeTracking())
+			{
+				INFO("StartEyeTracking() can NOT start eye tracking.");
+				if (m_EyeTrackingResultCB != null) { m_EyeTrackingResultCB = null; }
 				return;
+			}
 
-			INFO("StartEyeTracking()");
+			string caller = Misc.GetCaller();
+			m_EyeTrackingRefCount++;
+			INFO("StartEyeTracking(" + m_EyeTrackingRefCount + ") from " + caller);
+
 			Thread eye_tracking_t = new Thread(StartEyeTrackingThread);
 			eye_tracking_t.Name = "StartEyeTrackingThread";
 			eye_tracking_t.Start();
@@ -290,21 +339,25 @@ namespace Wave.Essence.Eye
 
 		private void StopEyeTrackingLock()
 		{
+			if (!CanStopEyeTracking()) { return; }
+
 			if (UseXRData())
 			{
 				DEBUG("StopEyeTrackingLock() XR");
+
+				#region Input Device
 				InputDeviceEye.ActivateEyeTracking(false);
+				#endregion
+
 				hasEyeTrackingData = false;
 				return;
 			}
-
-			if (!CanStopEyeTracking())
-				return;
 
 			INFO("StopEyeTrackingLock()");
 			SetEyeTrackingStatus(EyeTrackingStatus.STOPING);
 			Interop.WVR_StopEyeTracking();
 			SetEyeTrackingStatus(EyeTrackingStatus.NOT_START);
+
 			hasEyeTrackingData = false;
 
 			EyeTrackingStatus status = GetEyeTrackingStatus();
@@ -321,9 +374,16 @@ namespace Wave.Essence.Eye
 		private void StopEyeTracking()
 		{
 			if (!CanStopEyeTracking())
+			{
+				INFO("StopEyeTracking() can NOT stop eye tracking.");
 				return;
+			}
 
-			INFO("StopEyeTracking()");
+			string caller = Misc.GetCaller();
+			if (m_EyeTrackingRefCount > 0) { m_EyeTrackingRefCount--; }
+			INFO("StopEyeTracking(" + m_EyeTrackingRefCount + ") from " + caller);
+			if (m_EyeTrackingRefCount != 0) { return; }
+
 			Thread eye_tracking_t = new Thread(StopEyeTrackingThread);
 			eye_tracking_t.Name = "StopEyeTrackingThread";
 			eye_tracking_t.Start();
@@ -494,6 +554,14 @@ namespace Wave.Essence.Eye
 		#endregion
 
 		#region Public Functions
+		public bool IsEyeTrackingDeviceConnected()
+		{
+			if (UseXRData())
+			{
+				return InputDeviceEye.IsEyeTrackingDeviceConnected();
+			}
+			return m_EyeTrackingDeviceConnected;
+		}
 		/// <summary> Retrieves current eye tracking service status. </summary>
 		public EyeTrackingStatus GetEyeTrackingStatus()
 		{

@@ -261,14 +261,37 @@ namespace Wave.OpenXR
 
             return false;
         }
-        internal static List<InputDevice> s_InputDevices = new List<InputDevice>();
+
+        internal static object inputDeviceLock = new object();
+        internal static List<InputDevice> inputDevices = new List<InputDevice>();
+        internal static List<InputDevice> s_InputDevices {
+            get {
+                lock (inputDeviceLock)
+                {
+                    return inputDevices;
+                }
+            }
+        }
+        internal static int inputDeviceFrame = -1;
+        private static void UpdateInputDevices()
+        {
+            if (inputDeviceFrame != Time.frameCount)
+            {
+                inputDeviceFrame = Time.frameCount;
+                lock (inputDeviceLock)
+                {
+                    InputDevices.GetDevices(inputDevices);
+                }
+            }
+        }
+
         /// <summary>
         /// Checks if a Wave Eye Tracking device is connected.
         /// </summary>
         /// <returns>True for connected.</returns>
         public static bool IsEyeTrackingDeviceConnected()
         {
-            InputDevices.GetDevices(s_InputDevices);
+            UpdateInputDevices();
             for (int i = 0; i < s_InputDevices.Count; i++)
             {
                 if (IsEyeTrackingDeviceConnected(s_InputDevices[i]))
@@ -292,7 +315,7 @@ namespace Wave.OpenXR
         /// <returns>True for tracked.</returns>
         public static bool IsEyeTrackingTracked()
         {
-            InputDevices.GetDevices(s_InputDevices);
+            UpdateInputDevices();
             for (int i = 0; i < s_InputDevices.Count; i++)
             {
                 if (IsEyeTrackingTracked(s_InputDevices[i]))
@@ -337,7 +360,7 @@ namespace Wave.OpenXR
             m_EyeTrackingFrame = Time.frameCount;
 
             m_EyesValid = false;
-            InputDevices.GetDevices(s_InputDevices);
+            UpdateInputDevices();
             for (int i = 0; i < s_InputDevices.Count; i++)
             {
                 if (IsEyeTrackingTracked(s_InputDevices[i]))

@@ -13,6 +13,7 @@ namespace Wave.Essence.Editor
 		public bool importedInteractionModePackage = false;
 		public bool importedTrackerModelPackage = false;
 		public bool importedBodyTrackingPackage = false;
+		public bool importedFacialExpressionMakerPackage = false;
 	}
 }
 #endif

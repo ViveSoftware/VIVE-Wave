@@ -23,6 +23,7 @@ namespace Wave.Essence.LipExpression
 		private static void DEBUG(string msg) { Log.d(LOG_TAG, msg, true); }
 		private static void INFO(string msg) { Log.i(LOG_TAG, msg, true); }
 
+		public delegate void LipExpResultDelegate(object sender, bool result);
 		public enum LipExpStatus
 		{
 			// Initial, can call Start API in this state.
@@ -81,24 +82,10 @@ namespace Wave.Essence.LipExpression
 				SetLipExpStatus(LipExpStatus.NoSupport);
 			}
 		}
-		bool mEnabled = false;
-		private void OnEnable()
+		void Start()
 		{
-			if (!mEnabled)
-			{
-				INFO("OnEnable()");
-				if (m_InitialStart) { StartLipExp(); }
-
-				mEnabled = true;
-			}
-		}
-		private void OnDisable()
-		{
-			if (mEnabled)
-			{
-				INFO("OnDisable()");
-				mEnabled = false;
-			}
+			INFO("Start()");
+			if (m_InitialStart) { StartLipExp(); }
 		}
 		private void Update()
 		{
@@ -147,11 +134,24 @@ namespace Wave.Essence.LipExpression
 			return false;
 		}
 
-		public delegate void LipExpResultDelegate(object sender, bool result);
+		private uint m_LipExpRefCount = 0;
+		private object lipExpThreadLocker = new object();
 		private event LipExpResultDelegate lipExpResultCB = null;
 		private void StartLipExpLock()
 		{
 			if (!CanStartLipExp()) { return; }
+
+			if (UseXRData())
+			{
+				DEBUG("StartLipExpLock() XR ");
+
+				#region Input Device
+				InputDeviceLip.ActivateLipExp(true);
+				#endregion
+
+				if (lipExpResultCB != null) { lipExpResultCB = null; } // Don't support callback when using XR data.
+				return;
+			}
 
 			SetLipExpStatus(LipExpStatus.Starting);
 			WVR_Result result = Interop.WVR_StartLipExp();
@@ -167,7 +167,9 @@ namespace Wave.Essence.LipExpression
 					SetLipExpStatus(LipExpStatus.StartFailure);
 					break;
 			}
-			DEBUG("StartLipExpLock() result: " + result);
+
+			LipExpStatus status = GetLipExpStatus();
+			DEBUG("StartLipExpLock() result: " + result + ", status: " + status);
 
 			if (lipExpResultCB != null)
 			{
@@ -175,8 +177,6 @@ namespace Wave.Essence.LipExpression
 				lipExpResultCB = null;
 			}
 		}
-
-		private object lipExpThreadLocker = new object();
 		private void StartLipExpThread()
 		{
 			lock (lipExpThreadLocker)
@@ -185,15 +185,59 @@ namespace Wave.Essence.LipExpression
 				StartLipExpLock();
 			}
 		}
+		public void StartLipExp()
+		{
+			if (!CanStartLipExp())
+			{
+				INFO("StartLipExp() can NOT start lip expression.");
+				if (lipExpResultCB != null) { lipExpResultCB = null; }
+				return;
+			}
+
+			string caller = Misc.GetCaller();
+			m_LipExpRefCount++;
+			INFO("StartLipExp(" + m_LipExpRefCount + ") from " + caller);
+
+			Thread lipExp_t = new Thread(StartLipExpThread);
+			lipExp_t.Name = "StartLipExpThread";
+			lipExp_t.Start();
+		}
+		public void StartLipExp(LipExpResultDelegate callback)
+		{
+			if (lipExpResultCB == null)
+			{
+				lipExpResultCB = callback;
+			}
+			else
+			{
+				lipExpResultCB += callback;
+			}
+
+			StartLipExp();
+		}
 
 		private void StopLipExpLock()
 		{
 			if (!CanStopLipExp()) { return; }
 
-			SetLipExpStatus(LipExpStatus.Stopping);
+			if (UseXRData())
+			{
+				DEBUG("StopLipExpLock() XR");
+
+				#region Input Device
+				InputDeviceLip.ActivateLipExp(false);
+				#endregion
+
+				hasLipExpData = false;
+				return;
+			}
+
 			INFO("StopLipExpLock()");
+			SetLipExpStatus(LipExpStatus.Stopping);
 			Interop.WVR_StopLipExp();
 			SetLipExpStatus(LipExpStatus.NotStart);
+
+			hasLipExpData = false;
 		}
 		private void StopLipExpThread()
 		{
@@ -202,6 +246,23 @@ namespace Wave.Essence.LipExpression
 				DEBUG("StopLipExpThread()");
 				StopLipExpLock();
 			}
+		}
+		public void StopLipExp()
+		{
+			if (!CanStopLipExp())
+			{
+				INFO("CanStopLipExp() can NOT stop lip expression.");
+				return;
+			}
+
+			string caller = Misc.GetCaller();
+			if (m_LipExpRefCount > 0) { m_LipExpRefCount--; }
+			INFO("StopLipExp(" + m_LipExpRefCount + ") from " + caller);
+			if (m_LipExpRefCount != 0) { return; }
+
+			Thread tracker_t = new Thread(StopLipExpThread);
+			tracker_t.Name = "StopLipExpThread";
+			tracker_t.Start();
 		}
 		#endregion
 
@@ -266,68 +327,6 @@ namespace Wave.Essence.LipExpression
 			{
 				m_LipExpStatusRWLock.ExitReadLock();
 			}
-		}
-
-		private uint m_LipExpRefCount = 0;
-		public void StartLipExp(LipExpResultDelegate callback)
-		{
-			if (lipExpResultCB == null)
-			{
-				lipExpResultCB = callback;
-			}
-			else
-			{
-				lipExpResultCB += callback;
-			}
-
-			StartLipExp();
-		}
-		public void StartLipExp()
-		{
-			//string caller = new StackFrame(1, true).GetMethod().Name;
-			Log.i(LOG_TAG, "StartLipExp(" + m_LipExpRefCount + ")", true);
-			m_LipExpRefCount++;
-
-			if (UseXRData())
-			{
-				InputDeviceLip.ActivateLipExp(true);
-				if (lipExpResultCB != null) { lipExpResultCB = null; } // Don't support callback when using XR data.
-				return;
-			}
-
-			if (!CanStartLipExp())
-			{
-				DEBUG("StartLipExp() can NOT start lip expression.");
-				if (lipExpResultCB != null) { lipExpResultCB = null; }
-				return;
-			}
-
-			Thread lipExp_t = new Thread(StartLipExpThread);
-			lipExp_t.Name = "StartLipExpThread";
-			lipExp_t.Start();
-		}
-		public void StopLipExp()
-		{
-			//string caller = new StackFrame(1, true).GetMethod().Name;
-			Log.i(LOG_TAG, "StopLipExp(" + m_LipExpRefCount + ")", true);
-			if (m_LipExpRefCount > 0) { m_LipExpRefCount--; }
-			if (m_LipExpRefCount > 0) { return; }
-
-			if (UseXRData())
-			{
-				InputDeviceLip.ActivateLipExp(false);
-				return;
-			}
-
-			if (!CanStopLipExp())
-			{
-				DEBUG("CanStopLipExp() can NOT stop lip expression.");
-				return;
-			}
-
-			Thread tracker_t = new Thread(StopLipExpThread);
-			tracker_t.Name = "StopLipExpThread";
-			tracker_t.Start();
 		}
 
 		public bool IsLipExpEnabled()

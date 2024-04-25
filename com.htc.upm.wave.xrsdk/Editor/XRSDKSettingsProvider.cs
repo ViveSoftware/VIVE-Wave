@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Wave.XR.Settings;
@@ -114,6 +114,45 @@ namespace Wave.XR
 				}
 				GUILayout.EndVertical();
 			}
+#if !UNITY_2022_2_OR_NEWER
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("Update Android Gradle Plugin and Gradle Version [2024.April]", EditorStyles.boldLabel);
+					GUILayout.Label("Unity developers using Unity 2022.3 or later can now use the default AGP and gradle settings.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Space(5f);
+					GUILayout.Label("Our SDK is built with Java 11 libraries. To avoid errors when building Android APKs, please use our recommended and verified development environment: AGP 4.2.0 and gradle version 6.9.2.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Space(5f);
+					GUILayout.Label("How to Update", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Space(5f);
+					GUILayout.Label("1.Download and extract the gradle 6.9.2 zip file.)", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					if (GUILayout.Button("Download URL", GUILayout.ExpandWidth(false)))
+						Application.OpenURL("https://gradle.org/releases/");
+					GUILayout.Space(5f);
+					GUILayout.Label("2.In Edit > Preferences > External Tools, specify the path to the extracted gradle folder.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					if (GUILayout.Button("Setting in the Preferences", GUILayout.ExpandWidth(false)))
+						SettingsService.OpenUserPreferences("Preferences/External Tools");
+					GUILayout.Space(5f);
+					GUILayout.Label("3.In Edit > Project Settings > Player > Publishing Settings, check the \"Custom Base Gradle Template\" box. This will generate the Assets > Plugins > Android > baseProjectTemplate.gradle file.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					if (GUILayout.Button("Player Settings", GUILayout.ExpandWidth(false)))
+						SettingsService.OpenProjectSettings("Project/Player");
+					GUILayout.Space(5f);
+					GUILayout.Label("4.Edit the baseProjectTemplate.gradle file and set \"com.android.tools.build:gradle\" to 4.2.0.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Space(5f);
+					bool b = EditorPrefs.GetBool("CustomGradleVersionSkip", false);
+					if (GUILayout.Toggle(b, "Ignore the warning dialog."))
+					{
+						EditorPrefs.SetBool("CustomGradleVersionSkip", true);
+					}
+					else
+					{
+						EditorPrefs.SetBool("CustomGradleVersionSkip", false);
+					}
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+#endif
 		}
 
 		public static void MoveFolder(string srcpath, string destpath)

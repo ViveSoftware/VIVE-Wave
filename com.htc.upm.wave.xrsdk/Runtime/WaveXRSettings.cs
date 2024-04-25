@@ -28,7 +28,8 @@ namespace Wave.XR.Settings
         {
             Disable,
             Enable,
-            Default
+            Default,
+            Dynamic
         }
 
         public enum FoveatedRenderingPeripheralQuality

@@ -27,6 +27,7 @@ namespace Wave.Essence.Hand
 	[DisallowMultipleComponent]
 	public sealed class HandManager : MonoBehaviour
 	{
+		#region Log
 		const string LOG_TAG = "Wave.Essence.Hand.HandManager";
 		private StringBuilder m_sb = null;
 		internal StringBuilder sb {
@@ -40,6 +41,7 @@ namespace Wave.Essence.Hand
 		int logFrame = 0;
 		private void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
 		private void WARNING(StringBuilder msg) { Log.w(LOG_TAG, msg, true); }
+		#endregion
 
 		#region Global Declaration
 		public static readonly string HAND_STATIC_GESTURE = "HAND_STATIC_GESTURE";
@@ -305,18 +307,17 @@ namespace Wave.Essence.Hand
 		{
 			if (m_GestureOptions.InitialStart)
 			{
-				sb.Clear().Append("Start() Starts hand gesture."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts hand gesture."); DEBUG(sb);
 				StartHandGesture();
 			}
-
 			if (m_TrackerOptions.Natural.InitialStart)
 			{
-				sb.Clear().Append("Start() Starts the natural hand tracker."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts the natural hand tracker."); DEBUG(sb);
 				StartHandTracker(TrackerType.Natural);
 			}
 			if (m_TrackerOptions.Electronic.InitialStart)
 			{
-				sb.Clear().Append("Start() Starts the electronic hand tracker."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts the electronic hand tracker."); DEBUG(sb);
 				StartHandTracker(TrackerType.Electronic);
 			}
 
@@ -390,6 +391,9 @@ namespace Wave.Essence.Hand
 		private void OnDisable()
 		{
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_Hand_EnhanceStable, OnWristPositionFusionChange);
+
+			// We don't stop hand tracking in this function since OnDisable may be called when ap is stopping.
+			// AP would crash if the ap process ended before the stop thread finished.
 		}
 		#endregion
 
@@ -722,51 +726,6 @@ namespace Wave.Essence.Hand
 			}
 		}
 
-		private bool CanStartHandTracker(TrackerSelector selector)
-		{
-			if (selector == TrackerSelector.ElectronicPrior)
-			{
-				if (!CanStartHandTracker(TrackerType.Electronic))
-				{
-					TrackerStatus electronic_status = GetHandTrackerStatus(TrackerType.Electronic);
-					switch (electronic_status)
-					{
-						case TrackerStatus.NoSupport:		// Electronic tracker is not supported.
-						case TrackerStatus.NotStart:		// Electronic tracker is supported but no electronic hand connected.
-						case TrackerStatus.StartFailure:	// Electronic tracker is supported but has been started failed.
-							if (!CanStartHandTracker(TrackerType.Natural))
-								return false;
-							// else return true; // The natural tracker is able to start.
-							break;
-						default:
-							break;
-					}
-				}
-				// else return true; // The electronic tracker is able to start.
-			}
-			if (selector == TrackerSelector.NaturalPrior)
-			{
-				if (!CanStartHandTracker(TrackerType.Natural))
-				{
-					TrackerStatus natural_status = GetHandTrackerStatus(TrackerType.Natural);
-					switch (natural_status)
-					{
-						case TrackerStatus.NoSupport:	   // Natural tracker is not supported.
-						case TrackerStatus.NotStart:		// Natural tracker is supported but no electronic hand connected.
-						case TrackerStatus.StartFailure:	// Natural tracker is supported but has been started failed.
-							if (!CanStartHandTracker(TrackerType.Electronic))
-								return false;
-							// else return true; // The natural tracker is able to start.
-							break;
-						default:
-							break;
-					}
-				}
-				// else return true; // The natural tracker is able to start.
-			}
-
-			return true;
-		}
 		private bool CanStartHandTracker(TrackerType tracker)
 		{
 			if (tracker == TrackerType.Natural)
@@ -777,7 +736,7 @@ namespace Wave.Essence.Hand
 					status == TrackerStatus.Stopping ||
 					status == TrackerStatus.NoSupport)
 				{
-					sb.Clear().Append("CanStartHandTracker() status: ").Append(status); DEBUG(sb);
+					sb.Clear().Append("CanStartHandTracker(").Append(tracker.Name()).Append(") status: ").Append(status); DEBUG(sb);
 					return false;
 				}
 
@@ -811,7 +770,7 @@ namespace Wave.Essence.Hand
 		{
 			var status = GetHandTrackerStatus(tracker);
 			if (status == TrackerStatus.Available) { return true; }
-			sb.Clear().Append("CanStopHandTracker() status:").Append(status.Name()); DEBUG(sb);
+			sb.Clear().Append("CanStopHandTracker(").Append(tracker.Name()).Append(") status:").Append(status.Name()); DEBUG(sb);
 			return false;
 		}
 
@@ -820,16 +779,20 @@ namespace Wave.Essence.Hand
 		private event HandTrackerResultDelegate handTrackerResultCB = null;
 		private void StartHandTrackerLock(TrackerType tracker)
 		{
-			if (!CanStartHandTracker(tracker))
-				return;
+			if (!CanStartHandTracker(tracker)) { return; }
 
 			if (UseXRData(tracker))
 			{
+				sb.Clear().Append("StartHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+
+				#region Input Device
 				if (tracker == TrackerType.Natural) { InputDeviceHand.ActivateNaturalHand(true); }
 #pragma warning disable
 				if (tracker == TrackerType.Electronic) { InputDeviceHand.ActivateElectronicHand(true); }
 #pragma warning enable
-				sb.Clear().Append("StartHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+				#endregion
+
+				if (handTrackerResultCB != null) { handTrackerResultCB = null; } // Don't support callback when using XR data.
 				return;
 			}
 
@@ -871,7 +834,11 @@ namespace Wave.Essence.Hand
 		public void StartHandTracker(TrackerType tracker)
 		{
 			if (!CanStartHandTracker(tracker))
+			{
+				sb.Clear().Append("StartHandTracker() ").Append(tracker.Name()).Append(", can NOT start hand tracker."); INFO(sb);
+				if (handTrackerResultCB != null) { handTrackerResultCB = null; }
 				return;
+			}
 
 			string caller = Misc.GetCaller();
 			if (tracker == TrackerType.Natural)
@@ -889,19 +856,37 @@ namespace Wave.Essence.Hand
 			hand_tracker_t.Name = "StartHandTrackerThread";
 			hand_tracker_t.Start(tracker);
 		}
+		public void StartHandTracker(TrackerType tracker, HandTrackerResultDelegate callback)
+		{
+			if (handTrackerResultCB == null)
+			{
+				handTrackerResultCB = callback;
+			}
+			else
+			{
+				handTrackerResultCB += callback;
+			}
+
+			StartHandTracker(tracker);
+		}
 
 		private void StopHandTrackerLock(TrackerType tracker)
 		{
-			if (!CanStopHandTracker(tracker))
-				return;
+			if (!CanStopHandTracker(tracker)) { return; }
 
 			if (UseXRData(tracker))
 			{
+				sb.Clear().Append("StopHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+
+				#region Input Device
 				if (tracker == TrackerType.Natural) { InputDeviceHand.ActivateNaturalHand(false); }
 #pragma warning disable
 				if (tracker == TrackerType.Electronic) { InputDeviceHand.ActivateElectronicHand(false); }
 #pragma warning enable
-				sb.Clear().Append("StopHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+				#endregion
+
+				if (tracker == TrackerType.Natural) { hasNaturalHandTrackerData = false; }
+				if (tracker == TrackerType.Electronic) { hasElectronicHandTrackerData = false; }
 				return;
 			}
 
@@ -909,10 +894,9 @@ namespace Wave.Essence.Hand
 			SetHandTrackerStatus(tracker, TrackerStatus.Stopping);
 			Interop.WVR_StopHandTracking((WVR_HandTrackerType)tracker);
 			SetHandTrackerStatus(tracker, TrackerStatus.NotStart);
-			if (tracker == TrackerType.Natural)
-				hasNaturalHandTrackerData = false;
-			if (tracker == TrackerType.Electronic)
-				hasElectronicHandTrackerData = false;
+
+			if (tracker == TrackerType.Natural) { hasNaturalHandTrackerData = false; }
+			if (tracker == TrackerType.Electronic) { hasElectronicHandTrackerData = false; }
 
 			TrackerStatus status = GetHandTrackerStatus(tracker);
 			GeneralEvent.Send(HAND_TRACKER_STATUS, tracker, status);
@@ -928,20 +912,23 @@ namespace Wave.Essence.Hand
 		public void StopHandTracker(TrackerType tracker)
 		{
 			if (!CanStopHandTracker(tracker))
+			{
+				sb.Clear().Append("StopHandTracker() ").Append(tracker.Name()).Append(", can NOT stop hand tracker."); INFO(sb);
 				return;
+			}
 
 			string caller = Misc.GetCaller();
 			if (tracker == TrackerType.Natural)
 			{
-				refCountNatural = refCountNatural > 0 ? refCountNatural - 1 : 0;
+				if (refCountNatural > 0) { refCountNatural--; }
 				sb.Clear().Append("StopHandTracker() ").Append(tracker.Name()).Append("(").Append(refCountNatural).Append(") from ").Append(caller); INFO(sb);
-				if (refCountNatural > 0) return;
+				if (refCountNatural != 0) return;
 			}
 			if (tracker == TrackerType.Electronic)
 			{
-				refCountElectronic = refCountElectronic > 0 ? refCountElectronic - 1 : 0;
+				if (refCountElectronic > 0) { refCountElectronic--; }
 				sb.Clear().Append("StopHandTracker() ").Append(tracker.Name()).Append("(").Append(refCountElectronic).Append(") from ").Append(caller); INFO(sb);
-				if (refCountElectronic > 0) return;
+				if (refCountElectronic != 0) return;
 			}
 
 			Thread hand_tracker_t = new Thread(StopHandTrackerThread);
@@ -976,6 +963,32 @@ namespace Wave.Essence.Hand
 					StartHandTrackerLock((TrackerType)tracker);
 				}
 			}
+		}
+		public void RestartHandTracker(TrackerType tracker)
+		{
+			TrackerStatus status = GetHandTrackerStatus();
+			if (status == TrackerStatus.Starting || status == TrackerStatus.Stopping)
+				return;
+
+			sb.Clear().Append("RestartHandTracker() ").Append(tracker.Name()); INFO(sb);
+			Thread hand_tracker_t = new Thread(RestartHandTrackerThread);
+			hand_tracker_t.Name = "RestartHandTrackerThread";
+			hand_tracker_t.Start(tracker);
+		}
+		public void RestartHandTracker(TrackerType tracker, HandTrackerResultDelegate callback)
+		{
+			if (handTrackerResultCB == null)
+				handTrackerResultCB = callback;
+			else
+				handTrackerResultCB += callback;
+
+			RestartHandTracker(tracker);
+		}
+		public void RestartHandTracker()
+		{
+			TrackerType tracker = TrackerType.Electronic;
+			if (GetPreferTracker(ref tracker))
+				RestartHandTracker(tracker);
 		}
 		#endregion
 
@@ -1058,33 +1071,6 @@ namespace Wave.Essence.Hand
 				return GetHandTrackerStatus(tracker);
 			else
 				return TrackerStatus.NotStart;
-		}
-
-		public void RestartHandTracker(TrackerType tracker)
-		{
-			TrackerStatus status = GetHandTrackerStatus();
-			if (status == TrackerStatus.Starting || status == TrackerStatus.Stopping)
-				return;
-
-			sb.Clear().Append("RestartHandTracker() ").Append(tracker.Name()); INFO(sb);
-			Thread hand_tracker_t = new Thread(RestartHandTrackerThread);
-			hand_tracker_t.Name = "RestartHandTrackerThread";
-			hand_tracker_t.Start(tracker);
-		}
-		public void RestartHandTracker(TrackerType tracker, HandTrackerResultDelegate callback)
-		{
-			if (handTrackerResultCB == null)
-				handTrackerResultCB = callback;
-			else
-				handTrackerResultCB += callback;
-
-			RestartHandTracker(tracker);
-		}
-		public void RestartHandTracker()
-		{
-			TrackerType tracker = TrackerType.Electronic;
-			if (GetPreferTracker(ref tracker))
-				RestartHandTracker(tracker);
 		}
 
 		/// <summary>

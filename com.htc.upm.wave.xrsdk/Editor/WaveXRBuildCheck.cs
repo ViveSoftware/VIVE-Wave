@@ -40,13 +40,12 @@ namespace Wave.XR.BuildCheck
 		const string AndroidManifestScriptCreatedPath = "Assets/Plugins/Android/AndroidManifest.IsCreatedByScript";
 		const string Aar2017PathDest = "Assets/Plugins/Android/wvr_unity_plugin_2017.aar";
 		const string Aar2022PathDest = "Assets/Plugins/Android/wvr_unity_plugin_2022.aar";
-		const string CustomGradle1Src = "Packages/" + Constants.SDKPackageName + "/Runtime/Android/launcherTemplate.gradle";
-		const string CustomGradle2Src = "Packages/" + Constants.SDKPackageName + "/Runtime/Android/mainTemplate.gradle";
-		const string CustomGradle1Dest = "Assets/Plugins/Android/launcherTemplate.gradle";
-		const string CustomGradle1CreatedPath = "Assets/Plugins/Android/launcherTemplate.IsCreatedByScript";
-		const string CustomGradle2Dest = "Assets/Plugins/Android/mainTemplate.gradle";
-		const string CustomGradle2CreatedPath = "Assets/Plugins/Android/mainTemplate.IsCreatedByScript";
+		const string CustomGradle1Src = "Packages/" + Constants.SDKPackageName + "/Runtime/Android/baseProjectTemplate.gradle";
+		const string CustomGradle1Dest = "Assets/Plugins/Android/baseProjectTemplate.gradle";
+		const string CustomGradle1CreatedPath = "Assets/Plugins/Android/baseProjectTemplate.IsCreatedByScript";
 		const string ForceBuildWVR = "ForceBuildWVR.txt";
+
+		private static bool forceUpdateGradleVersion = false;
 
 		internal static void AddHandTrackingAndroidManifest()
 		{
@@ -335,16 +334,6 @@ namespace Wave.XR.BuildCheck
 				if (File.Exists(CustomGradle1Dest + ".meta"))
 					File.Delete(CustomGradle1Dest + ".meta");
 			}
-			bool isCustomGradle2CreatedPath = File.Exists(CustomGradle2CreatedPath);
-			if (isCustomGradle2CreatedPath)
-			{
-				File.Delete(CustomGradle2CreatedPath);
-				File.Delete(CustomGradle2CreatedPath + ".meta");
-				if (File.Exists(CustomGradle2Dest))
-					File.Delete(CustomGradle2Dest);
-				if (File.Exists(CustomGradle2Dest + ".meta"))
-					File.Delete(CustomGradle2Dest + ".meta");
-			}
 #endif
 		}
 
@@ -470,11 +459,6 @@ namespace Wave.XR.BuildCheck
 			{
 				File.Create(CustomGradle1CreatedPath).Dispose();
 				File.Copy(CustomGradle1Src, CustomGradle1Dest, false);
-			}
-			if (!File.Exists(CustomGradle2Dest))
-			{
-				File.Create(CustomGradle2CreatedPath).Dispose();
-				File.Copy(CustomGradle2Src, CustomGradle2Dest, false);
 			}
 #endif
 		}
@@ -924,6 +908,18 @@ namespace Wave.XR.BuildCheck
 				if (File.Exists(ForceBuildWVR))
 				{
 					//SetBuildingWave();
+#if !UNITY_2022_2_OR_NEWER
+					bool skipdialog = EditorPrefs.GetBool("CustomGradleVersionSkip", false);
+					if (!skipdialog && !File.Exists(CustomGradle1Dest))
+					{
+						EditorWindow tmp = EditorWindow.focusedWindow;
+						GradleVersionWindow window = (GradleVersionWindow)EditorWindow.GetWindow(typeof(GradleVersionWindow), true, "Custom Gradle Version", false);
+						forceUpdateGradleVersion = true;
+						window.Show();
+						if (tmp != null)
+							tmp.Focus();
+					}
+#endif
 					AddHandTrackingAndroidManifest();
 					AddTrackerAndroidManifest();
 					AddEyeTrackingAndroidManifest();
@@ -938,6 +934,18 @@ namespace Wave.XR.BuildCheck
 				}
 				else if (report.summary.platform == BuildTarget.Android && CheckIsBuildingWave())
 				{
+#if !UNITY_2022_2_OR_NEWER
+					bool skipdialog = EditorPrefs.GetBool("CustomGradleVersionSkip", false);
+					if (!skipdialog && !File.Exists(CustomGradle1Dest))
+					{
+						EditorWindow tmp = EditorWindow.focusedWindow;
+						GradleVersionWindow window = (GradleVersionWindow)EditorWindow.GetWindow(typeof(GradleVersionWindow), true, "Custom Gradle Version", false);
+						forceUpdateGradleVersion = true;
+						window.Show();
+						if (tmp != null)
+							tmp.Focus();
+					}
+#endif
 					CopyAndroidManifest();
 					CopyGradles();
 					CopyWaveAARs();
@@ -957,6 +965,59 @@ namespace Wave.XR.BuildCheck
 				RemoveWaveAARs();
 			}
         }
+
+		public class GradleVersionWindow : EditorWindow
+		{
+			[MenuItem("Wave/Preference/Custom Gradle Version")]
+			static void Init()
+			{
+				EditorWindow tmp = EditorWindow.focusedWindow;
+				// Get existing open window or if none, make a new one:
+				GradleVersionWindow window = (GradleVersionWindow)EditorWindow.GetWindow(typeof(GradleVersionWindow), true, "Custom Gradle Version", false);
+				window.position = new Rect(Screen.width / 10, Screen.height / 10, 320, 240);
+				forceUpdateGradleVersion = true;
+				window.Show();
+				if (tmp != null)
+					tmp.Focus();
+			}
+
+			public static void ShowWindow()
+			{
+				GetWindow<GradleVersionWindow>("Custom Gradle Version");
+			}
+
+			void OnGUI()
+			{
+				{
+
+					GUIStyle style = new GUIStyle(EditorStyles.boldLabel);
+					style.wordWrap = true;
+					//style.fontSize = 16;
+					{
+						//var origin = GUI.color;
+						//GUI.color = Color.red;
+						GUILayout.Label(
+							"Update Android Gradle Plugin and Gradle Version [2024.April]" +
+							"\n" +
+							"\nYou are seeing this message because your Unity development environment may not meet the requirements of Wave SDK." +
+							"\n" +
+							"\nPlease update your AGP version to 4.2.0 and use Gradle version 6.9.2, or click the button below to configure your environment.\n", style);
+						//GUI.color = origin;
+					}
+
+					if (GUILayout.Button("Configure Unity Environment"))
+					{
+						SettingsService.OpenProjectSettings("Project/Wave XR/XRSDK");
+						//Application.OpenURL("https://developers.xsolla.com/sdk/unity/application-build-guides/how-to-build-for-android-11/");
+					}
+
+					if (GUILayout.Button("Close"))
+					{
+						this.Close();
+					}
+				}
+			}
+		}
 	}
 
 	[Obsolete("CheckIfHandTrackingEnabled is deprecated. Please use WaveXRSettings EnableNaturalHand instead", false)]
@@ -1305,148 +1366,148 @@ namespace Wave.XR.BuildCheck
 			Menu.SetChecked(CheckIfLipExpressionEnabled.MENU_NAME, enabled_);
 			return true;
 		}
-	}
-	/*
-	[InitializeOnLoad]
-	public static class MenuAvatarIKHandler
-	{
-		internal const string MENU_NAME = "Wave/Body Tracking/Enable Avatar IK";
+		/*
+		[InitializeOnLoad]
+		public static class MenuAvatarIKHandler
+		{
+			internal const string MENU_NAME = "Wave/Body Tracking/Enable Avatar IK";
 
-		const string LOG_TAG = "Wave.XR.MenuAvatarIKHandler ";
-		static StringBuilder m_sb = null;
-		static StringBuilder sb
-		{
-			get
+			const string LOG_TAG = "Wave.XR.MenuAvatarIKHandler ";
+			static StringBuilder m_sb = null;
+			static StringBuilder sb
 			{
-				if (m_sb == null) { m_sb = new StringBuilder(); }
-				return m_sb;
-			}
-		}
-		static void DEBUG(StringBuilder msg)
-		{
-			msg.Insert(0, LOG_TAG);
-			Debug.Log(msg);
-		}
-
-		#region Scripting Symbol
-		const string DEFINE_AVATAR_IK = "WAVE_AVATAR_IK";
-		internal struct ScriptingDefinedSettings
-		{
-			public string[] scriptingDefinedSymbols;
-			public BuildTargetGroup[] targetGroups;
-
-			public ScriptingDefinedSettings(string[] symbols, BuildTargetGroup[] groups)
-			{
-				scriptingDefinedSymbols = symbols;
-				targetGroups = groups;
-			}
-		}
-		static readonly ScriptingDefinedSettings m_SettingAvatarIK = new ScriptingDefinedSettings(
-			new string[] { DEFINE_AVATAR_IK, },
-			new BuildTargetGroup[] { BuildTargetGroup.Android, }
-		);
-		static void AddScriptingDefineSymbols(ScriptingDefinedSettings setting)
-		{
-			for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
-			{
-				var group = setting.targetGroups[group_index];
-				string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
-				List<string> allDefines = definesString.Split(';').ToList();
-				for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+				get
 				{
-					if (!allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
-					{
-						sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" to group ").Append(group);
-						DEBUG(sb);
-						allDefines.Add(setting.scriptingDefinedSymbols[symbol_index]);
-					}
-					else
-					{
-						sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
-						DEBUG(sb);
-					}
+					if (m_sb == null) { m_sb = new StringBuilder(); }
+					return m_sb;
 				}
-				PlayerSettings.SetScriptingDefineSymbolsForGroup(
-					group,
-					string.Join(";", allDefines.ToArray())
-				);
 			}
-		}
-		static void RemoveScriptingDefineSymbols(ScriptingDefinedSettings setting)
-		{
-			for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
+			static void DEBUG(StringBuilder msg)
 			{
-				var group = setting.targetGroups[group_index];
-				string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
-				List<string> allDefines = definesString.Split(';').ToList();
-				for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+				msg.Insert(0, LOG_TAG);
+				Debug.Log(msg);
+			}
+
+#region Scripting Symbol
+			const string DEFINE_AVATAR_IK = "WAVE_AVATAR_IK";
+			internal struct ScriptingDefinedSettings
+			{
+				public string[] scriptingDefinedSymbols;
+				public BuildTargetGroup[] targetGroups;
+
+				public ScriptingDefinedSettings(string[] symbols, BuildTargetGroup[] groups)
 				{
-					if (allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
-					{
-						sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" from group ").Append(group);
-						DEBUG(sb);
-						allDefines.Remove(setting.scriptingDefinedSymbols[symbol_index]);
-					}
-					else
-					{
-						sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
-						DEBUG(sb);
-					}
+					scriptingDefinedSymbols = symbols;
+					targetGroups = groups;
 				}
-				PlayerSettings.SetScriptingDefineSymbolsForGroup(
-					group,
-					string.Join(";", allDefines.ToArray())
-				);
+			}
+			static readonly ScriptingDefinedSettings m_SettingAvatarIK = new ScriptingDefinedSettings(
+				new string[] { DEFINE_AVATAR_IK, },
+				new BuildTargetGroup[] { BuildTargetGroup.Android, }
+			);
+			static void AddScriptingDefineSymbols(ScriptingDefinedSettings setting)
+			{
+				for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
+				{
+					var group = setting.targetGroups[group_index];
+					string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+					List<string> allDefines = definesString.Split(';').ToList();
+					for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+					{
+						if (!allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
+						{
+							sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" to group ").Append(group);
+							DEBUG(sb);
+							allDefines.Add(setting.scriptingDefinedSymbols[symbol_index]);
+						}
+						else
+						{
+							sb.Clear(); sb.Append("AddScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
+							DEBUG(sb);
+						}
+					}
+					PlayerSettings.SetScriptingDefineSymbolsForGroup(
+						group,
+						string.Join(";", allDefines.ToArray())
+					);
+				}
+			}
+			static void RemoveScriptingDefineSymbols(ScriptingDefinedSettings setting)
+			{
+				for (int group_index = 0; group_index < setting.targetGroups.Length; group_index++)
+				{
+					var group = setting.targetGroups[group_index];
+					string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+					List<string> allDefines = definesString.Split(';').ToList();
+					for (int symbol_index = 0; symbol_index < setting.scriptingDefinedSymbols.Length; symbol_index++)
+					{
+						if (allDefines.Contains(setting.scriptingDefinedSymbols[symbol_index]))
+						{
+							sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" from group ").Append(group);
+							DEBUG(sb);
+							allDefines.Remove(setting.scriptingDefinedSymbols[symbol_index]);
+						}
+						else
+						{
+							sb.Clear(); sb.Append("RemoveScriptingDefineSymbols() ").Append(setting.scriptingDefinedSymbols[symbol_index]).Append(" already existed.");
+							DEBUG(sb);
+						}
+					}
+					PlayerSettings.SetScriptingDefineSymbolsForGroup(
+						group,
+						string.Join(";", allDefines.ToArray())
+					);
+				}
+			}
+#endregion
+
+			private static bool m_Enabled = false;
+			static MenuAvatarIKHandler()
+			{
+				MenuAvatarIKHandler.m_Enabled = EditorPrefs.GetBool(MenuAvatarIKHandler.MENU_NAME, false);
+
+				/// Delaying until first editor tick so that the menu
+				/// will be populated before setting check state, and
+				/// re-apply correct action
+				EditorApplication.delayCall += () =>
+				{
+					PerformAction(MenuAvatarIKHandler.m_Enabled);
+				};
+			}
+
+			[MenuItem(MenuAvatarIKHandler.MENU_NAME, priority = 604)]
+			private static void ToggleAction()
+			{
+				/// Toggling action
+				PerformAction(!MenuAvatarIKHandler.m_Enabled);
+			}
+
+			private static void PerformAction(bool enabled)
+			{
+				/// Set checkmark on menu item
+				Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, enabled);
+				if (enabled)
+				{
+					AddScriptingDefineSymbols(m_SettingAvatarIK);
+				}
+				else
+				{
+					RemoveScriptingDefineSymbols(m_SettingAvatarIK);
+				}
+				/// Saving editor state
+				EditorPrefs.SetBool(MenuAvatarIKHandler.MENU_NAME, enabled);
+
+				MenuAvatarIKHandler.m_Enabled = enabled;
+			}
+
+			[MenuItem(MenuAvatarIKHandler.MENU_NAME, validate = true, priority = 604)]
+			private static bool ValidateEnabled()
+			{
+				Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, m_Enabled);
+				return true;
 			}
 		}
-		#endregion
-
-		private static bool m_Enabled = false;
-		static MenuAvatarIKHandler()
-		{
-			MenuAvatarIKHandler.m_Enabled = EditorPrefs.GetBool(MenuAvatarIKHandler.MENU_NAME, false);
-
-			/// Delaying until first editor tick so that the menu
-			/// will be populated before setting check state, and
-			/// re-apply correct action
-			EditorApplication.delayCall += () =>
-			{
-				PerformAction(MenuAvatarIKHandler.m_Enabled);
-			};
-		}
-
-		[MenuItem(MenuAvatarIKHandler.MENU_NAME, priority = 604)]
-		private static void ToggleAction()
-		{
-			/// Toggling action
-			PerformAction(!MenuAvatarIKHandler.m_Enabled);
-		}
-
-		private static void PerformAction(bool enabled)
-		{
-			/// Set checkmark on menu item
-			Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, enabled);
-			if (enabled)
-			{
-				AddScriptingDefineSymbols(m_SettingAvatarIK);
-			}
-			else
-			{
-				RemoveScriptingDefineSymbols(m_SettingAvatarIK);
-			}
-			/// Saving editor state
-			EditorPrefs.SetBool(MenuAvatarIKHandler.MENU_NAME, enabled);
-
-			MenuAvatarIKHandler.m_Enabled = enabled;
-		}
-
-		[MenuItem(MenuAvatarIKHandler.MENU_NAME, validate = true, priority = 604)]
-		private static bool ValidateEnabled()
-		{
-			Menu.SetChecked(MenuAvatarIKHandler.MENU_NAME, m_Enabled);
-			return true;
-		}
+		*/
 	}
-	*/
 }
 #endif

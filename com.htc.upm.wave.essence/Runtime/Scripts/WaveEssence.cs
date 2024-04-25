@@ -179,6 +179,7 @@ namespace Wave.Essence
 			Log.gpl.check();
 
 			UpdateEventButtons();
+			UpdateDevicesPose();
 		}
 		#endregion
 
@@ -1091,6 +1092,90 @@ namespace Wave.Essence
 		{
 			if (s_TableStatic != null && s_TableStatic.ContainsKey((WVR_DeviceType)hand)) { return s_TableStatic[(WVR_DeviceType)hand]; }
 			return false;
+		}
+		#endregion
+
+		#region Wave Native Pose and Haptic
+		private static readonly WVR_PoseState_t emptyWVR_PoseState = new WVR_PoseState_t();
+		private Dictionary<WVR_DeviceType, WVR_PoseState_t> m_Pose = new Dictionary<WVR_DeviceType, WVR_PoseState_t>()
+		{
+			{ WVR_DeviceType.WVR_DeviceType_HMD, emptyWVR_PoseState },
+			{ WVR_DeviceType.WVR_DeviceType_Controller_Right, emptyWVR_PoseState },
+			{ WVR_DeviceType.WVR_DeviceType_Controller_Left, emptyWVR_PoseState },
+		};
+		private void UpdateDevicesPose()
+		{
+			UpdatePose(WVR_DeviceType.WVR_DeviceType_HMD);
+			UpdatePose(WVR_DeviceType.WVR_DeviceType_Controller_Right);
+			UpdatePose(WVR_DeviceType.WVR_DeviceType_Controller_Left);
+		}
+
+		private void UpdatePose(WVR_DeviceType deviceType)
+		{
+			if (IsConnected(deviceType))
+			{
+				WVR_PoseState_t newPose = m_Pose[deviceType];
+				WVR_PoseOriginModel origin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnHead;
+				if (ClientInterface.GetOrigin(ref origin))
+				{
+					Interop.WVR_GetPoseState(deviceType, origin, 0, ref newPose);
+					m_Pose[deviceType] = newPose;
+				}
+			}
+		}
+
+		public bool IsTracked(WVR_DeviceType deviceType)
+		{
+			return m_Pose[deviceType].IsValidPose;
+		}
+
+		public Vector3 GetDevicePosition(WVR_DeviceType deviceType)
+		{
+			Vector3 position = Vector3.zero;
+			if (IsTracked(deviceType))
+			{
+				var mat = RigidTransform.toMatrix44(m_Pose[deviceType].PoseMatrix);
+				position = Coordinate.GetVectorFromGL(mat);
+			}
+			return position;
+		}
+
+		public Quaternion GetDeviceRotation(WVR_DeviceType deviceType)
+		{
+			Quaternion rotation = Quaternion.identity;
+			if (IsTracked(deviceType))
+			{
+				var mat = RigidTransform.toMatrix44(m_Pose[deviceType].PoseMatrix);
+				rotation = Coordinate.GetQuaternionFromGL(mat);
+			}
+			return rotation;
+		}
+
+		public Vector3 GetDeviceVelocity(WVR_DeviceType deviceType)
+		{
+			Vector3 velocity = Vector3.zero;
+			if (IsTracked(deviceType))
+			{
+				WVR_Vector3f_t vel = m_Pose[deviceType].Velocity;
+				velocity = Coordinate.GetVectorFromGL(vel);
+			}
+			return velocity;
+		}
+
+		public Vector3 GetDeviceAngularVelocity(WVR_DeviceType deviceType)
+		{
+			Vector3 angularVelocity = Vector3.zero;
+			if (IsTracked(deviceType))
+			{
+				WVR_Vector3f_t angVel = m_Pose[deviceType].AngularVelocity;
+				angularVelocity = new Vector3(-angVel.v0, -angVel.v1, angVel.v2);
+			}
+			return angularVelocity;
+		}
+
+		public void SendHapticImpulse(WVR_DeviceType deviceType, WVR_InputId id, uint durationMillisec, uint frequency = 1, WVR_Intensity intensity = WVR_Intensity.WVR_Intensity_Normal)
+		{
+			Interop.WVR_TriggerVibration(deviceType, id, durationMillisec * 1000, frequency, intensity);
 		}
 		#endregion
 	}

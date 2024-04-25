@@ -18,6 +18,7 @@ using System;
 using System.Threading;
 using System.Diagnostics;
 using UnityEngine.XR;
+using UnityEngine.Events;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -74,9 +75,26 @@ namespace Wave.Essence.Tracker
 		private static TrackerManager instance = null;
 		public static TrackerManager Instance { get { return instance; } }
 
+		#region Inspector
 		[SerializeField]
 		private bool m_InitialStartTracker = false;
 		public bool InitialStartTracker { get { return m_InitialStartTracker; } set { m_InitialStartTracker = value; } }
+
+		[Serializable]
+		public class TrackerSwipeEvent : UnityEvent<uint> { };
+		[SerializeField]
+		private TrackerSwipeEvent m_OnSwipeToRight = new TrackerSwipeEvent();
+		public TrackerSwipeEvent OnSwipeToRight { get { return m_OnSwipeToRight; } set { m_OnSwipeToRight = value; } }
+		[SerializeField]
+		private TrackerSwipeEvent m_OnSwipeToLeft = new TrackerSwipeEvent();
+		public TrackerSwipeEvent OnSwipeToLeft { get { return m_OnSwipeToLeft; } set { m_OnSwipeToLeft = value; } }
+		[SerializeField]
+		private TrackerSwipeEvent m_OnSwipeToUp = new TrackerSwipeEvent();
+		public TrackerSwipeEvent OnSwipeToUp { get { return m_OnSwipeToUp; } set { m_OnSwipeToUp = value; } }
+		[SerializeField]
+		private TrackerSwipeEvent m_OnSwipeToDown = new TrackerSwipeEvent();
+		public TrackerSwipeEvent OnSwipeToDown { get { return m_OnSwipeToDown; } set { m_OnSwipeToDown = value; } }
+		#endregion
 
 		#region Wave XR Constants
 		const string kTrackerComponentStatus = "TrackerComponentStatus";
@@ -154,6 +172,10 @@ namespace Wave.Essence.Tracker
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerButtonUnpressed, OnTrackerButtonUnpressed);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerTouchTapped, OnTrackerTouchTapped);
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerTouchUntapped, OnTrackerTouchUntapped);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerLeftToRightSwipe, OnTrackerSwipe);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerRightToLeftSwipe, OnTrackerSwipe);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerDownToUpSwipe, OnTrackerSwipe);
+			SystemEvent.Listen(WVR_EventType.WVR_EventType_TrackerUpToDownSwipe, OnTrackerSwipe);
 
 			if (m_InitialStartTracker) { StartTracker(); }
 		}
@@ -167,6 +189,12 @@ namespace Wave.Essence.Tracker
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerButtonUnpressed, OnTrackerButtonUnpressed);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerTouchTapped, OnTrackerTouchTapped);
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerTouchUntapped, OnTrackerTouchUntapped);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerLeftToRightSwipe, OnTrackerSwipe);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerRightToLeftSwipe, OnTrackerSwipe);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerDownToUpSwipe, OnTrackerSwipe);
+			SystemEvent.Remove(WVR_EventType.WVR_EventType_TrackerUpToDownSwipe, OnTrackerSwipe);
+
+			StopTracker();
 		}
 
 		static List<InputDevice> s_InputDevices = new List<InputDevice>();
@@ -836,6 +864,28 @@ namespace Wave.Essence.Tracker
 
 			s_TrackerButtonStates[trackerId].s_ButtonTouch[id.ArrayIndex()] = false;
 		}
+		private void OnTrackerSwipe(WVR_Event_t systemEvent)
+		{
+			TrackerId trackerId = systemEvent.trackerInput.tracker.trackerId.Id();
+			WVR_InputId id = systemEvent.trackerInput.inputId;
+			sb.Clear().Append("OnTrackerSwipe() ").Append(trackerId.Name()).Append(", ").Append(id); DEBUG(sb);
+
+			switch (systemEvent.common.type)
+			{
+				case WVR_EventType.WVR_EventType_TrackerLeftToRightSwipe:
+					m_OnSwipeToRight?.Invoke((uint)trackerId);
+					break;
+				case WVR_EventType.WVR_EventType_TrackerRightToLeftSwipe:
+					m_OnSwipeToLeft?.Invoke((uint)trackerId);
+					break;
+				case WVR_EventType.WVR_EventType_TrackerDownToUpSwipe:
+					m_OnSwipeToUp?.Invoke((uint)trackerId);
+					break;
+				case WVR_EventType.WVR_EventType_TrackerUpToDownSwipe:
+					m_OnSwipeToDown?.Invoke((uint)trackerId);
+					break;
+			}
+		}
 
 		bool AllowUpdateTrackerButton(TrackerId trackerId, WVR_InputId id)
 		{
@@ -1071,6 +1121,11 @@ namespace Wave.Essence.Tracker
 
 			return s_TrackerConnection[trackerId];
 		}
+		/// <summary>
+		/// Checks if a tracker's pose is valid.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <returns>True for the pose is valid.</returns>
 		public bool IsTrackerPoseValid(TrackerId trackerId)
 		{
 			if (UseXRData())
@@ -1080,6 +1135,12 @@ namespace Wave.Essence.Tracker
 
 			return s_TrackerPoses[trackerId].valid;
 		}
+		/// <summary>
+		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.InputTrackingState.html">InputTrackingState</see> of a tracker's pose.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="state">A tracker pose's state in <see href="https://docs.unity3d.com/ScriptReference/XR.InputTrackingState.html">InputTrackingState</see>.</param>
+		/// <returns>True for the state is valid.</returns>
 		public bool GetTrackerTrackingState(TrackerId trackerId, out InputTrackingState state)
 		{
 			state = InputTrackingState.None;
@@ -1162,6 +1223,12 @@ namespace Wave.Essence.Tracker
 
 			return s_TrackerPoses[trackerId].rigid.rot;
 		}
+		/// <summary>
+		/// Retrieves a tracker's velocity in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's velocity in Vector3.</param>
+		/// <returns>>True for the velocity is valid.</returns>
 		public bool GetTrackerVelocity(TrackerId trackerId, out Vector3 velocity)
 		{
 			if (UseXRData())
@@ -1182,6 +1249,12 @@ namespace Wave.Essence.Tracker
 			}
 			return s_TrackerPoses[trackerId].velocity;
 		}
+		/// <summary>
+		/// Retrieves a tracker's angular velocity in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's angular velocity in Vector3.</param>
+		/// <returns>>True for the angular velocity is valid.</returns>
 		public bool GetTrackerAngularVelocity(TrackerId trackerId, out Vector3 angularVelocity)
 		{
 			if (UseXRData())
@@ -1202,6 +1275,12 @@ namespace Wave.Essence.Tracker
 			}
 			return s_TrackerPoses[trackerId].angularVelocity;
 		}
+		/// <summary>
+		/// Retrieves a tracker's acceleration in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's acceleration in Vector3.</param>
+		/// <returns>>True for the acceleration is valid.</returns>
 		public bool GetTrackerAcceleration(TrackerId trackerId, out Vector3 acceleration)
 		{
 			if (UseXRData())
@@ -1284,6 +1363,14 @@ namespace Wave.Essence.Tracker
 				if (id == TrackerButton.Trigger)
 				{
 					if (InputDeviceTracker.ButtonAxis(trackerId.InputDevice(), XR_Feature.trigger, out float value))
+					{
+						axis.x = value;
+						return axis;
+					}
+				}
+				if (id == TrackerButton.Grip)
+				{
+					if (InputDeviceTracker.ButtonAxis(trackerId.InputDevice(), XR_Feature.grip, out float value))
 					{
 						axis.x = value;
 						return axis;

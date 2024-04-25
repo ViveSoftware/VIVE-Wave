@@ -38,7 +38,7 @@ namespace Wave.XR.Sample.Hand
 		public HandJoint Joint { get { return m_Joint; } set { m_Joint = value; } }
 
 		[SerializeField]
-		private List<Transform> m_JointPose;
+		private List<Transform> m_JointPose = new List<Transform>();
 		public List<Transform> JointsPose { get { return m_JointPose; } set { m_JointPose = value; } }
 
 		[SerializeField]
@@ -50,9 +50,10 @@ namespace Wave.XR.Sample.Hand
 
 		private void Start()
 		{
-			foreach (Transform jointPose in m_JointPose)
+			for (int i = 0; i < m_JointPose.Count; i++)
 			{
-				m_MeshRenderers.Add(jointPose.GetComponent<MeshRenderer>());
+				if (m_JointPose[i] != null)
+					m_MeshRenderers.Add(m_JointPose[i].GetComponent<MeshRenderer>());
 			}
 		}
 

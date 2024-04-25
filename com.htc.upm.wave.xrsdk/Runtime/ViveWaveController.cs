@@ -80,6 +80,40 @@ namespace Wave.XR
 						.WithProduct(kProductFocus3Right));
 		}
 
+		#region Aliases
+		/**
+         * To get these variable's name, check InputDevice.description.capabilities.
+         * In capabilities, inputFeatures record each feature's name and commonusages.
+         * e.g.
+         *		XRDeviceDescriptor descriptor = XRDeviceDescriptor.FromJson(InputDevice.description.capabilities);
+         *		descriptor.inputFeatures.name and inputFeatures.inputFeatures.usageHints
+         *		Debug.Log(descriptor.inputFeatures.name, inputFeatures.inputFeatures.usageHints)
+         *		name => Left Controller Primary2DAxis (Touchpad Axis)
+         *		usageHints.content => Primary2DAxis	
+         * The alias name is LeftControllerPrimary2DAxisTouchpadAxis and commonusages is Primary2DAxis.
+         **/
+		const string kControllerR = "RightController", kControllerL = "LeftController";
+		const string kPrimary2DAxis = "Primary2DAxisTouchpadAxis";
+		const string kPrimary2DAxisClick = "Primary2DAxisClickTouchpad";
+		const string kPrimary2DAxisTouch = "Primary2DAxisTouchTouchpadTouch";
+		const string kTriggerButton = "TriggerButton";
+		const string kTrigger = "TriggerTriggerAxis";
+		const string kGripButton = "GripButton";
+		const string kGrip = "Grip";
+		const string kMenuButton = "MenuButton";
+		const string kPrimaryButton = "PrimaryButton";
+		const string kPrimaryTouch = "PrimaryTouch";
+		const string kSecondaryButton = "SecondaryButton";
+		const string kSecondaryTouch = "SecondaryTouch";
+		const string kIsTracked = "IsTracked";
+		const string kTrackingState = "TrackingState";
+		const string kDevicePosition = "Position";
+		const string kDeviceRotation = "Rotation";
+		const string kDeviceVelocity = "Velocity";
+		const string kDeviceAngularVelocity = "AngularVelocity";
+		const string kBatteryLevel = "BatteryPercentage";
+		#endregion
+
 		/**
 		 * If the public variable's name is NOT a system variable's name, the variable will be added as an XR binding path.
 		 * 
@@ -99,71 +133,69 @@ namespace Wave.XR
 		 **/
 
 		/// <summary> Represents the thumbstick axis in Vector2 where x {-1, 1} is positive at right side and y {-1, 1} is positive at top side. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerPrimary2DAxisTouchpadAxis", "LeftControllerPrimary2DAxisTouchpadAxis" }, usage = "Primary2DAxis")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kPrimary2DAxis, kControllerL + kPrimary2DAxis })]
 		public Vector2Control thumbstick { get; private set; }
-		/// <summary>
-		/// Represents the Thumbstick key is pressed. Binding path:
-		/// 
-		/// <code>Left controller: &lt;XRController&gt;{LeftHand}/{primary2DAxisClick}</code>
-		/// 
-		/// <code>Right controller: &lt;XRController&gt;{RightHand}/{primary2DAxisClick}</code>
-		/// </summary>
-		[Preserve, InputControl(usage = "Primary2DAxisClick")]
+		/// <summary> Represents the Thumbstick key is pressed.</summary>
+		[Preserve, InputControl(aliases = new[] { kControllerR + kPrimary2DAxisClick, kControllerL + kPrimary2DAxisClick })]
 		public ButtonControl thumbstickClicked { get; private set; }
-		/// <summary>
-		/// Represents the Thumbstick key is touched.
-		/// 
-		/// <code>Left controller: &lt;XRController&gt;{LeftHand}/{primary2DAxisTouch}</code>
-		/// 
-		/// <code>Right controller: &lt;XRController&gt;{RightHand}/{primary2DAxisTouch}</code>
-		/// </summary>
-		[Preserve, InputControl(usage = "Primary2DAxisTouch")]
+		/// <summary> Represents the Thumbstick key is touched. </summary>
+		[Preserve, InputControl(aliases = new[] { kControllerR + kPrimary2DAxisTouch, kControllerL + kPrimary2DAxisTouch })]
 		public ButtonControl thumbstickTouched { get; private set; }
 
 		/// <summary> Represents the Trigger key is pressed. Note the "triggerTouched" is NOT supported in <see href="https://hub.vive.com/storage/app/doc/en-us/UnityXR/UnityXRButton.html">Unity XR Input</see>. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerTriggerButton", "LeftControllerTriggerButton" }, usage = "TriggerButton")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kTriggerButton, kControllerL + kTriggerButton })]
 		public ButtonControl triggerPressed { get; private set; }
 		/// <summary> Represents the trigger axis in float {0, 1} where 1 means the Trigger key is fully pressed. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerTriggerTriggerAxis", "LeftControllerTriggerTriggerAxis" }, usage = "Trigger")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kTrigger, kControllerL + kTrigger })]
 		public AxisControl trigger { get; private set; }
 
 		/// <summary> Represents the Grip key is pressed. Note the "gripTouched" is NOT supported in <see href="https://hub.vive.com/storage/app/doc/en-us/UnityXR/UnityXRButton.html">Unity XR Input</see>. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerGripButton", "LeftControllerGripButton" }, usage = "GripButton")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kGripButton, kControllerL + kGripButton })]
 		public ButtonControl gripPressed { get; private set; }
 		/// <summary> Represents the grip axis in float {0, 1} where 1 means the Grip key is fully pressed. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerGrip", "LeftControllerGrip" }, usage = "Grip")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kGrip, kControllerL + kGrip })]
 		public AxisControl grip { get; private set; }
 
 		/// <summary> Represents the Left Menu key is pressed. Note only left controller has a menu key. </summary>
-		[Preserve, InputControl(aliases = new[] { "LeftControllerMenuButton" }, usage = "MenuButton")]
+		[Preserve, InputControl(aliases = new[] { kControllerL + kMenuButton })]
 		public ButtonControl menu { get; private set; }
 
 		/// <summary> Represents the A key in right controller or X key in left controller is pressed. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerPrimaryButton", "LeftControllerPrimaryButton" }, usage = "PrimaryButton")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kPrimaryButton, kControllerL + kPrimaryButton })]
 		public ButtonControl primaryButton { get; private set; }
 		/// <summary> Represents the A key in right controller or X key in left controller is touched. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerPrimaryTouch", "LeftControllerPrimaryTouch" }, usage = "PrimaryTouch")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kPrimaryTouch, kControllerL + kPrimaryTouch })]
 		public ButtonControl primaryTouched { get; private set; }
 
 		/// <summary> Represents the B key in right controller or Y key in left controller is pressed. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerSecondaryButton", "LeftControllerSecondaryButton" }, usage = "SecondaryButton")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kSecondaryButton, kControllerL + kSecondaryButton })]
 		public ButtonControl secondaryButton { get; private set; }
 		/// <summary> Represents the B key in right controller or Y key in left controller is touched. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerSecondaryTouch", "LeftControllerSecondaryTouch" }, usage = "SecondaryTouch")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kSecondaryTouch, kControllerL + kSecondaryTouch })]
 		public ButtonControl secondaryTouched { get; private set; }
 
 		/// <summary> Checks if the left/right controller is tracked. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerIsTracked", "LeftControllerIsTracked" }, usage = "IsTracked")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kIsTracked, kControllerL + kIsTracked })]
 		new public ButtonControl isTracked { get; private set; }
 		/// <summary> Represents the tracking state in <see href="https://docs.unity3d.com/ScriptReference/XR.InputTrackingState.html">InputTrackingState</see> of left/right controller. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerTrackingState", "LeftControllerTrackingState" }, usage = "TrackingState")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kTrackingState, kControllerL + kTrackingState })]
 		new public IntegerControl trackingState { get; private set; }
 		/// <summary> Represents the position in Vector3 of left/right controller. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerPosition", "LeftControllerPosition" }, usage = "DevicePosition")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kDevicePosition, kControllerL + kDevicePosition })]
 		new public Vector3Control devicePosition { get; private set; }
 		/// <summary> Represents the rotation in Quaternion of left/right controller. </summary>
-		[Preserve, InputControl(aliases = new[] { "RightControllerRotation", "LeftControllerRotation" }, usage = "DeviceRotation")]
+		[Preserve, InputControl(aliases = new[] { kControllerR + kDeviceRotation, kControllerL + kDeviceRotation })]
 		new public QuaternionControl deviceRotation { get; private set; }
+		/// <summary> Represents the velocity in Vector3 of left/right controller. </summary>
+		[Preserve, InputControl(aliases = new[] { kControllerR + kDeviceVelocity, kControllerL + kDeviceVelocity })]
+		public Vector3Control deviceVelocity { get; private set; }
+		/// <summary> Represents the angular velocity in Vector3 of left/right controller. </summary>
+		[Preserve, InputControl(aliases = new[] { kControllerR + kDeviceAngularVelocity, kControllerL + kDeviceAngularVelocity })]
+		public Vector3Control deviceAngularVelocity { get; private set; }
+
+		/// <summary> Represents the batter percentage in float {0, 1} where 1 means fully charged. </summary>
+		[Preserve, InputControl(aliases = new[] { "Right" + kBatteryLevel, "Left" + kBatteryLevel })]
+		public AxisControl batteryLevel { get; private set; }
 
 		/// <summary>
 		/// Internal call used to assign controls to the the correct element.
@@ -195,6 +227,9 @@ namespace Wave.XR
 			trackingState = GetChildControl<IntegerControl>("trackingState");
 			devicePosition = GetChildControl<Vector3Control>("devicePosition");
 			deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+			deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+			deviceAngularVelocity = GetChildControl<Vector3Control>("deviceAngularVelocity");
+			batteryLevel = GetChildControl<AxisControl>("batteryLevel");
 		}
 	}
 }

@@ -105,6 +105,10 @@ namespace Wave.Native
 		WVR_EventType_TrackerButtonUnpressed = 5001,     /**< @ref WVR_InputId status of @ref WVR_TrackerId changed to not pressed */
 		WVR_EventType_TrackerTouchTapped = 5002,     /**< @ref WVR_InputId status of @ref WVR_TrackerId changed to touched. */
 		WVR_EventType_TrackerTouchUntapped = 5003,     /**< @ref WVR_InputId status of @ref WVR_TrackerId changed to untouched. */
+		WVR_EventType_TrackerLeftToRightSwipe = 5004,     /**< Notification of swipe motion (move Left to Right) on tracker */
+		WVR_EventType_TrackerRightToLeftSwipe = 5005,     /**< Notification of swipe motion (move Right to Left) on tracker */
+		WVR_EventType_TrackerDownToUpSwipe = 5006,        /**< Notification of swipe motion (move Down to Up) on tracker */
+		WVR_EventType_TrackerUpToDownSwipe = 5007,        /**< Notification of swipe motion (move Up to Down) on tracker */
 	}
 
 	public enum WVR_PeripheralQuality
@@ -2908,9 +2912,11 @@ namespace Wave.Native
 			return WVR_Base.Instance.GetBodyTrackingExtrinsics(extrinsics, ref count);
 		}
 
-		#region Trackable Marker
+        #endregion Body Tracking
 
-		public static WVR_Result WVR_StartMarker()
+        #region Trackable Marker
+
+        public static WVR_Result WVR_StartMarker()
 		{
 			return WVR_Base.Instance.StartMarker();
 		}
@@ -2985,8 +2991,12 @@ namespace Wave.Native
 			return WVR_Base.Instance.GetArucoMarkerData(markerId, out data);
 		}
 
-		#endregion
-		#endregion
+		public static WVR_Result WVR_ClearTrackableMarkers()
+		{
+			return WVR_Base.Instance.ClearTrackableMarkers();
+		}
+
+		#endregion Trackable Marker
 
 		public static ulong WVR_GetSupportedFeatures()
 		{
@@ -4294,6 +4304,11 @@ namespace Wave.Native
 			public virtual WVR_Result GetArucoMarkerData(WVR_Uuid markerId, out WVR_ArucoMarkerData data)
 			{
 				data = default(WVR_ArucoMarkerData);
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+
+			public virtual WVR_Result ClearTrackableMarkers()
+			{
 				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
 

@@ -56,11 +56,7 @@ namespace Wave.XR
                 return m_sb;
             }
         }
-        static void DEBUG(StringBuilder msg)
-        {
-            msg.Insert(0, LOG_TAG);
-            Debug.Log(msg);
-        }
+        static void DEBUG(StringBuilder msg) { Debug.Log(msg); }
         uint logFrame = 0;
         static bool printIntervalLog = false;
 
@@ -83,7 +79,7 @@ namespace Wave.XR
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize()
 		{
-            sb.Clear(); sb.Append("Initialize() RegisterLayout with interface ").Append(kInterfaceName);
+            sb.Clear().Append(LOG_TAG).Append("Initialize() RegisterLayout with interface ").Append(kInterfaceName);
             DEBUG(sb);
             InputSystem.RegisterLayout(
                 typeof(ViveWaveWristTracker),
@@ -94,17 +90,17 @@ namespace Wave.XR
             var device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             while (device != null)
             {
-                sb.Clear().Append("Initialize() Removes a ViveWaveWristTracker device."); DEBUG(sb);
+                sb.Clear().Append(LOG_TAG).Append("Initialize() Removes a ViveWaveWristTracker device."); DEBUG(sb);
                 InputSystem.RemoveDevice(device);
                 device = InputSystem.devices.FirstOrDefault(x => x is ViveWaveWristTracker);
             }
 
-            sb.Clear(); sb.Append("Initialize() Adds right ViveWaveWristTracker device ").Append(kProductNameRight);
+            sb.Clear().Append(LOG_TAG).Append("Initialize() Adds right ViveWaveWristTracker device ").Append(kProductNameRight);
             DEBUG(sb);
             InputSystem.AddDevice(
                 new InputDeviceDescription { interfaceName = kInterfaceName, product = kProductNameRight, serial = kSerialNumberRight }
             );
-            sb.Clear(); sb.Append("Initialize() Adds left ViveWaveWristTracker device ").Append(kProductNameLeft);
+            sb.Clear().Append(LOG_TAG).Append("Initialize() Adds left ViveWaveWristTracker device ").Append(kProductNameLeft);
             DEBUG(sb);
             InputSystem.AddDevice(
                 new InputDeviceDescription { interfaceName = kInterfaceName, product = kProductNameLeft, serial = kSerialNumberLeft }
@@ -128,8 +124,7 @@ namespace Wave.XR
 
             InputSystem.SetDeviceUsage(this, (IsLeft ? CommonUsages.LeftHand : CommonUsages.RightHand));
 
-            sb.Clear();
-            sb.Append("FinishSetup() deviceId: ").Append(deviceId)
+            sb.Clear().Append(LOG_TAG).Append("FinishSetup() deviceId: ").Append(deviceId)
                 .Append(", IsLeft: ").Append(IsLeft)
                 .Append(", interfaceName: ").Append(description.interfaceName)
                 .Append(", product: ").Append(description.product)
@@ -147,7 +142,7 @@ namespace Wave.XR
 
             if (!InputDeviceTracker.IsAvailable())
             {
-                //if (printIntervalLog) { sb.Clear(); sb.Append("OnUpdate() No tracker connected."); DEBUG(sb); }
+                //if (printIntervalLog) { sb.Clear().Append(LOG_TAG).Append("OnUpdate() No tracker connected."); DEBUG(sb); }
                 return;
             }
 
@@ -188,7 +183,7 @@ namespace Wave.XR
 
             if (printIntervalLog)
             {
-                sb.Clear(); sb.Append("OnUpdate() ").Append(m_TrackerId)
+                sb.Clear().Append(LOG_TAG).Append("OnUpdate() ").Append(m_TrackerId)
                     .Append(", product: ").Append(description.product)
                     .Append(", isTracked: ").Append(state.pose.isTracked)
                     .Append(", trackingState: ").Append(state.pose.trackingState)

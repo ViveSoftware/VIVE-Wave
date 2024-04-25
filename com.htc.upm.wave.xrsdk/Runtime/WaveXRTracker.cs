@@ -115,15 +115,18 @@ namespace Wave.OpenXR
 		const string kTracker15Role = "TrackerRole15";
 
 		/// <summary> Standalone Tracker Characteristics </summary>
+		[Obsolete("This variable is deprecated.")]
 		public const InputDeviceCharacteristics kAloneTrackerCharacteristics = (
 			InputDeviceCharacteristics.TrackedDevice
 		);
 		/// <summary> Right Tracker Characteristics </summary>
+		[Obsolete("This variable is deprecated.")]
 		public const InputDeviceCharacteristics kRightTrackerCharacteristics = (
 			InputDeviceCharacteristics.TrackedDevice |
 			InputDeviceCharacteristics.Right
 		);
 		/// <summary> Left Tracker Characteristics </summary>
+		[Obsolete("This variable is deprecated.")]
 		public const InputDeviceCharacteristics kLeftTrackerCharacteristics = (
 			InputDeviceCharacteristics.TrackedDevice |
 			InputDeviceCharacteristics.Left
@@ -373,6 +376,12 @@ namespace Wave.OpenXR
 			}
 			return false;
 		}
+		/// <summary>
+		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.InputTrackingState.html">InputTrackingState</see> of a tracker's pose.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="state">A tracker pose's state in <see href="https://docs.unity3d.com/ScriptReference/XR.InputTrackingState.html">InputTrackingState</see>.</param>
+		/// <returns>True for the state is valid.</returns>
 		public static bool GetTrackingState(TrackerId trackerId, out InputTrackingState state)
 		{
 			state = InputTrackingState.None;
@@ -418,6 +427,12 @@ namespace Wave.OpenXR
 
 			return false;
 		}
+		/// <summary>
+		/// Retrieves a tracker's velocity in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's velocity in Vector3.</param>
+		/// <returns>>True for the velocity is valid.</returns>
 		public static bool GetVelocity(TrackerId trackerId, out Vector3 velocity)
 		{
 			velocity = Vector3.zero;
@@ -433,6 +448,12 @@ namespace Wave.OpenXR
 
 			return false;
 		}
+		/// <summary>
+		/// Retrieves a tracker's angular velocity in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's angular velocity in Vector3.</param>
+		/// <returns>>True for the angular velocity is valid.</returns>
 		public static bool GetAngularVelocity(TrackerId trackerId, out Vector3 angularVelocity)
 		{
 			angularVelocity = Vector3.zero;
@@ -448,6 +469,12 @@ namespace Wave.OpenXR
 
 			return false;
 		}
+		/// <summary>
+		/// Retrieves a tracker's acceleration in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's acceleration in Vector3.</param>
+		/// <returns>>True for the acceleration is valid.</returns>
 		public static bool GetAcceleration(TrackerId trackerId, out Vector3 acceleration)
 		{
 			acceleration = Vector3.zero;
@@ -463,6 +490,12 @@ namespace Wave.OpenXR
 
 			return false;
 		}
+		/// <summary>
+		/// Retrieves a tracker's angular acceleration in Vector3.
+		/// </summary>
+		/// <param name="trackerId">A tracker's ID in <see cref="TrackerId">TrackerId</see>.</param>
+		/// <param name="velocity">A tracker pose's angular acceleration in Vector3.</param>
+		/// <returns>>True for the angular acceleration is valid.</returns>
 		public static bool GetAngularAcceleration(TrackerId trackerId, out Vector3 angularAcceleration)
 		{
 			angularAcceleration = Vector3.zero;
@@ -503,23 +536,6 @@ namespace Wave.OpenXR
 				if (roleId == (UInt32)s_TrackerRoles[i])
 					return s_TrackerRoles[i];
 			}
-
-			/*for (int i = 0; i < s_InputDevices.Count; i++)
-			{
-				if (!s_InputDevices[i].isValid) { continue; }
-
-				if (!IsTrackerDevice(s_InputDevices[i], trackerId)) { continue; }
-
-				if (s_InputDevices[i].characteristics.Equals(kLeftTrackerCharacteristics))
-					return TrackerRole.Pair1_Left;
-
-				if (s_InputDevices[i].characteristics.Equals(kRightTrackerCharacteristics))
-					return TrackerRole.Pair1_Right;
-
-				if (s_InputDevices[i].characteristics.Equals(kAloneTrackerCharacteristics))
-					return TrackerRole.Standalone;
-			}*/
-
 
 			return TrackerRole.Undefined;
 		}
@@ -599,6 +615,14 @@ namespace Wave.OpenXR
 			return false;
 		}
 
+		/// <summary>
+		/// Retrieves a tracker's device name.
+		/// <br>For Wrist Tracker: the device name will be "Vive_Tracker_Wrist" or "Vive_Wrist_Tracker".</br>
+		/// <br>For Ultimate Tracker: the device name will be "Vive_Tracker_OT", "Vive_Self_Tracker" or "Vive_Ultimate_Tracker".</br>
+		/// </summary>
+		/// <param name="trackerId"></param>
+		/// <param name="trackerName"></param>
+		/// <returns></returns>
 		public static bool GetTrackerDeviceName(TrackerId trackerId, out string trackerName)
 		{
 			if (GetTrackerDevice(trackerId, out InputDevice device))

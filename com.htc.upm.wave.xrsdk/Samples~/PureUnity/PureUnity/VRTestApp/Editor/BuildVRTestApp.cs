@@ -472,7 +472,7 @@ namespace Wave.Generic.Sample.Editor
 			UpdateDefineSymbols();
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build 32+64bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build 32+64bit", priority = 520)]
 		static void BuildApk()
 		{
 			CustomizedCommandLine();
@@ -480,7 +480,7 @@ namespace Wave.Generic.Sample.Editor
 			BuildApk(_destinationPath, false, false, true, true, true);
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build 32bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build 32bit", priority = 520)]
 		static void BuildApk32()
 		{
 			CustomizedCommandLine();
@@ -494,13 +494,13 @@ namespace Wave.Generic.Sample.Editor
 			BuildApk(_destinationPath, false, false, true, false, true);
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build+Run 32+64bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build+Run 32+64bit", priority = 520)]
 		static void BuildAndRunApk()
 		{
 			BuildApk(null, true, false, true, true, true);
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build+Run 32bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build+Run 32bit", priority = 520)]
 		static void BuildAndRunApk32()
 		{
 			BuildApk("armv7", true, false);
@@ -512,13 +512,13 @@ namespace Wave.Generic.Sample.Editor
 			BuildApk(null, true, false, true, false, true);
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 32+64bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 32+64bit", priority = 520)]
 		static void BuildDevAndRunApk()
 		{
 			BuildApk(null, true, true, true, true, true);
 		}
 
-		[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 32bit", priority = 520)]
+		//[MenuItem("Wave/Build VRTestApp/Build+Dev+Run 32bit", priority = 520)]
 		static void BuildDevAndRunApk32()
 		{
 			BuildApk("armv7", true, true);

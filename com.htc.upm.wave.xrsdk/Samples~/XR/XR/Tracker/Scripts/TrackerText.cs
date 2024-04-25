@@ -44,11 +44,18 @@ namespace Wave.OpenXR
 
 		readonly Dictionary<InputFeatureUsage<bool>, string> s_ButtonsBinding = new Dictionary<InputFeatureUsage<bool>, string>()
 		{
-			{CommonUsages.menuButton, "MenuButton"},
-			{CommonUsages.primaryButton, "PrimaryButton"},
-			{CommonUsages.secondaryButton, "SecondaryButton"},
-			{CommonUsages.primary2DAxisClick, "Touchpad"},
-			{CommonUsages.triggerButton, "TriggerButton"}
+			{new InputFeatureUsage<bool>("GripTouch"), "Grip Touch"},
+			{CommonUsages.gripButton, "Grip Button" },
+			{new InputFeatureUsage<bool>("TriggerTouch"), "Trigger Touch"},
+			{CommonUsages.triggerButton, "Trigger Button"},
+			{CommonUsages.primary2DAxisTouch, "Touchpad Touch"},
+			{CommonUsages.primary2DAxisClick, "Touchpad Button"},
+			{new InputFeatureUsage<bool>("MenuTouch"), "Menu Touch"},
+			{CommonUsages.menuButton, "Menu Button"},
+			{CommonUsages.primaryTouch, "Primary Touch"},
+			{CommonUsages.primaryButton, "Primary Button"},
+			{CommonUsages.secondaryTouch, "Secondary Touch"},
+			{CommonUsages.secondaryButton, "Secondary Button"},
 		};
 
 
@@ -164,14 +171,14 @@ namespace Wave.OpenXR
 		private void TextPress()
 		{
 			m_Text.text = "Pressed:";
-			for(int i=0; i<s_ButtonsBinding.Count; i++)
+			for (int i = 0; i < s_ButtonsBinding.Count; i++)
 			{
 				var button = s_ButtonsBinding.ElementAt(i);
 				if (InputDeviceTracker.ButtonDown(m_Tracker, button.Key, out bool value))
 				{
 					if (value)
 					{
-						m_Text.text += $" {button.Value} ";
+						m_Text.text += $" {button.Value},";
 						InputDeviceTracker.HapticPulse(m_Tracker);
 					}
 				}

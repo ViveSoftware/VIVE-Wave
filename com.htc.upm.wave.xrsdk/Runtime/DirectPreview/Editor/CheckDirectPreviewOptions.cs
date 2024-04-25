@@ -296,11 +296,12 @@ namespace Wave.XR.DirectPreview.Editor
             //}
 
             ShowButtons();
-
-			EditorGUILayout.LabelField("List Direct Preview supported features as below:");
+			EditorGUILayout.LabelField("Notice:", EditorStyles.boldLabel);
+			EditorGUILayout.LabelField("After using Direct Preview, please remember to stop streaming server, otherwise VIVE Business Streaming will not function properly.", new GUIStyle(EditorStyles.label) { wordWrap = true });
+			EditorGUILayout.LabelField("List Direct Preview supported features as below:", EditorStyles.boldLabel);
 			EditorGUILayout.LabelField("1. Controller Model.");
 			EditorGUILayout.LabelField("2. Hand Tracking. (without hand scale and hand pinch)");
-			EditorGUILayout.LabelField("List Direct Preview not supported features as below:");
+			EditorGUILayout.LabelField("List Direct Preview not supported features as below:", EditorStyles.boldLabel);
 			EditorGUILayout.LabelField("1. Hand Gesture.");
 			EditorGUILayout.LabelField("2. Passthrough.");
 			EditorGUILayout.LabelField("3. Compositor Layer.");

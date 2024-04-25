@@ -73,28 +73,64 @@ namespace Wave.XR
                         .WithProduct(@kProducts));
         }
 
-        [Preserve, InputControl(alias = "HMDTrackingState")]
+		#region Alias
+		/**
+         * To get these variable's name, check InputDevice.description.capabilities.
+         * In capabilities, inputFeatures record each feature's name and commonusages.
+         * e.g.
+         *		XRDeviceDescriptor descriptor = XRDeviceDescriptor.FromJson(InputDevice.description.capabilities);
+         *		descriptor.inputFeatures.name and inputFeatures.inputFeatures.usageHints
+         *		Debug.Log(descriptor.inputFeatures.name, inputFeatures.inputFeatures.usageHints)
+         *		name => Left Controller Primary2DAxis (Touchpad Axis)
+         *		usageHints.content => Primary2DAxis	
+         * The alias name is LeftControllerPrimary2DAxisTouchpadAxis and commonusages is Primary2DAxis.
+         **/
+		const string kDevice = "HMD";
+		const string kTrackingState = "TrackingState";
+		const string kIsTracked = "IsTracked";
+		const string kDevicePosition = "Position";
+		const string kDeviceRotation = "Rotation";
+		const string kDeviceVelocity = "Velocity";
+		const string kDeviceAngularVelocity = "AngularVelocity";
+		const string kCenterEyePosition = "CenterEyePosition";
+		const string kCenterEyeRotation = "CenterEyeRotation";
+		const string kBatteryLevel = "BatteryPercentage";
+		const string kUserPresence = "UserPresence";
+		#endregion
+
+		[Preserve, InputControl(alias = kDevice + kTrackingState)]
         public new IntegerControl trackingState { get; private set; }
 
-        [Preserve, InputControl(alias = "HMDIsTracked")]
+        [Preserve, InputControl(alias = kDevice + kIsTracked)]
         public new ButtonControl isTracked { get; private set; }
 
-        [Preserve, InputControl(alias = "HMDPosition")]
+        [Preserve, InputControl(alias = kDevice + kDevicePosition)]
         public new Vector3Control devicePosition { get; private set; }
 
-        [Preserve, InputControl(alias = "HMDRotation")]
+        [Preserve, InputControl(alias = kDevice + kDeviceRotation)]
         public new QuaternionControl deviceRotation { get; private set; }
 
-        [Preserve, InputControl(alias = "HMDCenterEyePosition")]
+		[Preserve, InputControl(alias = kDevice + kDeviceVelocity)]
+		public Vector3Control deviceVelocity { get; private set; }
+
+		[Preserve, InputControl(alias = kDevice + kDeviceAngularVelocity)]
+		public Vector3Control deviceAngularVelocity { get; private set; }
+
+		[Preserve, InputControl(alias = kDevice + kCenterEyePosition)]
         public new Vector3Control centerEyePosition { get; private set; }
 
-        [Preserve, InputControl(alias = "HMDCenterEyeRotation")]
+        [Preserve, InputControl(alias = kDevice + kCenterEyeRotation)]
         public new QuaternionControl centerEyeRotation { get; private set; }
 
-        /// <summary>
-        /// Internal call used to assign controls to the the correct element.
-        /// </summary>
-        protected override void FinishSetup()
+		[Preserve, InputControl(alias = kDevice + kBatteryLevel)]
+		public AxisControl batteryLevel { get; private set; }
+
+		[Preserve, InputControl(alias = kUserPresence)]
+		public ButtonControl userPresence { get; private set; }
+		/// <summary>
+		/// Internal call used to assign controls to the the correct element.
+		/// </summary>
+		protected override void FinishSetup()
         {
             sb.Clear().Append("FinishSetup() description deviceClass: ").Append(description.deviceClass)
                 .Append(", interfaceName: ").Append(description.interfaceName)
@@ -110,9 +146,13 @@ namespace Wave.XR
             isTracked = GetChildControl<ButtonControl>("isTracked");
             devicePosition = GetChildControl<Vector3Control>("devicePosition");
             deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
-            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+			deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+			deviceAngularVelocity = GetChildControl<Vector3Control>("deviceAngularVelocity");
+			centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
             centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
-        }
-    }
+			batteryLevel = GetChildControl<AxisControl>("batteryLevel");
+			userPresence = GetChildControl<ButtonControl>("userPresence");
+		}
+	}
 }
 #endif

@@ -979,6 +979,13 @@ namespace Wave.Native
 			return WVR_GetArucoMarkerData(markerId, out data);
 		}
 
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ClearTrackableMarkers", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ClearTrackableMarkers();
+		public override WVR_Result ClearTrackableMarkers()
+		{
+			return WVR_ClearTrackableMarkers();
+		}
+
 		#endregion
 
 		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetSupportedFeatures", CallingConvention = CallingConvention.Cdecl)]
