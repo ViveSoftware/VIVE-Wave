@@ -1,5 +1,6 @@
-using System.Runtime.InteropServices;
+using System;
 using System.Text;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Wave.XR.Function;
@@ -8,7 +9,7 @@ namespace Wave.XR
 {
     public sealed class WaveXRSpectatorCameraHandle : MonoBehaviour
     {
-        // These fields is used to control spectator in editor
+        // These fields are used to control spectator in editor
         public bool debugStartCamera = false;
         public bool debugRenderFrame = false;
         public int debugFPS = 30;
@@ -23,20 +24,25 @@ namespace Wave.XR
         private bool run = false; // camera is running or not
         private bool shouldRenderFrame = false; // should render the frame in current time
 
+        // For debug log printout
+        private readonly StringBuilder sb = new StringBuilder(300);
+
         // Unity component
         private Camera spectatorCamera;
         private GameObject spectatorCameraObject;
         private WaveXRSpectatorCamera spectatorCameraComponent;
-        private readonly StringBuilder sb = new StringBuilder(300);
 
-        // Texture
-        private System.IntPtr textureId;
-        private RenderTexture renderTexture;
+        // Related to spectator camera texture
+        private const int spectatorCameraDepth = 24;
+        private const int TotalRenderTextureCount = 3;
+        private RenderTexture[] renderTextureArray = new RenderTexture[TotalRenderTextureCount];
+        private int currentRenderTextureCount = -1;
+        private IntPtr textureId = IntPtr.Zero;
 
         // Override pose variables
         private bool hasOverridePose = false;
-        private Vector3 overridePosition;
-        private Quaternion overrideRotation;
+        private Vector3 overridePosition = Vector3.zero;
+        private Quaternion overrideRotation = Quaternion.identity;
 
         // Override fov variables
         private bool hasOverrideFov = false;
@@ -54,7 +60,7 @@ namespace Wave.XR
             // receiver
             (queue) =>
             {
-                //Debug.Log("RunInRenderThread");
+                // Debug.Log("RunInRenderThread");
                 System.IntPtr nativeTexId;
                 lock (queue)
                 {
@@ -70,20 +76,65 @@ namespace Wave.XR
             }
         );
 
-        // Callback function when spectator start/stop
+        /// <summary>
+        /// The callback function registration when the spectator camera is started.
+        /// </summary>
+        public delegate void OnSpectatorStartDelegate();
+
+        /// <summary>
+        /// The callback function registration when the spectator camera is stopped.
+        /// </summary>
+        public delegate void OnSpectatorStopDelegate();
+
+        /// <summary>
+        /// The callback function registration for private usage when the spectator camera is started.
+        /// </summary>
+        private delegate bool IsSpectatorStartedDelegate();
+
+        /// <summary>
+        /// The callback function registration when the spectator camera should render in this frame.
+        /// </summary>
+        private delegate bool ShouldSpectatorRenderFrameDelegate();
+
+        /// <summary>
+        /// The callback function registration for setting the spectator camera texture pointer.
+        /// </summary>
+        private delegate void SetSpectatorTextureDelegate(System.IntPtr ptr);
+
+        /// <summary>
+        /// The callback function registration for getting the render parameter of the spectator camera.
+        /// </summary>
+        private delegate bool GetSpectatorRenderParametersDelegate(
+            ref uint w,
+            ref uint h,
+            ref float l,
+            ref float r,
+            ref float t,
+            ref float b);
+
+        // Callback function when spectator start.
         public OnSpectatorStartDelegate OnSpectatorStart;
+
+        // Callback function when spectator stop.
         public OnSpectatorStopDelegate OnSpectatorStop;
 
+        // Callback function when spectator start.
         private static IsSpectatorStartedDelegate isSpectatorStarted;
+
+        // Callback function when spectator should render in this frame.
         private static ShouldSpectatorRenderFrameDelegate shouldSpectatorRenderFrame;
+
+        // Callback function for setting the spectator camera texture pointer.
         private static SetSpectatorTextureDelegate setSpectatorTexture;
+
+        // Callback function for getting the render parameter of the spectator camera.
         private static GetSpectatorRenderParametersDelegate getSpectatorRenderParameters;
 
         // Shader property
         private static readonly int MainTex = Shader.PropertyToID("_MainTex");
 
         #region Public function of spectator handler
-        
+
         /// <summary>
         /// Get the instance of WaveXRSpectatorCameraHandle
         /// </summary>
@@ -108,9 +159,9 @@ namespace Wave.XR
         /// </summary>
         public void OnCameraPostRender()
         {
-            if (textureId == System.IntPtr.Zero && renderTexture != null)
+            if (renderTextureArray[currentRenderTextureCount] != null)
             {
-                textureId = renderTexture.GetNativeTexturePtr();
+                textureId = renderTextureArray[currentRenderTextureCount].GetNativeTexturePtr();
             }
 
             SubmitInRenderThread();
@@ -171,7 +222,7 @@ namespace Wave.XR
         {
             hasOverrideCullingMask = false;
         }
-        
+
         #endregion Public function of spectator handler
 
         #region Private function of spectator handler internal usage in its lifecycle
@@ -192,16 +243,31 @@ namespace Wave.XR
             }
         }
 
-        private void DestroyRenderTexture()
+        private void ReleaseAllRenderTexture()
         {
-            if (renderTexture != null)
+            textureId = IntPtr.Zero;
+            
+            for (int i = 0; i < renderTextureArray.Length; i++)
             {
-                renderTexture.Release();
-                Destroy(renderTexture, 0.5f);
-                renderTexture = null;
+                if (renderTextureArray[i] == null)
+                {
+                    continue;
+                }
+                
+                renderTextureArray[i].Release();
+                Destroy(renderTextureArray[i], .5f);
+                renderTextureArray[i] = null;
             }
+        }
 
-            textureId = System.IntPtr.Zero;
+        private void ReleaseCurrentRenderTexture()
+        {
+            textureId = IntPtr.Zero;
+            
+            if (currentRenderTextureCount > 0 && renderTextureArray[currentRenderTextureCount] != null)
+            {
+                renderTextureArray[currentRenderTextureCount].Release();
+            }
         }
 
         private void DestroyCamera()
@@ -220,7 +286,7 @@ namespace Wave.XR
 
         private void ReleaseResource()
         {
-            DestroyRenderTexture();
+            ReleaseAllRenderTexture();
             DestroyCamera();
             if (debugMaterial)
             {
@@ -257,31 +323,50 @@ namespace Wave.XR
         // Called when parameters are validate.
         private void CheckTexture()
         {
-            var rp = renderParameters;
-            if (renderTexture != null)
+            currentRenderTextureCount++;
+            if (currentRenderTextureCount >= 3)
             {
-                bool changed = renderTexture.width != (int)rp.RenderParametersNative.width ||
-                               renderTexture.height != (int)rp.RenderParametersNative.height;
+                currentRenderTextureCount = 0;
+            }
+
+            var rp = renderParameters;
+            if (renderTextureArray[currentRenderTextureCount] != null)
+            {
+                bool changed =
+                    renderTextureArray[currentRenderTextureCount].width != (int)rp.RenderParametersNative.width ||
+                    renderTextureArray[currentRenderTextureCount].height != (int)rp.RenderParametersNative.height;
                 if (changed)
                 {
-                    DestroyRenderTexture();
+                    ReleaseCurrentRenderTexture();
                 }
             }
 
-            if (renderTexture == null)
+            if (renderTextureArray[currentRenderTextureCount] == null)
             {
-                renderTexture = new RenderTexture((int)rp.RenderParametersNative.width,
-                    (int)rp.RenderParametersNative.height, 32);
+                renderTextureArray[currentRenderTextureCount] = new RenderTexture
+                (
+                    (int)rp.RenderParametersNative.width,
+                    (int)rp.RenderParametersNative.height,
+                    spectatorCameraDepth,
+                    RenderTextureFormat.Default
+                );
             }
 
-            if (!renderTexture.IsCreated())
+            if (!renderTextureArray[currentRenderTextureCount].IsCreated())
             {
-                textureId = System.IntPtr.Zero;
-                renderTexture.Create();
-                if (debugMaterial)
-                {
-                    debugMaterial.SetTexture(MainTex, renderTexture);
-                }
+                // Re-init before create
+                renderTextureArray[currentRenderTextureCount].width = (int)rp.RenderParametersNative.width;
+                renderTextureArray[currentRenderTextureCount].height = (int)rp.RenderParametersNative.height;
+                renderTextureArray[currentRenderTextureCount].depth = spectatorCameraDepth;
+                renderTextureArray[currentRenderTextureCount].format = RenderTextureFormat.Default;
+                
+                // Create
+                renderTextureArray[currentRenderTextureCount].Create();
+            }
+            
+            if (debugMaterial)
+            {
+                debugMaterial.SetTexture(MainTex, renderTextureArray[currentRenderTextureCount]);
             }
         }
 
@@ -297,6 +382,7 @@ namespace Wave.XR
                     ReleaseResource();
                     return;
                 }
+
                 if (debugRenderFrame)
                 {
                     debugAccTime += Time.unscaledDeltaTime;
@@ -341,7 +427,7 @@ namespace Wave.XR
                 }
                 catch
                 {
-                    // ignored
+                    // Ignored
                 }
 
                 shouldRenderFrame = false;
@@ -349,7 +435,7 @@ namespace Wave.XR
 
             if (changedST && !run)
             {
-                // state change to stop
+                // State change to stop
                 ReleaseResource();
             }
 
@@ -413,19 +499,16 @@ namespace Wave.XR
                 spectatorCameraTransform.position = overridePosition;
                 spectatorCameraTransform.rotation = overrideRotation;
             }
-            else
+            else if (main != null)
             {
-                if (!(main is null))
-                {
-                    var mainCameraTransform = main.transform;
-                    var spectatorCameraTransform = spectatorCamera.transform;
+                var mainCameraTransform = main.transform;
+                var spectatorCameraTransform = spectatorCamera.transform;
 
-                    spectatorCameraTransform.position = mainCameraTransform.position;
-                    spectatorCameraTransform.rotation = mainCameraTransform.rotation;
-                }
+                spectatorCameraTransform.position = mainCameraTransform.position;
+                spectatorCameraTransform.rotation = mainCameraTransform.rotation;
             }
 
-            if (!(main is null))
+            if (main != null)
             {
                 spectatorCamera.farClipPlane = main.farClipPlane;
                 spectatorCamera.nearClipPlane = main.nearClipPlane;
@@ -434,7 +517,7 @@ namespace Wave.XR
                 spectatorCamera.clearFlags = main.clearFlags;
                 spectatorCamera.depth =
                     main.depth +
-                    99; // No matter what depth we set, the mono camera always run before stereo camera. See Profiler to check.
+                    1; // No matter what depth we set, the mono camera always run before stereo camera. See Profiler to check.
                 spectatorCamera.depthTextureMode = main.depthTextureMode;
                 spectatorCamera.useOcclusionCulling = main.useOcclusionCulling;
                 spectatorCamera.cullingMask = hasOverrideCullingMask ? overrideCullingMask : main.cullingMask;
@@ -504,7 +587,7 @@ namespace Wave.XR
                     spectatorCamera.projectionMatrix = renderParameters.Proj;
                 }
 
-                spectatorCamera.targetTexture = renderTexture;
+                spectatorCamera.targetTexture = renderTextureArray[currentRenderTextureCount];
                 spectatorCamera.enabled = true;
             }
         }
@@ -592,38 +675,6 @@ namespace Wave.XR
         #endregion Render thread submit
 
         #endregion Private function of spectator handler internal usage in its lifecycle
-        
-        #region Public callback function
-        
-        /// <summary>
-        /// The callback function registration when the spectator camera is started.
-        /// </summary>
-        public delegate void OnSpectatorStartDelegate();
-
-        /// <summary>
-        /// The callback function registration when the spectator camera is stopped.
-        /// </summary>
-        public delegate void OnSpectatorStopDelegate();
-        
-        #endregion Public callback function
-
-        #region Callback function for internal usage of spectator handler
-        
-        private delegate bool IsSpectatorStartedDelegate();
-
-        private delegate bool ShouldSpectatorRenderFrameDelegate();
-
-        private delegate void SetSpectatorTextureDelegate(System.IntPtr ptr);
-
-        private delegate bool GetSpectatorRenderParametersDelegate(
-            ref uint w,
-            ref uint h,
-            ref float l,
-            ref float r,
-            ref float t,
-            ref float b);
-
-        #endregion Callback function for internal usage of spectator handler
 
         #region Unity Lifecycle functions
 
@@ -638,7 +689,6 @@ namespace Wave.XR
             ReleaseResource();
         }
 
-        // Update is called once per frame
         private void Update()
         {
             CheckStatus();

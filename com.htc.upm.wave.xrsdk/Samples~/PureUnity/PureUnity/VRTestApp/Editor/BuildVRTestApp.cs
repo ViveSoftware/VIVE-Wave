@@ -87,7 +87,7 @@ namespace Wave.Generic.Sample.Editor
 			PlayerSettings.bundleVersion = "2.0.0";
 			PlayerSettings.companyName = "HTC Corp.";
 			PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
-			PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel22;
+			PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
 		}
 
 		private static void GeneralSettingsForWindows()
@@ -637,7 +637,7 @@ namespace Wave.Generic.Sample.Editor
 				PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 			}
 
-			PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
+			PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
 #if UNITY_2022_1_OR_NEWER
 			PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
 #else

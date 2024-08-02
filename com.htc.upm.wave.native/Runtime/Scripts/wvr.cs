@@ -1220,7 +1220,18 @@ namespace Wave.Native
 		WVR_Error_LipExpression_FeatureNotRequested = 303, /**< The AndroidManifest.xml of this VR App does not request lip expression feature.*/
 		WVR_Error_EyeExpression_FeatureNotRequested = 304, /**< The AndroidManifest.xml of this VR App does not request eye expression feature.*/
 
-		WVR_Error_Data_Invalid = 400   /**< Data is invalid or unavailabe at this moment, ex., visual occlusion. */
+		WVR_Error_Data_Invalid				= 400,   /**< Data is invalid or unavailabe at this moment, ex., visual occlusion. */
+		WVR_Error_PermissionNotGranted		= 401,
+
+		WVR_Error_Anchor_NameDuplicated		= 500,
+		WVR_Error_Anchor_AnchorDuplicated	= 501,
+		WVR_Error_Anchor_LimitReached		= 502,
+		WVR_Error_Anchor_FileExisted		= 503,
+		WVR_Error_Anchor_NotReady			= 504,
+
+		WVR_Error_Body_Tracking_Unknown		= 600,
+		WVR_Error_Body_Tracking_Not_Ready	= 601,
+		WVR_Error_Body_Tracking_Init_Fail	= 602,
 	}
 
 
@@ -2103,60 +2114,542 @@ namespace Wave.Native
 	#endregion
 
 	#region Body Tracking
-	public enum WVR_BodyTrackingType : UInt32
+#if WAVE_BODY_CALIBRATION
+	public enum WVR_BodyTrackingDeviceRole : Int32
 	{
-		WVR_BodyTrackingType_Invalid = 0,
-		WVR_BodyTrackingType_HMD = 1,
-		WVR_BodyTrackingType_Controller = 2,
-		WVR_BodyTrackingType_Hand = 3,
-		WVR_BodyTrackingType_WristTracker = 4,
-		WVR_BodyTrackingType_ViveSelfTracker = 5,
-		WVR_BodyTrackingType_ViveSelfTrackerIM = 6,
-	}
+		WVR_BodyTrackingDeviceRole_Invalid = -1,
 
-	public enum WVR_TrackedDeviceRole : Int32
+		WVR_BodyTrackingDeviceRole_Hip = 0,
+		WVR_BodyTrackingDeviceRole_Chest = 1,
+		WVR_BodyTrackingDeviceRole_Head = 2,
+
+		WVR_BodyTrackingDeviceRole_LeftElbow = 3,
+		WVR_BodyTrackingDeviceRole_LeftWrist = 4,
+		WVR_BodyTrackingDeviceRole_LeftHand = 5,
+		WVR_BodyTrackingDeviceRole_LeftHandheld = 6,
+
+		WVR_BodyTrackingDeviceRole_RightElbow = 7,
+		WVR_BodyTrackingDeviceRole_RightWrist = 8,
+		WVR_BodyTrackingDeviceRole_RightHand = 9,
+		WVR_BodyTrackingDeviceRole_RightHandheld = 10,
+
+		WVR_BodyTrackingDeviceRole_LeftKnee = 11,
+		WVR_BodyTrackingDeviceRole_LeftAnkle = 12,
+		WVR_BodyTrackingDeviceRole_LeftFoot = 13,
+
+		WVR_BodyTrackingDeviceRole_RightKnee = 14,
+		WVR_BodyTrackingDeviceRole_RightAnkle = 15,
+		WVR_BodyTrackingDeviceRole_RightFoot = 16,
+
+		WVR_BodyTrackingDeviceRole_Max,
+	};
+	public enum WVR_BodyTrackingCalibrationMode : Int32
 	{
-		WVR_TrackedDeviceRole_Invalid = -1,
+		WVR_BodyTrackingCalibrationMode_Unknown = -1,
+		WVR_BodyTrackingCalibrationMode_ArmIK = 0,
+		WVR_BodyTrackingCalibrationMode_UpperBodyIK = 1,
+		WVR_BodyTrackingCalibrationMode_FullBodyIK = 2,
+		WVR_BodyTrackingCalibrationMode_UpperIKAndLegFK = 3,
+		WVR_BodyTrackingCalibrationMode_SpineIK = 4,
+		WVR_BodyTrackingCalibrationMode_LegIK = 5,
+		WVR_BodyTrackingCalibrationMode_LegFK = 6,
+		WVR_BodyTrackingCalibrationMode_SpineIKAndLegFK = 7,
+		WVR_BodyTrackingCalibrationMode_Max = 8,
+	};
+	[Flags]
+	public enum WVR_BodyTrackingPoseState : UInt32
+	{
+		WVR_BodyTrackingPoseState_NoData = 0,
+		WVR_BodyTrackingPoseState_Rotation = 1 << 0,
+		WVR_BodyTrackingPoseState_Position = 1 << 1
+	};
 
-		WVR_TrackedDeviceRole_Hip = 0,
-		WVR_TrackedDeviceRole_Chest = 1,
-		WVR_TrackedDeviceRole_Head = 2,
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyTracking_Extrinsic_t // size=28
+	{
+		[FieldOffset(0)] public WVR_Vector3f_t position;
+		[FieldOffset(12)] public WVR_Quatf_t rotation;
 
-		WVR_TrackedDeviceRole_LeftElbow = 3,
-		WVR_TrackedDeviceRole_LeftWrist = 4,
-		WVR_TrackedDeviceRole_LeftHand = 5,
-		WVR_TrackedDeviceRole_LeftHandheld = 6,
+		public WVR_BodyTracking_Extrinsic_t(WVR_Vector3f_t in_pos, WVR_Quatf_t in_rot)
+		{
+			position = in_pos;
+			rotation = in_rot;
+		}
+		public WVR_BodyTracking_Extrinsic_t(WVR_Pose_t in_pose)
+		{
+			position = in_pose.position;
+			rotation = in_pose.rotation;
+		}
+		public static WVR_BodyTracking_Extrinsic_t identity {
+			get {
+				return new WVR_BodyTracking_Extrinsic_t(WVR_Vector3f_t.Zero, WVR_Quatf_t.Identity);
+			}
+		}
+		public void Update(WVR_BodyTracking_Extrinsic_t in_ext)
+		{
+			position = in_ext.position;
+			rotation = in_ext.rotation;
+		}
+		public void Update(WVR_Vector3f_t in_pos, WVR_Quatf_t in_rot)
+		{
+			position = in_pos;
+			rotation = in_rot;
+		}
 
-		WVR_TrackedDeviceRole_RightElbow = 7,
-		WVR_TrackedDeviceRole_RightWrist = 8,
-		WVR_TrackedDeviceRole_RightHand = 9,
-		WVR_TrackedDeviceRole_RightHandheld = 10,
+		public string log()
+		{
+			string msg = "position (" + position.v0.ToString("N3") + ", " + position.v1.ToString("N3") + ", " + position.v2.ToString("N3") + ")"
+				+ ", rotation (" + rotation.x.ToString("N3") + ", " + rotation.y.ToString("N3") + ", " + rotation.z.ToString("N3") + ", " + rotation.w.ToString("N3") + ")";
 
-		WVR_TrackedDeviceRole_LeftKnee = 11,
-		WVR_TrackedDeviceRole_LeftAnkle = 12,
-		WVR_TrackedDeviceRole_LeftFoot = 13,
-
-		WVR_TrackedDeviceRole_RightKnee = 14,
-		WVR_TrackedDeviceRole_RightAnkle = 15,
-		WVR_TrackedDeviceRole_RightFoot = 16,
-
-		WVR_TrackedDeviceRole_Max,
+			return msg;
+		}
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct WVR_BodyTrackingExtrinsic
+	public struct WVR_BodyTracking_Pose_t // size=68
 	{
-		[FieldOffset(0)] public WVR_TrackedDeviceRole role;
-		[FieldOffset(4)] public WVR_BodyTrackingType deviceType;
-		[FieldOffset(8)] public WVR_Pose_t pose;
+		[FieldOffset(0)] public WVR_BodyTrackingPoseState poseState;
+		[FieldOffset(4)] public WVR_Vector3f_t position;
+		[FieldOffset(16)] public WVR_Vector3f_t velocity;
+		[FieldOffset(28)] public WVR_Vector3f_t angularVelocity;
+		[FieldOffset(40)] public WVR_Vector3f_t acceleration;
+		[FieldOffset(52)] public WVR_Quatf_t rotation;
 
-		public WVR_BodyTrackingExtrinsic(WVR_TrackedDeviceRole in_role, WVR_BodyTrackingType in_type, WVR_Pose_t in_pose)
+		public WVR_BodyTracking_Pose_t(WVR_BodyTrackingPoseState in_state, WVR_Vector3f_t in_pos, WVR_Vector3f_t in_vel, WVR_Vector3f_t in_aVel, WVR_Vector3f_t in_acc, WVR_Quatf_t in_rot)
 		{
-			role = in_role;
-			deviceType = in_type;
-			pose = in_pose;
+			poseState = in_state;
+			position = in_pos;
+			velocity = in_vel;
+			angularVelocity = in_aVel;
+			acceleration = in_acc;
+			rotation = in_rot;
+		}
+		public static WVR_BodyTracking_Pose_t identity {
+			get {
+				return new WVR_BodyTracking_Pose_t(
+					WVR_BodyTrackingPoseState.WVR_BodyTrackingPoseState_NoData,
+					WVR_Vector3f_t.Zero,
+					WVR_Vector3f_t.Zero,
+					WVR_Vector3f_t.Zero,
+					WVR_Vector3f_t.Zero,
+					WVR_Quatf_t.Identity);
+			}
+		}
+		public void Update(WVR_BodyTracking_Pose_t in_pose)
+		{
+			poseState = in_pose.poseState;
+			position = in_pose.position;
+			velocity = in_pose.velocity;
+			angularVelocity = in_pose.angularVelocity;
+			acceleration = in_pose.acceleration;
+			rotation = in_pose.rotation;
+		}
+		public void Update(WVR_BodyTrackingPoseState in_state, WVR_Vector3f_t in_pos, WVR_Vector3f_t in_vel, WVR_Vector3f_t in_aVel, WVR_Vector3f_t in_acc, WVR_Quatf_t in_rot)
+		{
+			poseState = in_state;
+			position = in_pos;
+			velocity = in_vel;
+			angularVelocity = in_aVel;
+			acceleration = in_acc;
+			rotation = in_rot;
+		}
+
+		public string log()
+		{
+			string msg = "poseState: " + poseState
+				+ ", position (" + position.v0.ToString("N3") + ", " + position.v1.ToString("N3") + ", " + position.v2.ToString("N3") + ")"
+				+ ", rotation (" + rotation.x.ToString("N3") + ", " + rotation.y.ToString("N3") + ", " + rotation.z.ToString("N3") + ", " + rotation.w.ToString("N3") + ")"
+				+ ", velocity (" + velocity.v0.ToString("N3") + ", " + velocity.v1.ToString("N3") + ", " + velocity.v2.ToString("N3") + ")"
+				+ ", acceleration (" + acceleration.v0.ToString("N3") + ", " + acceleration.v1.ToString("N3") + ", " + acceleration.v2.ToString("N3") + ")"
+				+ ", angularVelocity (" + angularVelocity.v0.ToString("N3") + ", " + angularVelocity.v1.ToString("N3") + ", " + angularVelocity.v2.ToString("N3") + ")";
+
+			return msg;
 		}
 	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyTracking_DeviceInfo_t
+	{
+		[FieldOffset(0)] public WVR_DeviceType type;
+		[FieldOffset(4)] public Int32 trackerId;
+		[FieldOffset(8)] public WVR_BodyTrackingDeviceRole role;
+		[FieldOffset(12)] public WVR_BodyTracking_Extrinsic_t extrinsic;
+		[FieldOffset(40)] public WVR_BodyTracking_Pose_t standardPose;
+
+		public WVR_BodyTracking_DeviceInfo_t(WVR_DeviceType in_type, Int32 in_id, WVR_BodyTrackingDeviceRole in_role, WVR_BodyTracking_Extrinsic_t in_ext, WVR_BodyTracking_Pose_t in_pose)
+		{
+			type = in_type;
+			trackerId = in_id;
+			role = in_role;
+			extrinsic = in_ext;
+			standardPose = in_pose;
+		}
+		public static WVR_BodyTracking_DeviceInfo_t identity {
+			get {
+				return new WVR_BodyTracking_DeviceInfo_t(
+					WVR_DeviceType.WVR_DeviceType_Invalid,
+					-1,
+					WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Invalid,
+					WVR_BodyTracking_Extrinsic_t.identity,
+					WVR_BodyTracking_Pose_t.identity
+				);
+			}
+		}
+		public void Update(WVR_BodyTracking_DeviceInfo_t in_info)
+		{
+			type = in_info.type;
+			trackerId = in_info.trackerId;
+			role = in_info.role;
+			extrinsic.Update(in_info.extrinsic);
+			standardPose.Update(in_info.standardPose);
+		}
+		public void Update(WVR_DeviceType in_type, Int32 in_id, WVR_BodyTrackingDeviceRole in_role, WVR_BodyTracking_Extrinsic_t in_ext, WVR_BodyTracking_Pose_t in_pose)
+		{
+			type = in_type;
+			trackerId = in_id;
+			role = in_role;
+			extrinsic.Update(in_ext);
+			standardPose.Update(in_pose);
+		}
+
+		public string log()
+		{
+			string msg = "type: " + type.Name() + ", trackerId: " + trackerId + ", role: " + role
+				+ "\nextrinsic " + extrinsic.log()
+				+ "\nstandardPose " + standardPose.log();
+
+			return msg;
+		}
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyTracking_RedirectExtrinsic_t
+	{
+		[FieldOffset(0)] public WVR_BodyTrackingDeviceRole role;
+		[FieldOffset(4)] public WVR_Quatf_t rotation;
+
+		public WVR_BodyTracking_RedirectExtrinsic_t(WVR_BodyTrackingDeviceRole in_role, WVR_Quatf_t in_rot)
+		{
+			role = in_role;
+			rotation = in_rot;
+		}
+		public static WVR_BodyTracking_RedirectExtrinsic_t identity {
+			get {
+				return new WVR_BodyTracking_RedirectExtrinsic_t(WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Invalid, WVR_Quatf_t.Identity);
+			}
+		}
+		public void Update(WVR_BodyTracking_RedirectExtrinsic_t in_ext)
+		{
+			role = in_ext.role;
+			rotation = in_ext.rotation;
+		}
+		public void Update(WVR_BodyTrackingDeviceRole in_role, WVR_Quatf_t in_rot)
+		{
+			role = in_role;
+			rotation = in_rot;
+		}
+
+		public string log()
+		{
+			string msg = "role: " + role
+				+ ", rotation (" + rotation.x.ToString("N3") + ", " + rotation.y.ToString("N3") + ", " + rotation.z.ToString("N3") + ", " + rotation.w.ToString("N3") + ")";
+
+			return msg;
+		}
+	}
+#endif
+
+#if WAVE_BODY_IK
+	/**
+	 * @brief Flags used to idenfity if the IK data is valid.
+	 * @version API Level X
+	 **/
+	public enum WVR_BodyIKFlag : UInt64
+	{
+		/// <summary> Indicates that the pose field’s orientation field contains valid data. </summary>
+		WVR_ORIENTATION_VALID_BIT = 0x00000001,
+		/// <summary> Indicates that the pose field’s position field contains valid data.  </summary>
+		WVR_POSITION_VALID_BIT = 0x00000002,
+		/// <summary> Indicates that the pose field’s linear velocity field contains valid data. </summary>
+		WVR_VELOCITY_LINEAR_VALID_BIT = 0x00000001,
+		/// <summary> Indicates that the pose field’s angular velocity field contains valid data. </summary>
+		WVR_VELOCITY_ANGULAR_VALID_BIT = 0x00000002,
+	}
+	/**
+	 * @brief The conventions of body joints
+	 * @version API Level X
+	 */
+	public enum WVR_BodyJoint : UInt32
+	{
+		WVR_BodyJoint_Hip = 0, /**< Hip */
+		WVR_BodyJoint_Left_Thigh = 1,
+		WVR_BodyJoint_Left_Leg = 2, /**< Knee */
+		WVR_BodyJoint_Left_Ankle = 3, /**< Ankle */
+		WVR_BodyJoint_Left_Foot = 4, /**< Toot */
+		WVR_BodyJoint_Right_Thigh = 5,
+		WVR_BodyJoint_Right_Leg = 6, /**< Knee */
+		WVR_BodyJoint_Right_Ankle = 7, /**< Ankle */
+		WVR_BodyJoint_Right_Foot = 8, /**< Toot */
+		WVR_BodyJoint_Waist = 9, /**< ????? UI no this */
+		WVR_BodyJoint_Spine_Lower = 10,
+		WVR_BodyJoint_Spine_Middle = 11,
+		WVR_BodyJoint_Spine_High = 12,
+		WVR_BodyJoint_Chest = 13, /**< Chest */
+		WVR_BodyJoint_Neck = 14,
+		WVR_BodyJoint_Head = 15, /**< Head */
+		WVR_BodyJoint_Left_Clavicle = 16,
+		WVR_BodyJoint_Left_Scapula = 17,
+		WVR_BodyJoint_Left_Upper_Arm = 18,
+		WVR_BodyJoint_Left_Forearm = 19, /**< Elbow */
+		WVR_BodyJoint_Left_Hand = 20, /**< Hand */
+		WVR_BodyJoint_Right_Clavicle = 21,
+		WVR_BodyJoint_Right_Scapula = 22,
+		WVR_BodyJoint_Right_Upper_Arm = 23,
+		WVR_BodyJoint_Right_Forearm = 24, /**< Elbow */
+		WVR_BodyJoint_Right_Hand = 25, /**< Hand */
+		/**< Handheld */
+		/**< Wrist */
+		WVR_BodyJoint_Count = 26,
+		WVR_BodyJoint_Max_Enum = 0x7fffffff
+	}
+
+	/**
+	 * @brief Handles are opaque identifiers for objects. It is with 64 bit pointers.
+	 * @version API Level X
+	 **/
+	public struct WVR_BodyTracker : IEquatable<UInt64>
+	{
+		private readonly UInt64 value;
+
+		public WVR_BodyTracker(UInt64 u)
+		{
+			value = u;
+		}
+
+		public static implicit operator UInt64(WVR_BodyTracker equatable)
+		{
+			return equatable.value;
+		}
+		public static implicit operator WVR_BodyTracker(UInt64 u)
+		{
+			return new WVR_BodyTracker(u);
+		}
+
+		public bool Equals(WVR_BodyTracker other) { return value == other.value; }
+		public bool Equals(UInt64 other) { return value == other; }
+		public override bool Equals(object obj) { return obj is WVR_BodyTracker && Equals((WVR_BodyTracker)obj); }
+
+		public override int GetHashCode() { return value.GetHashCode(); }
+		public override string ToString() { return value.ToString(); }
+
+		public static bool operator ==(WVR_BodyTracker a, WVR_BodyTracker b) { return a.Equals(b); }
+		public static bool operator !=(WVR_BodyTracker a, WVR_BodyTracker b) { return !a.Equals(b); }
+		public static bool operator >=(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value >= b.value; }
+		public static bool operator <=(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value <= b.value; }
+		public static bool operator >(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value > b.value; }
+		public static bool operator <(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value < b.value; }
+		public static WVR_BodyTracker operator +(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value + b.value; }
+		public static WVR_BodyTracker operator -(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value - b.value; }
+		public static WVR_BodyTracker operator *(WVR_BodyTracker a, WVR_BodyTracker b) { return a.value * b.value; }
+		public static WVR_BodyTracker operator /(WVR_BodyTracker a, WVR_BodyTracker b)
+		{
+			if (b.value == 0)
+			{
+				throw new DivideByZeroException();
+			}
+			return a.value / b.value;
+		}
+
+	}
+
+	/**
+	 * @brief The data structure of body location pose.
+	 * @version API Level X
+	 **/
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyLocationPose_t // size=36
+	{
+		[FieldOffset(0)] public UInt64 locationFlags;		/**< The locationFlags is a bitfield. */
+		[FieldOffset(8)] public WVR_Vector3f_t position;	/**< Position (x, y, z) part of Pose (refer to @ref WVR_Vector3f). */
+		[FieldOffset(20)] public WVR_Quatf_t orientation;	/**< Rotation (quaternion form: w, x, y, z) part of Pose (refer to @ref WVR_Quatf). */
+
+		public WVR_BodyLocationPose_t(UInt64 in_flags, WVR_Vector3f_t in_pos, WVR_Quatf_t in_rot)
+		{
+			locationFlags = in_flags;
+			position = in_pos;
+			orientation = in_rot;
+		}
+		public static WVR_BodyLocationPose_t identity {
+			get {
+				return new WVR_BodyLocationPose_t(0, WVR_Vector3f_t.Zero, WVR_Quatf_t.Identity);
+			}
+		}
+		public void Update(WVR_BodyLocationPose_t in_pose)
+		{
+			locationFlags = in_pose.locationFlags;
+			position = in_pose.position;
+			orientation = in_pose.orientation;
+		}
+	}
+
+	/**
+	 * @brief The data structure of body velocity pose.
+	 * @version API Level X
+	 **/
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyVelocityPose_t // size=32
+	{
+		[FieldOffset(0)] public UInt64 velocityFlags;			/**< The velocityFlags is a bitfield. */
+		[FieldOffset(8)] public WVR_Vector3f_t linearVelocity;	/**< The velocity of pose  (refer to @ref WVR_Vector3f). */
+		[FieldOffset(20)] public WVR_Vector3f_t angularVelocity;/**< The angular velocity of pose. */
+
+		public void Update(WVR_BodyVelocityPose_t in_pose)
+		{
+			velocityFlags = in_pose.velocityFlags;
+			linearVelocity = in_pose.linearVelocity;
+			angularVelocity = in_pose.angularVelocity;
+		}
+	}
+
+	/**
+	 * @brief The data structure of body joint pose.
+	 * @version API Level X
+	 **/
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyJointPose_t // size=36+32=68
+	{
+		[FieldOffset(0)] public WVR_BodyLocationPose_t location;     /**< The location of pose. */
+		[FieldOffset(36)] public WVR_BodyVelocityPose_t velocity;    /**< The velocity of pose. */
+
+		public void Update(WVR_BodyJointPose_t in_pose)
+		{
+			location.Update(in_pose.location);
+			velocity.Update(in_pose.velocity);
+		}
+	}
+
+	/**
+	 * @brief The body avatar create information
+	 */
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_AvatarData_t
+	{
+		public float height;                    /**< The avatar's height */
+		public WVR_PoseOriginModel originType;  /**< The avatar's joints origin */
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 26)]
+		public WVR_BodyLocationPose_t[] joints;//WVR_BodyLocationPose_t joints[WVR_BodyJoint_Count];
+		private void UpdateJoints(WVR_BodyLocationPose_t[] in_joints)
+		{
+			if (in_joints != null)
+			{
+				if (joints == null || joints.Length != in_joints.Length) { joints = new WVR_BodyLocationPose_t[in_joints.Length]; }
+				for (int i = 0; i < joints.Length; i++)
+					joints[i].Update(in_joints[i]);
+			}
+			else
+			{
+				joints = null;
+			}
+		}
+
+		public WVR_AvatarData_t(float in_height, WVR_PoseOriginModel in_origin, WVR_BodyLocationPose_t[] in_joints)
+		{
+			height = in_height;
+			originType = in_origin;
+			joints = in_joints;
+		}
+		public static WVR_AvatarData_t identity {
+			get {
+				return new WVR_AvatarData_t(0, WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnGround,
+					new WVR_BodyLocationPose_t[26] // WVR_BodyJoint.WVR_BodyJoint_Count
+					{
+						WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity,
+						WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity,
+						WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity,
+						WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity,
+						WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity, WVR_BodyLocationPose_t.identity,
+						WVR_BodyLocationPose_t.identity
+					}
+				);
+			}
+		}
+		public void Update(WVR_AvatarData_t in_avatar)
+		{
+			height = in_avatar.height;
+			originType = in_avatar.originType;
+			UpdateJoints(in_avatar.joints);
+		}
+	}
+
+	/**
+	 * @brief The body avatar create information
+	 **/
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_BodyCreateInfo_t
+	{
+		public WVR_AvatarData_t avatarData;    /**< The avatar's create info */
+
+		public WVR_BodyCreateInfo_t(WVR_AvatarData_t in_avatar)
+		{
+			avatarData = in_avatar;
+		}
+		public static WVR_BodyCreateInfo_t identity {
+			get {
+				return new WVR_BodyCreateInfo_t(WVR_AvatarData_t.identity);
+			}
+		}
+		public void Update(WVR_BodyCreateInfo_t in_info)
+		{
+			avatarData.Update(in_info.avatarData);
+		}
+	}
+
+	/**
+	 * @brief The data structure of body.
+	 * @version API Level X
+	 **/
+	[StructLayout(LayoutKind.Sequential)]
+	public struct WVR_BodyJointData_t
+	{
+		public UInt64 timestamp; /**< Absolute time (in nanosecond) of pose. */
+		public float confidence; /**< The body confidence value. */
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 26)] // size = WVR_BodyJoint_Count
+		public WVR_BodyJointPose_t[] joints;
+
+		public WVR_BodyJointData_t(UInt64 in_timestamp, float in_confidence, WVR_BodyJointPose_t[] in_joints)
+		{
+			timestamp = in_timestamp;
+			confidence = in_confidence;
+			joints = in_joints;
+		}
+		public static WVR_BodyJointData_t identity {
+			get {
+				return new WVR_BodyJointData_t(0, 0, new WVR_BodyJointPose_t[(UInt32)WVR_BodyJoint.WVR_BodyJoint_Count]);
+			}
+		}
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct WVR_BodyProperties_t
+	{
+		[FieldOffset(0)] public float scale;
+
+		public WVR_BodyProperties_t(float in_scale)
+		{
+			scale = in_scale;
+		}
+		public static WVR_BodyProperties_t identity {
+			get {
+				return new WVR_BodyProperties_t(1.6f);
+			}
+		}
+
+		public void Update(WVR_BodyProperties_t in_prop)
+		{
+			scale = in_prop.scale;
+		}
+	}
+#endif
 	#endregion
 
 	public enum WVR_SupportedFeature {
@@ -2890,33 +3383,108 @@ namespace Wave.Native
 		#endregion
 
 		#region Body Tracking
-		public static UInt32 WVR_GetBodyTrackingStandardPoseSize()
+#if WAVE_BODY_CALIBRATION
+		public static UInt32 WVR_GetBodyTrackingRedirectExtrinsicCount()
 		{
-			return WVR_Base.Instance.GetBodyTrackingStandardPoseSize();
+			return WVR_Base.Instance.GetBodyTrackingRedirectExtrinsicCount();
 		}
-		public static bool WVR_GetBodyTrackingStandardPoseInfo([In, Out] WVR_BodyTrackingType[] types, [In, Out] UInt32[] counts)
+		public static UInt32 WVR_GetBodyTrackingDeviceCount()
 		{
-			return WVR_Base.Instance.GetBodyTrackingStandardPoseInfo(types, counts);
+			return WVR_Base.Instance.GetBodyTrackingDeviceCount();
 		}
-		public static bool WVR_GetBodyTrackingStandardPose(WVR_BodyTrackingType type, [In, Out] UInt32[] ids, [In, Out] WVR_Pose_t[] poses)
+		public static WVR_Result WVR_GetBodyTrackingDeviceInfo(
+			ref float userHeight,
+			ref WVR_BodyTrackingCalibrationMode mode,
+			[In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount,
+			[In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount)
 		{
-			return WVR_Base.Instance.GetBodyTrackingStandardPose(type, ids, poses);
+			return WVR_Base.Instance.GetBodyTrackingDeviceInfo(ref userHeight, ref mode, devices, ref deviceCount, redirectExtrinsics, ref redirectCount);
 		}
+		public static UInt32 WVR_GetActiveDeviceExtrinsicCount()
+		{
+			return WVR_Base.Instance.GetActiveDeviceExtrinsicCount();
+		}
+		public static WVR_Result WVR_GetActiveDeviceExtrinsics([In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 count)
+		{
+			return WVR_Base.Instance.GetActiveDeviceExtrinsics(devices, ref count);
+		}
+		public static WVR_Result WVR_ApplyCalibrationData(
+			float userHeight,
+			[In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount,
+			WVR_BodyTrackingCalibrationMode mode,
+			[In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount)
+		{
+			return WVR_Base.Instance.ApplyCalibrationData(userHeight, devices, deviceCount, mode, redirectExtrinsics, redirectCount);
+		}
+#endif
+#if WAVE_BODY_IK
+		/**
+		 * @brief Use this function to create body tracker.
+		 *
+		 * Use this API to creat body tracker handle.
+		 * This API must be called by main thread.
+		 *
+		 * @param info of @ref WVR_BodyCreateInfo_t.
+		 * @param bodyTracker is the returned WVR_BodyTracker handle.
+		 * @retval WVR_Success Create WVR_BodyTracker successfully.
+		 * @retval Others @ref WVR_Result mean failure.
+		 * @version API Level X
+		 **/
+		public static WVR_Result WVR_CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker)
+		{
+			return WVR_Base.Instance.CreateBodyTracker(ref info, ref bodyTracker);
+		}
+		/**
+		 * @brief Use this function to destroy body tracker.
+		 *
+		 * Use this API to destroy body tracker handle.
+		 * This API must be called by main thread.
+		 *
+		 * @param bodyTracker is a WVR_BodyTracker previously created by @ref WVR_CreateBodyTracker.
+		 * @retval WVR_Success destroy body tracker successfully.
+		 * @retval others @ref WVR_Result mean failure.
+		 * @version API Level X
+		 **/
+		public static WVR_Result WVR_DestroyBodyTracker(WVR_BodyTracker bodyTracker)
+		{
+			return WVR_Base.Instance.DestroyBodyTracker(bodyTracker);
+		}
+		/**
+		 * @brief Use this function to get the body tracking data.
+		 *
+		 * @param bodyTracker is a WVR_BodyTracker previously created by @ref WVR_CreateBodyTracker.
+		 * @param originModel is specify the tracking universe of the origin tracking model. Refer to @ref WVR_PoseOriginModel.
+		 * @param data is body joint data @ref WVR_BodyJointData_t
+		 * @retval WVR_Success Successfully retrieved data.
+		 * @retval Others @ref WVR_Result mean failure.
+		 * @version API Level X
+		 **/
+		public static WVR_Result WVR_GetBodyJointData(
+			WVR_BodyTracker bodyTracker,
+			WVR_PoseOriginModel originModel,
+			ref WVR_BodyJointData_t data)
+		{
+			return WVR_Base.Instance.GetBodyJointData(bodyTracker, originModel, ref data);
+		}
+		/**
+		 * @brief Use this function to get the body tracking data.
+		 *
+		 * @param bodyTracker is a WVR_BodyTracker previously created by @ref WVR_CreateBodyTracker.
+		 * @param properties of body properties.
+		 * @retval WVR_Success Successfully retrieved data.
+		 * @retval Others @ref WVR_Result mean failure.
+		 * @version API Level X
+		 */
+		public static WVR_Result WVR_GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties)
+		{
+			return WVR_Base.Instance.GetBodyProperties(bodyTracker, ref properties);
+		}
+#endif
+		#endregion
 
-		public static UInt32 WVR_GetBodyTrackingExtrinsicCount()
-		{
-			return WVR_Base.Instance.GetBodyTrackingExtrinsicCount();
-		}
-		public static bool WVR_GetBodyTrackingExtrinsics([In, Out] WVR_BodyTrackingExtrinsic[] extrinsics, ref UInt32 count)
-		{
-			return WVR_Base.Instance.GetBodyTrackingExtrinsics(extrinsics, ref count);
-		}
+		#region Trackable Marker
 
-        #endregion Body Tracking
-
-        #region Trackable Marker
-
-        public static WVR_Result WVR_StartMarker()
+		public static WVR_Result WVR_StartMarker()
 		{
 			return WVR_Base.Instance.StartMarker();
 		}
@@ -4315,219 +4883,53 @@ namespace Wave.Native
 			#endregion
 
 			#region Body Tracking
-			public virtual UInt32 GetBodyTrackingStandardPoseSize() { return 0; }
-
-			public virtual bool GetBodyTrackingStandardPoseInfo([In, Out] WVR_BodyTrackingType[] types, [In, Out] UInt32[] counts)
+#if WAVE_BODY_CALIBRATION
+			public virtual UInt32 GetBodyTrackingRedirectExtrinsicCount() { return 0; }
+			public virtual UInt32 GetBodyTrackingDeviceCount() { return 0; }
+			public virtual WVR_Result GetBodyTrackingDeviceInfo(
+				ref float userHeight,
+				ref WVR_BodyTrackingCalibrationMode mode,
+				[In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount,
+				[In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount)
 			{
-				types[0] = WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker;
-				counts[0] = 2;
-				types[1] = WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker;
-				counts[1] = 3;
-				return true;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
-
-			UInt32[] s_WristTrackerIds = {
-				(UInt32)WVR_TrackerId.WVR_TrackerId_0,
-				(UInt32)WVR_TrackerId.WVR_TrackerId_1
-			};
-			UInt32[] s_InsideOutTrackerIds = {
-				(UInt32)WVR_TrackerId.WVR_TrackerId_2,
-				(UInt32)WVR_TrackerId.WVR_TrackerId_3,
-				(UInt32)WVR_TrackerId.WVR_TrackerId_4
-			};
-			public virtual bool GetBodyTrackingStandardPose(WVR_BodyTrackingType type, [In, Out] UInt32[] ids, [In, Out] WVR_Pose_t[] poses)
+			public virtual UInt32 GetActiveDeviceExtrinsicCount() { return 0; }
+			public virtual WVR_Result GetActiveDeviceExtrinsics([In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 count)
 			{
-				if (type == WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker) { ids = s_WristTrackerIds; }
-				if (type == WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker) { ids = s_InsideOutTrackerIds; }
-
-				return true;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
-
-			#region Tracked Device Extrinsics
-			// Head
-			private static readonly WVR_BodyTrackingExtrinsic extHead = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_Head,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_HMD,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.0f, -0.08f, 0.1f),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-
-			// Wrist: Self Tracker or Wrist Tracker
-			private static readonly WVR_BodyTrackingExtrinsic extLeftWrist_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftWrist,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.0f, -0.035f, -0.043f),
-						new WVR_Quatf_t(0.0f, 0.707f, 0.0f, -0.707f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightWrist_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightWrist,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.0f, -0.035f, -0.043f),
-						new WVR_Quatf_t(0.0f, -0.707f, 0.0f, -0.707f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extLeftWrist_WristTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftWrist,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(-0.03f, 0.005f, -0.056f),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightWrist_WristTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightWrist,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_WristTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.03f, 0.005f, -0.056f),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-
-			// Controller
-			private static readonly WVR_BodyTrackingExtrinsic extLeftHandheld = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftHandheld,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_Controller,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(-0.03f, -0.035f, 0.13f),
-						new WVR_Quatf_t(-0.345273f, 0.639022f, -0.462686f, -0.508290f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightHandheld = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightHandheld,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_Controller,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.03f, -0.035f, 0.13f),
-						new WVR_Quatf_t(-0.345273f, -0.639022f, 0.462686f, -0.508290f)
-					)
-				);
-
-			// Hand
-			private static readonly WVR_BodyTrackingExtrinsic extLeftHand = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftHand,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_Hand,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0.094802f, 0.641923f, 0.071626f, -0.757508f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightHand = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightHand,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_Hand,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0.094802f, -0.641923f, 0.071626f, -0.757508f)
-					)
-				);
-
-			// Hip: Self Tracker
-			private static readonly WVR_BodyTrackingExtrinsic extHip = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_Hip,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-
-			// Knee: Self Tracker IM
-			private static readonly WVR_BodyTrackingExtrinsic extLeftKnee_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftKnee,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightKnee_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightKnee,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-
-			// Ankle: Self Tracker or Self Tracker IM
-			private static readonly WVR_BodyTrackingExtrinsic extLeftAnkle_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftAnkle,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.0f, -0.05f, 0.0f),
-						new WVR_Quatf_t(-0.5f, 0.5f, -0.5f, 0.5f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightAnkle_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightAnkle,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0.0f, -0.05f, 0.0f),
-						new WVR_Quatf_t(0.5f, 0.5f, -0.5f, -0.5f)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extLeftAnkle_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftAnkle,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightAnkle_SelfTrackerIM = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightAnkle,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTrackerIM,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extLeftFoot_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_LeftFoot,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0.13f),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			private static readonly WVR_BodyTrackingExtrinsic extRightFoot_SelfTracker = new WVR_BodyTrackingExtrinsic(
-					WVR_TrackedDeviceRole.WVR_TrackedDeviceRole_RightFoot,
-					WVR_BodyTrackingType.WVR_BodyTrackingType_ViveSelfTracker,
-					new WVR_Pose_t(
-						new WVR_Vector3f_t(0, 0, 0.13f),
-						new WVR_Quatf_t(0, 0, 0, -1)
-					)
-				);
-			#endregion
-
-			const UInt32 extrinsicCount = 18;
-			private readonly WVR_BodyTrackingExtrinsic[] s_TrackingExtrinsics = new WVR_BodyTrackingExtrinsic[18] {
-				extHead,
-				extLeftWrist_SelfTracker, extRightWrist_SelfTracker,
-				extLeftWrist_WristTracker, extRightWrist_WristTracker,
-				extLeftHandheld, extRightHandheld,
-				extLeftHand, extRightHand,
-				extHip,
-				extLeftKnee_SelfTrackerIM, extRightKnee_SelfTrackerIM,
-				extLeftAnkle_SelfTracker, extRightAnkle_SelfTracker,
-				extLeftAnkle_SelfTrackerIM, extRightAnkle_SelfTrackerIM,
-				extLeftFoot_SelfTracker, extRightFoot_SelfTracker,
-			};
-			public virtual UInt32 GetBodyTrackingExtrinsicCount()
+			public virtual WVR_Result ApplyCalibrationData(
+				float userHeight,
+				[In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount,
+				WVR_BodyTrackingCalibrationMode mode,
+				[In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount)
 			{
-				return extrinsicCount;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
-			public virtual bool GetBodyTrackingExtrinsics([In, Out] WVR_BodyTrackingExtrinsic[] extrinsics, ref UInt32 count)
+#endif
+#if WAVE_BODY_IK
+			public virtual WVR_Result CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker)
 			{
-				count = extrinsicCount;
-				for (UInt32 i = 0; i < count; i++)
-					extrinsics[i] = s_TrackingExtrinsics[i];
-
-				return true;
+				return WVR_Result.WVR_Error_FeatureNotSupport;
 			}
+			public virtual WVR_Result DestroyBodyTracker(WVR_BodyTracker bodyTracker)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+			public virtual WVR_Result GetBodyJointData(WVR_BodyTracker bodyTracker, WVR_PoseOriginModel originModel, ref WVR_BodyJointData_t data)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+			public virtual WVR_Result GetBodyScale(WVR_BodyTracker bodyTracker, ref float scale)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+			public virtual WVR_Result GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties)
+			{
+				return WVR_Result.WVR_Error_FeatureNotSupport;
+			}
+#endif
 			#endregion
 
 			public virtual ulong GetSupportedFeatures()

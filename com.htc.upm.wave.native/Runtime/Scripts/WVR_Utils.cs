@@ -27,8 +27,17 @@ namespace Wave.Native
 				case WVR_DeviceType.WVR_DeviceType_Controller_Left: return "Controller Left";
 				case WVR_DeviceType.WVR_DeviceType_Controller_Right: return "Controller Right";
 				case WVR_DeviceType.WVR_DeviceType_HMD: return "HMD";
-				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Left: return "Hand Left";
-				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Right: return "Hand Right";
+				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Left: return "NaturalHand Left";
+				case WVR_DeviceType.WVR_DeviceType_NaturalHand_Right: return "NaturalHand Right";
+				case WVR_DeviceType.WVR_DeviceType_Camera: return "Camera";
+				case WVR_DeviceType.WVR_DeviceType_EyeTracking: return "Eye Tracking";
+				case WVR_DeviceType.WVR_DeviceType_HandGesture_Right: return "HandGesture Right";
+				case WVR_DeviceType.WVR_DeviceType_HandGesture_Left: return "HandGesture Left";
+				case WVR_DeviceType.WVR_DeviceType_ElectronicHand_Right: return "ElectronicHand Right";
+				case WVR_DeviceType.WVR_DeviceType_ElectronicHand_Left: return "ElectronicHand Left";
+				case WVR_DeviceType.WVR_DeviceType_Tracker: return "Tracker";
+				case WVR_DeviceType.WVR_DeviceType_Lip: return "Lip";
+				case WVR_DeviceType.WVR_DeviceType_EyeExpression: return "Eye Expression";
 				default: return "Invalid";
 			}
 		}
@@ -77,6 +86,10 @@ namespace Wave.Native
 			unity_vec.x = gl_vec.v0;
 			unity_vec.y = gl_vec.v1;
 			unity_vec.z = -gl_vec.v2;
+		}
+		public static WVR_Vector3f_t GetVector3fFromUnity(Vector3 unityVec)
+		{
+			return new WVR_Vector3f_t(unityVec.x, unityVec.y, -unityVec.z);
 		}
 		public static void Vector3NormalizeZ(ref Vector3 vec)
 		{
@@ -141,6 +154,10 @@ namespace Wave.Native
 			unity_quat.y = glQuat.y;
 			unity_quat.z = -glQuat.z;
 			unity_quat.w = -glQuat.w;
+		}
+		public static WVR_Quatf_t GetQuatfFromUnity(Quaternion unityQuat)
+		{
+			return new WVR_Quatf_t(unityQuat.x, unityQuat.y, -unityQuat.z, -unityQuat.w);
 		}
 
 		public static Vector3 GetScale(this Matrix4x4 matrix)

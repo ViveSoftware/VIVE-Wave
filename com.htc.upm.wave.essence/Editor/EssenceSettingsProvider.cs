@@ -63,7 +63,7 @@ namespace Wave.Essence.Editor
 			}
 		}
 
-        #region Essence.Controller.Model asset
+		#region Essence.Controller.Model asset
 		const string kControllerModelAsset = "/ControllerModel.asset";
 		public static void UpdateAssetControllerModel(bool importedControllerModelPackage)
 		{
@@ -94,9 +94,9 @@ namespace Wave.Essence.Editor
 			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kControllerModelAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
 			return asset.importedControllerModelPackage;
 		}
-        #endregion
+		#endregion
 
-        #region Essence.InputModule asset
+		#region Essence.InputModule asset
 		const string kInputModuleAsset = "/InputModule.asset";
 		public static void UpdateAssetInputModule(bool importedInputModulePackage)
 		{
@@ -123,9 +123,9 @@ namespace Wave.Essence.Editor
 			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kInputModuleAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
 			return asset.importedInputModulePackage;
 		}
-        #endregion
+		#endregion
 
-        #region Essence.Hand.Model asset
+		#region Essence.Hand.Model asset
 		const string kHandModelAsset = "/HandModel.asset";
 		public static void UpdateAssetHandModel(bool importedHandModelPackage)
 		{
@@ -152,9 +152,9 @@ namespace Wave.Essence.Editor
 			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kHandModelAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
 			return asset.importedHandModelPackage;
 		}
-        #endregion
+		#endregion
 
-        #region Essence.Interaction.Mode asset
+		#region Essence.Interaction.Mode asset
 		const string kInteractionModeAsset = "/InteractionMode.asset";
 		public static void UpdateAssetInteractionMode(bool importedInteractionModePackage)
 		{
@@ -181,65 +181,7 @@ namespace Wave.Essence.Editor
 			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kInteractionModeAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
 			return asset.importedInteractionModePackage;
 		}
-        #endregion
-
-        #region BodyTracking asset
-		const string kBodyTrackingAsset = "/BodyTracking.asset";
-		public static void UpdateAssetBodyTracking(bool importedBodyTrackingPackage)
-		{
-			PackageEssenceAsset asset = null;
-			if (File.Exists(WaveEssencePath + kBodyTrackingAsset))
-			{
-				asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kBodyTrackingAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-				asset.importedBodyTrackingPackage = importedBodyTrackingPackage;
-			}
-			else
-			{
-				asset = ScriptableObject.CreateInstance(typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-				asset.importedBodyTrackingPackage = importedBodyTrackingPackage;
-				AssetDatabase.CreateAsset(asset, WaveEssencePath + kBodyTrackingAsset);
-			}
-			AssetDatabase.SaveAssets();
-			Debug.Log("UpdateAssetBodyTracking() " + WaveEssencePath + kBodyTrackingAsset + ", importedBodyTrackingPackage: " + asset.importedBodyTrackingPackage);
-		}
-		internal static bool IsBodyTrackingPackageOnceImported()
-		{
-			if (!File.Exists(WaveEssencePath + kBodyTrackingAsset))
-				return false;
-
-			PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kBodyTrackingAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-			return asset.importedBodyTrackingPackage;
-		}
-        #endregion
-
-        #region FacialExpressionMaker asset
-        const string kFacialExpressionMakerAsset = "/FacialExpressionMaker.asset";
-        public static void UpdateAssetFacialExpressionMaker(bool importedFacialExpressionMakerPackage)
-        {
-            PackageEssenceAsset asset = null;
-            if (File.Exists(WaveEssencePath + kFacialExpressionMakerAsset))
-            {
-                asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kFacialExpressionMakerAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-                asset.importedFacialExpressionMakerPackage = importedFacialExpressionMakerPackage;
-            }
-            else
-            {
-                asset = ScriptableObject.CreateInstance(typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-                asset.importedFacialExpressionMakerPackage = importedFacialExpressionMakerPackage;
-                AssetDatabase.CreateAsset(asset, WaveEssencePath + kFacialExpressionMakerAsset);
-            }
-            AssetDatabase.SaveAssets();
-            Debug.Log("UpdateAssetFacialExpressionMaker() " + WaveEssencePath + kFacialExpressionMakerAsset + ", importedFacialExpressionMakerPackage: " + asset.importedFacialExpressionMakerPackage);
-        }
-        internal static bool IsFacialExpressionMakerPackageOnceImported()
-        {
-            if (!File.Exists(WaveEssencePath + kFacialExpressionMakerAsset))
-                return false;
-
-            PackageEssenceAsset asset = AssetDatabase.LoadAssetAtPath(WaveEssencePath + kFacialExpressionMakerAsset, typeof(PackageEssenceAsset)) as PackageEssenceAsset;
-            return asset.importedFacialExpressionMakerPackage;
-        }
-        #endregion
+		#endregion
 
 		private static readonly string[] essenceKeywords = new string[]
 		{
@@ -262,9 +204,9 @@ namespace Wave.Essence.Editor
 		};
 
 		internal static UnityEditor.PackageManager.PackageInfo pi = null;
-        internal static UnityEditor.PackageManager.PackageInfo piXrsdk = null;
+		internal static UnityEditor.PackageManager.PackageInfo piXrsdk = null;
 
-        public EssenceSettingsProvider(string path, SettingsScope scope = SettingsScope.Project)
+		public EssenceSettingsProvider(string path, SettingsScope scope = SettingsScope.Project)
 			: base(path, scope, essenceKeywords)
 		{
 			CheckingWavePackagePath();
@@ -304,18 +246,17 @@ namespace Wave.Essence.Editor
 		internal const string kTrackerModelPath = "/Tracker/Model";
 		internal const string kTrackerModelPackage = "wave_essence_tracker_model.unitypackage";
 		internal const string kScenePerceptionPath = "/ScenePerception";
-        internal const string kScenePerceptionPackage = "wave_essence_sceneperception.unitypackage";
-        internal const string kScenePerceptionDemoPackage = "wave_essence_sceneperception.demo.unitypackage";
-        internal const string kTrackableMarkerPath = "/TrackableMarker";
+		internal const string kScenePerceptionPackage = "wave_essence_sceneperception.unitypackage";
+		internal const string kScenePerceptionDemoPackage = "wave_essence_sceneperception.demo.unitypackage";
+		internal const string kTrackableMarkerPath = "/TrackableMarker";
 		internal const string kTrackableMarkerPackage = "wave_essence_trackablemarker.unitypackage";
-        internal const string kURPMaterialsPackage = "wave_essence_urpmaterials.unitypackage";
+		internal const string kURPMaterialsPackage = "wave_essence_urpmaterials.unitypackage";
 		internal const string kSpectatorPath = "/Spectator";
 		internal const string kSpectatorPackage = "wave_essence_spectator.unitypackage";
 		internal const string kBodyTrackingPath = "/BodyTracking";
 		internal const string kBodyTrackingPackage = "wave_essence_bodytracking.unitypackage";
-        internal const string kFacialExpressionMakerPath = "/FacialExpression/Maker";
-        internal const string kFacialExpressionMakerPackage = "wave_essence_facialexpressionmaker.unitypackage";
-		internal const string kVrm1Package = "VRM-0.109.0_7aff.unitypackage";
+		internal const string kFacialExpressionMakerPath = "/FacialExpression/Maker";
+		internal const string kFacialExpressionMakerPackage = "wave_essence_facialexpressionmaker.unitypackage";
 
 		internal static bool featureControllerModelImported = false;
 		internal static bool featureInputModuleImported = false;
@@ -329,11 +270,11 @@ namespace Wave.Essence.Editor
 		internal static bool featureRenderDocImported = false;
 		internal static bool featureTrackerModelImported = false;
 		internal static bool featureScenePerceptionImported = false;
-        internal static bool featureScenePerceptionDemoImported = false;
-        internal static bool featureTrackableMarkerImported = false;
+		internal static bool featureScenePerceptionDemoImported = false;
+		internal static bool featureTrackableMarkerImported = false;
 		internal static bool featureSpectatorImported = false;
 		internal static bool featureBodyTrackingImported = false;
-        internal static bool featureFacialExpressionMakerImported = false;
+		internal static bool featureFacialExpressionMakerImported = false;
 
 		internal static bool featureControllerModelNeedUpdate = false;
 		internal static bool featureInputModuleNeedUpdate = false;
@@ -368,19 +309,19 @@ namespace Wave.Essence.Editor
 			featureRenderDocImported = Directory.Exists(WaveEssencePath + kRenderDocPath);
 			featureTrackerModelImported = Directory.Exists(WaveEssencePath + kTrackerModelPath);
 			featureScenePerceptionImported = Directory.Exists(WaveEssencePath + kScenePerceptionPath);
-            featureTrackableMarkerImported = Directory.Exists(WaveEssencePath + kTrackableMarkerPath);
+			featureTrackableMarkerImported = Directory.Exists(WaveEssencePath + kTrackableMarkerPath);
 			featureSpectatorImported = Directory.Exists(WaveEssencePath + kSpectatorPath);
 			featureBodyTrackingImported = Directory.Exists(WaveEssencePath + kBodyTrackingPath);
 			featureFacialExpressionMakerImported = Directory.Exists(WaveEssencePath + kFacialExpressionMakerPath);
 
 			if (pi == null)
 				return false;
-			 
-            featureScenePerceptionDemoImported = featureScenePerceptionImported && (Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + pi.version + "/Demo") ||
+
+			featureScenePerceptionDemoImported = featureScenePerceptionImported && (Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + pi.version + "/Demo") ||
 Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "/Demo"));
 
 
-            featureControllerModelNeedUpdate = featureControllerModelImported && !Directory.Exists(WaveEssencePath + kControllerModelPath + "/" + pi.version) &&
+			featureControllerModelNeedUpdate = featureControllerModelImported && !Directory.Exists(WaveEssencePath + kControllerModelPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kControllerModelPath + "/" + FAKE_VERSION);
 			featureInputModuleNeedUpdate = featureInputModuleImported && !Directory.Exists(WaveEssencePath + kInputModulePath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kInputModulePath + "/" + FAKE_VERSION);
@@ -404,16 +345,17 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				!Directory.Exists(WaveEssencePath + kTrackerModelPath + "/" + FAKE_VERSION);
 			featureScenePerceptionNeedUpdate = featureScenePerceptionImported && !Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION);
-            featureTrackableMarkerNeedUpdate = featureTrackableMarkerImported && !Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + pi.version) &&
+			featureTrackableMarkerNeedUpdate = featureTrackableMarkerImported && !Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kTrackableMarkerPath + "/" + FAKE_VERSION);
 			featureSpectatorNeedUpdate = featureSpectatorImported && !Directory.Exists(WaveEssencePath + kSpectatorPath + "/" + pi.version) && !Directory.Exists(WaveEssencePath + kSpectatorPath + "/" + FAKE_VERSION);
 			featureBodyTrackingNeedUpdate = featureBodyTrackingImported && !Directory.Exists(WaveEssencePath + kBodyTrackingPath + "/" + pi.version) &&
 				!Directory.Exists(WaveEssencePath + kBodyTrackingPath + "/" + FAKE_VERSION);
-            featureFacialExpressionMakerNeedUpdate = featureFacialExpressionMakerImported && !Directory.Exists(WaveEssencePath + kFacialExpressionMakerPath + "/" + pi.version) &&
-                !Directory.Exists(WaveEssencePath + kFacialExpressionMakerPath + "/" + FAKE_VERSION);
+			featureFacialExpressionMakerNeedUpdate = featureFacialExpressionMakerImported && !Directory.Exists(WaveEssencePath + kFacialExpressionMakerPath + "/" + pi.version) &&
+				!Directory.Exists(WaveEssencePath + kFacialExpressionMakerPath + "/" + FAKE_VERSION);
 
-			hasFeatureNeedUpdate = featureControllerModelNeedUpdate || featureInputModuleNeedUpdate || featureHandModelNeedUpdate || featureHandInteractionlNeedUpdate || featureInteractionModeNeedUpdate || featureInteractionToolkitNeedUpdate ||
-				featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate || featureScenePerceptionNeedUpdate || featureTrackableMarkerNeedUpdate || featureSpectatorNeedUpdate || featureBodyTrackingNeedUpdate || featureFacialExpressionMakerNeedUpdate;
+			hasFeatureNeedUpdate = featureControllerModelNeedUpdate || featureInputModuleNeedUpdate || featureHandModelNeedUpdate || featureHandInteractionlNeedUpdate || featureInteractionModeNeedUpdate ||
+				featureInteractionToolkitNeedUpdate || featureCameraTextureNeedUpdate || featureCompositorLayerNeedUpdate || featureBundlePreviewNeedUpdate || featureRenderDocNeedUpdate ||
+				featureScenePerceptionNeedUpdate || featureTrackableMarkerNeedUpdate || featureSpectatorNeedUpdate || featureBodyTrackingNeedUpdate || featureFacialExpressionMakerNeedUpdate;
 
 			return hasFeatureNeedUpdate;
 		}
@@ -451,14 +393,14 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				UpdateModule(WaveEssencePath + kSpectatorPath, kSpectatorPackage);
 			if (featureBodyTrackingNeedUpdate)
 				UpdateModule(WaveEssencePath + kBodyTrackingPath, kBodyTrackingPackage);
-            if (featureFacialExpressionMakerNeedUpdate)
-                UpdateModule(WaveEssencePath + kFacialExpressionMakerPath, kFacialExpressionMakerPackage);
+			if (featureFacialExpressionMakerNeedUpdate)
+				UpdateModule(WaveEssencePath + kFacialExpressionMakerPath, kFacialExpressionMakerPackage);
 		}
 
 		string GetSamplePath(string displayName, string version, string sampleFolder)
 		{
-            return Path.Combine("Assets", "Samples", piXrsdk.displayName, pi.version, sampleFolder);
-        }
+			return Path.Combine("Assets", "Samples", piXrsdk.displayName, pi.version, sampleFolder);
+		}
 
 		public bool IsXRSDKSamplesInstalled()
 		{
@@ -477,49 +419,49 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 			return Directory.Exists(GetSamplePath(xrsdkname, version, "XR"));
 		}
 
-        public bool IsPureUnitySamplesInstalled()
-        {
-            string xrsdkname;
-            if (piXrsdk == null)
-                xrsdkname = "VIVE Wave XR Plugin";
-            else
-                xrsdkname = piXrsdk.displayName;
-
-            string version;
-            if (piXrsdk == null)
-                version = pi.version;
-            else
-                version = piXrsdk.version;
-
-            return Directory.Exists(GetSamplePath(xrsdkname, version, "PureUnity"));
-        }
-
-        private static void CopyDirectoryRecursively(string sourceDir, string targetDir)
-        {
-            // Create target directory if it doesn't exist
-            if (!Directory.Exists(targetDir))
-            {
-                Directory.CreateDirectory(targetDir);
-            }
-
-            // Copy each file into the new directory
-            foreach (string file in Directory.GetFiles(sourceDir))
-            {
-                string targetFile = Path.Combine(targetDir, Path.GetFileName(file));
-                File.Copy(file, targetFile, true);
-            }
-
-            // Copy each subdirectory using recursion
-            foreach (string subdir in Directory.GetDirectories(sourceDir))
-            {
-                string targetSubdir = Path.Combine(targetDir, Path.GetFileName(subdir));
-                CopyDirectoryRecursively(subdir, targetSubdir);
-            }
-        }
-
-        public void InstallSample(string path, string target, bool needRefresh = true)
+		public bool IsPureUnitySamplesInstalled()
 		{
-            Debug.Log($"Copy Assets from {path} to {target}");
+			string xrsdkname;
+			if (piXrsdk == null)
+				xrsdkname = "VIVE Wave XR Plugin";
+			else
+				xrsdkname = piXrsdk.displayName;
+
+			string version;
+			if (piXrsdk == null)
+				version = pi.version;
+			else
+				version = piXrsdk.version;
+
+			return Directory.Exists(GetSamplePath(xrsdkname, version, "PureUnity"));
+		}
+
+		private static void CopyDirectoryRecursively(string sourceDir, string targetDir)
+		{
+			// Create target directory if it doesn't exist
+			if (!Directory.Exists(targetDir))
+			{
+				Directory.CreateDirectory(targetDir);
+			}
+
+			// Copy each file into the new directory
+			foreach (string file in Directory.GetFiles(sourceDir))
+			{
+				string targetFile = Path.Combine(targetDir, Path.GetFileName(file));
+				File.Copy(file, targetFile, true);
+			}
+
+			// Copy each subdirectory using recursion
+			foreach (string subdir in Directory.GetDirectories(sourceDir))
+			{
+				string targetSubdir = Path.Combine(targetDir, Path.GetFileName(subdir));
+				CopyDirectoryRecursively(subdir, targetSubdir);
+			}
+		}
+
+		public void InstallSample(string path, string target, bool needRefresh = true)
+		{
+			Debug.Log($"Copy Assets from {path} to {target}");
 			CopyDirectoryRecursively(path, target);
 
 			if (needRefresh)
@@ -591,8 +533,8 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				showTrackableMarker ||
 				showURPMaterials ||
 				showSpectator ||
-                showBodyTracking ||
-                showFacialExpressionMaker)
+				showBodyTracking ||
+				showFacialExpressionMaker)
 			{
 				hasKeyword = true;
 			}
@@ -615,6 +557,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 			 * 14. Spectator
              * 15. Body Tracking
              * 16. Facial Expression Maker
+             * 17. Avatar Retarget
              **/
 
 			checkFeaturePackages();
@@ -627,16 +570,16 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				if (GUILayout.Button("Check packages", GUILayout.ExpandWidth(false)))
 					EssenseSettingsConfigDialog.ShowDialog();
 
-                bool b = EditorPrefs.GetBool("EssenceNotifyUpdatePackageSkip", false);
-                if (GUILayout.Toggle(b, "Do not auto check package update"))
-                {
-                    EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", true);
-                }
-                else
-                {
-                    EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", false);
-                }
-                GUILayout.Space(5f);
+				bool b = EditorPrefs.GetBool("EssenceNotifyUpdatePackageSkip", false);
+				if (GUILayout.Toggle(b, "Do not auto check package update"))
+				{
+					EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", true);
+				}
+				else
+				{
+					EditorPrefs.SetBool("EssenceNotifyUpdatePackageSkip", false);
+				}
+				GUILayout.Space(5f);
 			}
 			GUILayout.EndVertical();
 
@@ -865,7 +808,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 						if (GUILayout.Button("Import Feature - BundlePreview", GUILayout.ExpandWidth(false)))
 							ImportModule(kBundlePreviewPackage);
 					}
-					
+
 					GUILayout.Space(5f);
 					GUI.enabled = true;
 				}
@@ -979,11 +922,11 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 						if (GUILayout.Button("Import Feature - Scene Perception", GUILayout.ExpandWidth(false)))
 							ImportModule(kScenePerceptionPackage);
 					}
-                    GUI.enabled = true;
-                    GUI.enabled = featureScenePerceptionImported && !featureScenePerceptionDemoImported;
+					GUI.enabled = true;
+					GUI.enabled = featureScenePerceptionImported && !featureScenePerceptionDemoImported;
 					string demoButtonStr = featureScenePerceptionImported ? "Import Demo - Scene Perception" : "Import Demo - import feature first";
 
-                    if (GUILayout.Button(demoButtonStr, GUILayout.ExpandWidth(false)))
+					if (GUILayout.Button(demoButtonStr, GUILayout.ExpandWidth(false)))
 					{
 						if ((!isXRSDKSampleInstalled || !isPUSampleInstalled) &&
 							EditorUtility.DisplayDialog("Import Scene Perception Demo",
@@ -998,8 +941,8 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 						}
 						ImportModule(kScenePerceptionDemoPackage);
 					}
-                    GUI.enabled = true;
-                    GUILayout.Space(5f);
+					GUI.enabled = true;
+					GUILayout.Space(5f);
 				}
 				GUILayout.EndVertical();
 			}
@@ -1031,22 +974,22 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				GUILayout.EndVertical();
 			}
 
-            if (GraphicsSettings.renderPipelineAsset != null && (showURPMaterials || !hasKeyword))
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    GUILayout.Label("URP materials", EditorStyles.boldLabel);
-                    GUILayout.Label("These materials will overwrite the original contents."
-                                    , new GUIStyle(EditorStyles.label) { wordWrap = true });
-                    GUILayout.Label("The feature will be imported at everywhere", EditorStyles.label);
-                    GUILayout.Space(5f);
-                    if (GUILayout.Button("Import Feature - URP Materials", GUILayout.ExpandWidth(false)))
-                        ImportModule(kURPMaterialsPackage, true);
-                    GUILayout.Space(5f);
-                    GUI.enabled = true;
-                }
-                GUILayout.EndVertical();
-            }
+			if (GraphicsSettings.renderPipelineAsset != null && (showURPMaterials || !hasKeyword))
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("URP materials", EditorStyles.boldLabel);
+					GUILayout.Label("These materials will overwrite the original contents."
+									, new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("The feature will be imported at everywhere", EditorStyles.label);
+					GUILayout.Space(5f);
+					if (GUILayout.Button("Import Feature - URP Materials", GUILayout.ExpandWidth(false)))
+						ImportModule(kURPMaterialsPackage, true);
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
 
 			if (showSpectator || !hasKeyword)
 			{
@@ -1054,7 +997,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				{
 					GUILayout.Label("Spectator", EditorStyles.boldLabel);
 					GUILayout.Label("Note: This feature is currently in Beta.\n" +
-					                "Spectator is a feature that enables you to set the spectator camera to record the VR scene freely.\n"
+									"Spectator is a feature that enables you to set the spectator camera to record the VR scene freely.\n"
 						, new GUIStyle(EditorStyles.label) { wordWrap = true });
 					GUILayout.Label("The feature will be imported at " + WaveEssencePath + kSpectatorPath, EditorStyles.label);
 					GUILayout.Space(5f);
@@ -1076,7 +1019,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 							else
 							{
 								Debug.LogError("Import Spectator feature fail because cannot get the WaveXR" +
-								               "setting, please try again later.");
+											   "setting, please try again later.");
 							}
 						}
 					}
@@ -1097,9 +1040,10 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				{
 					GUILayout.Label("Body Tracking", EditorStyles.boldLabel);
 					GUILayout.Label(
-						"The Body Tracking feature depends on Humanoid VRM plugin.\n" +
-						"You can import the Humanoid VRM package (VRM-0.109.0_7aff.unitypackage) at\n" +
-						"Library > PackageCache > com.htc.upm.wave.essence > UnityPackages~",
+						"The Body Tracking feature depends on Tracker Model.\n" +
+						"The Body Tracking feature supports VRM and FBX formats.\n" +
+						"You can import the VRM package (UniVRM-0.109.0_7aff.unitypackage) from\n" +
+						"Edit > Preference > Wave Settings > VRM 0",
 						new GUIStyle(EditorStyles.label) { wordWrap = true });
 					GUILayout.Label(
 						"Note: Must using Unity Editor 2020.3.30f1 or newer version.",
@@ -1117,7 +1061,6 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 					{
 						if (GUILayout.Button("Import Feature - Body Tracking", GUILayout.ExpandWidth(false)))
 						{
-							//ImportModule(kVrm1Package);
 							ImportModule(kBodyTrackingPackage);
 						}
 					}
@@ -1127,42 +1070,40 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				GUILayout.EndVertical();
 			}
 
-            if (showFacialExpressionMaker || !hasKeyword)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    GUILayout.Label("Facial Expression Maker", EditorStyles.boldLabel);
-                    GUILayout.Label(
-                        "The Facial Expression Maker feature depends on Humanoid VRM plugin.\n" +
-                        "You can import the Humanoid VRM package (VRM-0.109.0_7aff.unitypackage) at\n" +
-                        "Library > PackageCache > com.htc.upm.wave.essence > UnityPackages~",
-                        new GUIStyle(EditorStyles.label) { wordWrap = true });
-                    GUILayout.Label(
-                        "Note: Must using Unity Editor 2020.3.40f1 or newer version.",
-                        new GUIStyle(EditorStyles.label) { wordWrap = true });
-                    GUILayout.Label("This feature will be imported at " + WaveEssencePath + "/FacialExpression/Maker.\n" +
-                        "Import the Facial Model package first before using this feature.", EditorStyles.label);
-                    GUILayout.Space(5f);
-                    GUI.enabled = (!featureFacialExpressionMakerImported || featureFacialExpressionMakerNeedUpdate);
-                    if (featureFacialExpressionMakerNeedUpdate)
-                    {
-                        if (GUILayout.Button("Update Feature - Facial Expression Maker", GUILayout.ExpandWidth(false)))
-                            UpdateModule(WaveEssencePath + kFacialExpressionMakerPath, kFacialExpressionMakerPackage);
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Import Feature - Facial Expression Maker", GUILayout.ExpandWidth(false)))
-                        {
-                            //ImportModule(kVrm1Package);
-                            ImportModule(kFacialExpressionMakerPackage);
-                        }
-                    }
-                    GUILayout.Space(5f);
-                    GUI.enabled = true;
-                }
-                GUILayout.EndVertical();
-            }
-        }
+			if (showFacialExpressionMaker || !hasKeyword)
+			{
+				GUILayout.BeginVertical(EditorStyles.helpBox);
+				{
+					GUILayout.Label("Facial Expression Maker", EditorStyles.boldLabel);
+					GUILayout.Label(
+						"The Facial Expression Maker feature supports VRM and FBX formats.\n" +
+						"You can import the VRM package (UniVRM-0.109.0_7aff.unitypackage) from\n" +
+						"Edit > Preference > Wave Settings > VRM 0",
+						new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label(
+						"Note: Must using Unity Editor 2020.3.40f1 or newer version.",
+						new GUIStyle(EditorStyles.label) { wordWrap = true });
+					GUILayout.Label("This feature will be imported at " + WaveEssencePath + "/FacialExpression/Maker.", EditorStyles.label);
+					GUILayout.Space(5f);
+					GUI.enabled = (!featureFacialExpressionMakerImported || featureFacialExpressionMakerNeedUpdate);
+					if (featureFacialExpressionMakerNeedUpdate)
+					{
+						if (GUILayout.Button("Update Feature - Facial Expression Maker", GUILayout.ExpandWidth(false)))
+							UpdateModule(WaveEssencePath + kFacialExpressionMakerPath, kFacialExpressionMakerPackage);
+					}
+					else
+					{
+						if (GUILayout.Button("Import Feature - Facial Expression Maker", GUILayout.ExpandWidth(false)))
+						{
+							ImportModule(kFacialExpressionMakerPackage);
+						}
+					}
+					GUILayout.Space(5f);
+					GUI.enabled = true;
+				}
+				GUILayout.EndVertical();
+			}
+		}
 
 		public static void DeleteFolder(string path)
 		{
@@ -1340,7 +1281,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 			}
 			else if (packagename.Equals("UnityPackages~\\wave_essence_inputmodule"))
 			{
-				if(!EssenceSettingsProvider.featureHandModelImported && !EssenceSettingsProvider.IsHandModelPackageOnceImported())
+				if (!EssenceSettingsProvider.featureHandModelImported && !EssenceSettingsProvider.IsHandModelPackageOnceImported())
 				{
 					EssenceSettingsProvider.UpdateAssetHandModel(true);
 					EssenceSettingsProvider.ImportModule(EssenceSettingsProvider.kHandModelPackage);
@@ -1361,7 +1302,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 					IsImporting = false;
 			}
 			else
-			    IsImporting = false;
+				IsImporting = false;
 			if (!EssenceSettingsProvider.WaveEssencePath.Equals("Assets/Wave/Essence"))
 				MoveEssenceFolder();
 		}
@@ -1373,7 +1314,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 			EssenceSettingsProvider.UpdateAssetHandModel(false);
 			EssenceSettingsProvider.UpdateAssetInteractionMode(false);
 			EssenceSettingsProvider.DeleteFolder(EssenceSettingsProvider.WaveEssencePath);
-			AssetDatabase.Refresh();			
+			AssetDatabase.Refresh();
 		}
 
 		private static void MoveEssenceFolder()
@@ -1508,12 +1449,12 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				GetCurrent = () => { return EssenceSettingsProvider.featureTrackableMarkerNeedUpdate.ToString(); },
 			};
 
-            var URPMaterials = new Item("URP Materials")
-            {
-                IsShow = () => { return true; },
-                IsReady = () => { return true; },
-                GetCurrent = () => { return "Need Manual Update"; },
-            };
+			var URPMaterials = new Item("URP Materials")
+			{
+				IsShow = () => { return true; },
+				IsReady = () => { return true; },
+				GetCurrent = () => { return "Need Manual Update"; },
+			};
 
 			var Spectator = new Item("Spectator")
 			{
@@ -1529,12 +1470,12 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				GetCurrent = () => { return EssenceSettingsProvider.featureBodyTrackingNeedUpdate.ToString(); },
 			};
 
-            var FacialExpressionMaker = new Item("Facial Expression Maker")
-            {
-                IsShow = () => { return EssenceSettingsProvider.featureFacialExpressionMakerImported; },
-                IsReady = () => { return !EssenceSettingsProvider.featureFacialExpressionMakerNeedUpdate; },
-                GetCurrent = () => { return EssenceSettingsProvider.featureFacialExpressionMakerNeedUpdate.ToString(); },
-            };
+			var FacialExpressionMaker = new Item("Facial Expression Maker")
+			{
+				IsShow = () => { return EssenceSettingsProvider.featureFacialExpressionMakerImported; },
+				IsReady = () => { return !EssenceSettingsProvider.featureFacialExpressionMakerNeedUpdate; },
+				GetCurrent = () => { return EssenceSettingsProvider.featureFacialExpressionMakerNeedUpdate.ToString(); },
+			};
 
 			return new List<Item>()
 			{
@@ -1550,10 +1491,10 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 				InteractionToolkit,
 				ScenePerception,
 				TrackableMarker,
-                URPMaterials,
+				URPMaterials,
 				Spectator,
 				BodyTracking,
-                FacialExpressionMaker,
+				FacialExpressionMaker,
 			};
 		}
 
@@ -1628,7 +1569,7 @@ Directory.Exists(WaveEssencePath + kScenePerceptionPath + "/" + FAKE_VERSION + "
 			GUILayout.Label("List imported packages :", EditorStyles.boldLabel);
 			foreach (var item in items)
 			{
-				if(item.Show())
+				if (item.Show())
 					notReadyItems++;
 			}
 

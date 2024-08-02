@@ -1289,7 +1289,7 @@ MonoBehaviour:
   m_LeftInteractive: 0.3
   m_RightInteractive: 0.7
   m_TopInteractive: 0.7
-  m_ButtomInteractive: 0.3
+  m_BottomInteractive: 0.3
 --- !u!20 &322257618
 Camera:
   m_ObjectHideFlags: 0
@@ -2336,7 +2336,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 652260467}
-        m_MethodName: OnButtomValueChange
+        m_MethodName: OnBottomValueChange
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2347,7 +2347,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 652260467}
-        m_MethodName: OnButtomValueChange
+        m_MethodName: OnBottomValueChange
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 957190651}
@@ -4735,7 +4735,7 @@ MonoBehaviour:
   m_LeftInteractive: 0.3
   m_RightInteractive: 0.7
   m_TopInteractive: 0.7
-  m_ButtomInteractive: 0.3
+  m_BottomInteractive: 0.3
 --- !u!20 &1022505881
 Camera:
   m_ObjectHideFlags: 0
@@ -10460,7 +10460,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 224225765845599858}
   m_Direction: 2
   m_Value: -0.00000011137802
-  m_Size: 0.5422854
+  m_Size: 0.54333335
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -11102,7 +11102,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000019073486, y: 137.00003}
+  m_AnchoredPosition: {x: -0.000019073486, y: 137}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!224 &224701558979040588

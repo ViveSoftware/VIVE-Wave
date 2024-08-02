@@ -29,13 +29,10 @@ namespace Wave.Native
 			{
 				if (instance == null)
 				{
-					if (instance == null)
-					{
-						var gameObject = new GameObject("WVR_EditorImpl");
-						instance = gameObject.AddComponent<WVR_EditorImpl>();
-						// This object should survive all scene transitions.
-						GameObject.DontDestroyOnLoad(instance);
-					}
+					var gameObject = new GameObject("WVR_EditorImpl");
+					instance = gameObject.AddComponent<WVR_EditorImpl>();
+					// This object should survive all scene transitions.
+					GameObject.DontDestroyOnLoad(instance);
 				}
 				return instance;
 			}
@@ -128,6 +125,8 @@ namespace Wave.Native
 		private Vector2 mouseAxis = Vector2.zero, mouseAxisEx = Vector2.zero;
 		private float axisProportion = .1f;
 #endif
+		bool trackerPoseStateUpdated = false;
+		int trackerConnectedIndex = (int)WVR_TrackerId.WVR_TrackerId_0;
 		void Update()
 		{
 			mFPS = 1.0f / Time.deltaTime;
@@ -172,7 +171,15 @@ namespace Wave.Native
 			UpdateHandGesture();
 
 			// Tracker
-			UpdateTracker();
+			if (trackerPoseStateUpdated && trackerConnectedIndex <= (int)WVR_TrackerId.WVR_TrackerId_15)
+			{
+				mEvent.trackerInput.tracker.common.type = WVR_EventType.WVR_EventType_TrackerConnected;
+				mEvent.trackerInput.tracker.trackerId = (WVR_TrackerId)trackerConnectedIndex;
+				hasEvent = true;
+
+				trackerConnectedIndex++;
+				DEBUG("Update() connected event of " + mEvent.trackerInput.tracker.trackerId);
+			}
 			BraceletPressed(WVR_TrackerId.WVR_TrackerId_0);
 			BraceletUnpressed(WVR_TrackerId.WVR_TrackerId_0);
 			BraceletPressed(WVR_TrackerId.WVR_TrackerId_1);
@@ -3038,7 +3045,7 @@ namespace Wave.Native
 			m_BraceletCaps.supportsOrientationTracking = true;
 			m_BraceletCaps.supportsPositionTracking = true;
 		}
-		private void UpdateTracker()
+		private void UpdateTrackerPose()
 		{
 			m_BraceletPoseRight.IsValidPose = true;
 			m_BraceletPoseRight.PoseMatrix = rightPoseMatrix;
@@ -3072,10 +3079,10 @@ namespace Wave.Native
 		public void StopTracker()
 		{
 			m_TrackerEnabled = false;
+			trackerPoseStateUpdated = false;
 		}
 		public bool IsTrackerConnected(WVR_TrackerId trackerId)
 		{
-			//if (trackerId == WVR_TrackerId.WVR_TrackerId_1 || trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3090,13 +3097,21 @@ namespace Wave.Native
 				return WVR_TrackerRole.WVR_TrackerRole_Pair1_Right;
 			if (trackerId == WVR_TrackerId.WVR_TrackerId_1)
 				return WVR_TrackerRole.WVR_TrackerRole_Pair1_Left;
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_2)
+				return WVR_TrackerRole.WVR_TrackerRole_Wrist_Left;
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_3)
+				return WVR_TrackerRole.WVR_TrackerRole_Wrist_Right;
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_4)
+				return WVR_TrackerRole.WVR_TrackerRole_Waist;
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_5)
+				return WVR_TrackerRole.WVR_TrackerRole_Ankle_Left;
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_6)
+				return WVR_TrackerRole.WVR_TrackerRole_Ankle_Right;
 
 			return WVR_TrackerRole.WVR_TrackerRole_Undefined;
 		}
 		public WVR_Result GetTrackerCapabilities(WVR_TrackerId trackerId, ref WVR_TrackerCapabilities capabilities)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3111,23 +3126,26 @@ namespace Wave.Native
 		{
 			if (m_TrackerEnabled)
 			{
-				if (trackerId == WVR_TrackerId.WVR_TrackerId_0)
+				UpdateTrackerPose();
+
+				if (trackerId == WVR_TrackerId.WVR_TrackerId_2)
 				{
 					poseState = m_BraceletPoseRight;
 					return WVR_Result.WVR_Success;
 				}
-				if (trackerId == WVR_TrackerId.WVR_TrackerId_1)
+				if (trackerId == WVR_TrackerId.WVR_TrackerId_3)
 				{
 					poseState = m_BraceletPoseLeft;
 					return WVR_Result.WVR_Success;
 				}
+
+				trackerPoseStateUpdated = true;
 			}
 
 			return WVR_Result.WVR_Error_FeatureNotSupport;
 		}
 		public Int32 GetTrackerInputDeviceCapability(WVR_TrackerId trackerId, WVR_InputType inputType)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_0 || trackerId == WVR_TrackerId.WVR_TrackerId_1)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3146,8 +3164,6 @@ namespace Wave.Native
 		}
 		public WVR_AnalogType GetTrackerInputDeviceAnalogType(WVR_TrackerId trackerId, WVR_InputId id)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled && s_BraceletAnalogTypes.ContainsKey(id))
 				{
@@ -3227,8 +3243,6 @@ namespace Wave.Native
 		{
 			bool pressed = false;
 
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3253,8 +3267,6 @@ namespace Wave.Native
 		{
 			bool touched = false;
 
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3281,8 +3293,6 @@ namespace Wave.Native
 			axis2d.x = 0;
 			axis2d.y = 0;
 
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3304,8 +3314,6 @@ namespace Wave.Native
 		}
 		public float GetTrackerBatteryLevel(WVR_TrackerId trackerId)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3316,8 +3324,6 @@ namespace Wave.Native
 		}
 		public WVR_Result TriggerTrackerVibration(WVR_TrackerId trackerId, UInt32 durationMicroSec = 65535, UInt32 frequency = 0, float amplitude = 0.0f)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1 ||
-				trackerId == WVR_TrackerId.WVR_TrackerId_0)
 			{
 				if (m_TrackerEnabled)
 				{
@@ -3352,15 +3358,13 @@ namespace Wave.Native
 			return exData;
 		}
 		static Dictionary<WVR_TrackerId, string> s_TrackerDeviceNames = new Dictionary<WVR_TrackerId, string>() {
-			{ WVR_TrackerId.WVR_TrackerId_0, "Wrist_Right"	/*new string(new char[] {'W', 'r', 'i', 's', 't', '_', 'R', 'i', 'g', 'h', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_1, "Wrist_Left"	/*new string(new char[] {'W', 'r', 'i', 's', 't', '_', 'L', 'e', 'f', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_2, "Waist"		/*new string(new char[] {'W', 'a', 'i', 's', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_3, "Ankle_Right"	/*new string(new char[] {'A', 'n', 'k', 'l', 'e', '_', 'R', 'i', 'g', 'h', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_4, "Ankle_Left"	/*new string(new char[] {'A', 'n', 'k', 'l', 'e', '_', 'L', 'e', 'f', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_5, "Upper_Arm_Right"	/*new string(new char[] {'U', 'p', 'p', 'e', 'r', '_', 'A', 'r', 'm', '_', 'R', 'i', 'g', 'h', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_6, "Upper_Arm_Left"	/*new string(new char[] {'U', 'p', 'p', 'e', 'r', '_', 'A', 'r', 'm', '_', 'L', 'e', 'f', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_7, "Thigh_Right"	/*new string(new char[] {'T', 'h', 'i', 'g', 'h', '_', 'R', 'i', 'g', 'h', 't' })*/ },
-			{ WVR_TrackerId.WVR_TrackerId_8, "Thigh_Left"	/*new string(new char[] {'T', 'h', 'i', 'g', 'h', '_', 'L', 'e', 'f', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_0, "Vive_Wrist_Tracker"	/*new string(new char[] {'W', 'r', 'i', 's', 't', '_', 'R', 'i', 'g', 'h', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_1, "Vive_Wrist_Tracker"	/*new string(new char[] {'W', 'r', 'i', 's', 't', '_', 'L', 'e', 'f', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_2, "Vive_Ultimate_Tracker"		/*new string(new char[] {'W', 'a', 'i', 's', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_3, "Vive_Ultimate_Tracker"	/*new string(new char[] {'A', 'n', 'k', 'l', 'e', '_', 'R', 'i', 'g', 'h', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_4, "Vive_Ultimate_Tracker"	/*new string(new char[] {'A', 'n', 'k', 'l', 'e', '_', 'L', 'e', 'f', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_5, "Vive_Ultimate_Tracker"	/*new string(new char[] {'U', 'p', 'p', 'e', 'r', '_', 'A', 'r', 'm', '_', 'R', 'i', 'g', 'h', 't' })*/ },
+			{ WVR_TrackerId.WVR_TrackerId_6, "Vive_Ultimate_Tracker"	/*new string(new char[] {'U', 'p', 'p', 'e', 'r', '_', 'A', 'r', 'm', '_', 'L', 'e', 'f', 't' })*/ },
 		};
 		public WVR_Result GetTrackerDeviceName(WVR_TrackerId trackerId, ref UInt32 nameSize, ref IntPtr deviceName)
 		{
@@ -3402,6 +3406,249 @@ namespace Wave.Native
 			DEBUG("UpdateNotifyDeviceInfo() " + info);
 		}
 		#endregion
+
+#if WAVE_BODY_CALIBRATION
+		public enum CalibrationPoseRole : UInt64
+		{
+			Unknown = 0,
+
+			// Using Tracker
+			Arm_Wrist = (UInt64)(1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Head
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftWrist
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightWrist),
+			UpperBody_Wrist = (UInt64)(Arm_Wrist | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Hip),
+			FullBody_Wrist_Ankle = (UInt64)(UpperBody_Wrist
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle),
+			FullBody_Wrist_Foot = (UInt64)(UpperBody_Wrist
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftFoot
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightFoot),
+
+			// Using Controller
+			Arm_Handheld = (UInt64)(1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Head 
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftHandheld
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightHandheld),
+			UpperBody_Handheld = (UInt64)(Arm_Handheld | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Hip),
+			FullBody_Handheld_Ankle = (UInt64)(UpperBody_Handheld | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle),
+			FullBody_Handheld_Foot = (UInt64)(UpperBody_Handheld | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftFoot | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightFoot),
+
+			// Using Natural Hand
+			Arm_Hand = (UInt64)(1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Head
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftHand
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightHand),
+			UpperBody_Hand = (UInt64)(Arm_Hand | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Hip),
+			FullBody_Hand_Ankle = (UInt64)(UpperBody_Hand | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle),
+			FullBody_Hand_Foot = (UInt64)(UpperBody_Hand | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftFoot | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightFoot),
+
+			// Head + Controller/Hand + Hip + Knee + Ankle
+			UpperBody_Handheld_Knee_Ankle = (UInt64)(UpperBody_Handheld
+				| 1 << ((Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftKnee) | 1 << ((Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightKnee)
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle),
+			UpperBody_Hand_Knee_Ankle = (UInt64)(UpperBody_Hand
+				| 1 << ((Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftKnee) | 1 << ((Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightKnee)
+				| 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle | 1 << (Int32)WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle),
+
+			// Total 14 Body Pose Roles.
+		}
+		private bool MatchBodyTrackingMode(WVR_BodyTrackingCalibrationMode mode, CalibrationPoseRole modeRole)
+		{
+			DEBUG("MatchBodyTrackingMode() mode: " + mode + ", modeRole: " + modeRole);
+
+			if (modeRole == CalibrationPoseRole.UpperBody_Handheld_Knee_Ankle || modeRole == CalibrationPoseRole.UpperBody_Hand_Knee_Ankle)
+			{
+				if (mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_UpperIKAndLegFK)
+					return true;
+			}
+			if (modeRole == CalibrationPoseRole.FullBody_Wrist_Ankle || modeRole == CalibrationPoseRole.FullBody_Wrist_Foot ||
+				modeRole == CalibrationPoseRole.FullBody_Handheld_Ankle || modeRole == CalibrationPoseRole.FullBody_Handheld_Foot ||
+				modeRole == CalibrationPoseRole.FullBody_Hand_Ankle || modeRole == CalibrationPoseRole.FullBody_Hand_Foot)
+			{
+				if (mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_FullBodyIK ||
+					mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_UpperBodyIK ||
+					mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_ArmIK)
+					return true;
+			}
+			if (modeRole == CalibrationPoseRole.UpperBody_Wrist || modeRole == CalibrationPoseRole.UpperBody_Handheld || modeRole == CalibrationPoseRole.UpperBody_Hand)
+			{
+				if (mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_UpperBodyIK ||
+					mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_ArmIK)
+					return true;
+			}
+			if (modeRole == CalibrationPoseRole.Arm_Wrist || modeRole == CalibrationPoseRole.Arm_Handheld ||
+				modeRole == CalibrationPoseRole.Arm_Hand)
+			{
+				if (mode == WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_ArmIK)
+					return true;
+			}
+
+			return false;
+		}
+		private WVR_BodyTrackingDeviceRole GetBodyTrackingRole(WVR_DeviceType type, Int32 trackerId)
+		{
+			if (type == WVR_DeviceType.WVR_DeviceType_HMD && trackerId == (Int32)WVR_DeviceType.WVR_DeviceType_HMD)
+				return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Head;
+			if (type == WVR_DeviceType.WVR_DeviceType_Controller_Left && trackerId == (Int32)WVR_DeviceType.WVR_DeviceType_Controller_Left)
+				return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftHandheld;
+			if (type == WVR_DeviceType.WVR_DeviceType_Controller_Right && trackerId == (Int32)WVR_DeviceType.WVR_DeviceType_Controller_Right)
+				return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightHandheld;
+			if (type == WVR_DeviceType.WVR_DeviceType_NaturalHand_Left && trackerId == (Int32)WVR_DeviceType.WVR_DeviceType_NaturalHand_Left)
+				return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftHand;
+			if (type == WVR_DeviceType.WVR_DeviceType_NaturalHand_Right && trackerId == (Int32)WVR_DeviceType.WVR_DeviceType_NaturalHand_Right)
+				return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightHand;
+			if (type == WVR_DeviceType.WVR_DeviceType_Tracker)
+			{
+				WVR_TrackerId tracker = (WVR_TrackerId)trackerId;
+				WVR_TrackerRole role = GetTrackerRole(tracker);
+				if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Left) { return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftWrist; }
+				if (role == WVR_TrackerRole.WVR_TrackerRole_Wrist_Right) { return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightWrist; }
+				if (role == WVR_TrackerRole.WVR_TrackerRole_Waist) { return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Hip; }
+				if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Left) { return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_LeftAnkle; }
+				if (role == WVR_TrackerRole.WVR_TrackerRole_Ankle_Right) { return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_RightAnkle; }
+			}
+
+			return WVR_BodyTrackingDeviceRole.WVR_BodyTrackingDeviceRole_Invalid;
+		}
+
+		private float m_UserHeight = 0;
+		private WVR_BodyTracking_DeviceInfo_t[] s_DeviceInfos = null;
+		private UInt32 m_DeviceInfosCount = 0;
+		private WVR_BodyTrackingCalibrationMode m_BodyTrackingCalibrationMode = WVR_BodyTrackingCalibrationMode.WVR_BodyTrackingCalibrationMode_Unknown;
+		private WVR_BodyTracking_RedirectExtrinsic_t[] s_RedirectExt = null;
+		private UInt32 m_RedirectExtCount = 0;
+
+		public UInt32 GetBodyTrackingRedirectExtrinsicCount() { return m_RedirectExtCount; }
+		public UInt32 GetBodyTrackingDeviceCount() { return m_DeviceInfosCount; }
+		public WVR_Result GetBodyTrackingDeviceInfo(
+			ref float userHeight,
+			ref WVR_BodyTrackingCalibrationMode mode,
+			[In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount,
+			[In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount)
+		{
+			userHeight = m_UserHeight;
+			mode = m_BodyTrackingCalibrationMode;
+			for (int i = 0; i < m_DeviceInfosCount; i++) { devices[i].Update(s_DeviceInfos[i]); }
+			deviceCount = m_DeviceInfosCount;
+			for (int i = 0; i < m_RedirectExtCount; i++) { redirectExtrinsics[i].Update(s_RedirectExt[i]); }
+			redirectCount = m_RedirectExtCount;
+			return WVR_Result.WVR_Success;
+		}
+		public WVR_Result ApplyCalibrationData(
+			float userHeight,
+			[In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount,
+			WVR_BodyTrackingCalibrationMode mode,
+			[In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount)
+		{
+			if (devices == null || devices.Length <= 0 || devices.Length != deviceCount)
+			{
+				ERROR("ApplyCalibrationData() devices are invalid.");
+				return WVR_Result.WVR_Error_InvalidArgument;
+			}
+			UInt64 roleMask = 0;
+			s_DeviceInfos = new WVR_BodyTracking_DeviceInfo_t[deviceCount];
+			m_DeviceInfosCount = deviceCount;
+			for (int i = 0; i < m_DeviceInfosCount; i++)
+			{
+				WVR_BodyTrackingDeviceRole role = GetBodyTrackingRole(devices[i].type, devices[i].trackerId);
+
+				DEBUG("ApplyCalibrationData() device: " + devices[i].type.Name() + ", id: " + devices[i].trackerId + ", role: " + role);
+#pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
+				roleMask |= (UInt64)(1 << (Int32)role);
+#pragma warning restore CS0675 // Bitwise-or operator used on a sign-extended operand
+
+				s_DeviceInfos[i].Update(devices[i]);
+			}
+
+			if (redirectExtrinsics == null || redirectExtrinsics.Length <= 0 || redirectExtrinsics.Length != redirectCount)
+			{
+				ERROR("ApplyCalibrationData() redirect extrinsics are invalid.");
+				return WVR_Result.WVR_Error_InvalidArgument;
+			}
+			s_RedirectExt = new WVR_BodyTracking_RedirectExtrinsic_t[redirectCount];
+			m_RedirectExtCount = redirectCount;
+			for (int i = 0; i < m_RedirectExtCount; i++)
+			{
+				s_RedirectExt[i].Update(redirectExtrinsics[i]);
+			}
+
+			CalibrationPoseRole calibRole = CalibrationPoseRole.Unknown;
+			{
+				// Upper Body + Leg FK
+				if ((roleMask & (UInt64)CalibrationPoseRole.UpperBody_Handheld_Knee_Ankle) == (UInt64)CalibrationPoseRole.UpperBody_Handheld_Knee_Ankle)
+					calibRole = CalibrationPoseRole.UpperBody_Handheld_Knee_Ankle;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.UpperBody_Hand_Knee_Ankle) == (UInt64)CalibrationPoseRole.UpperBody_Hand_Knee_Ankle)
+					calibRole = CalibrationPoseRole.UpperBody_Hand_Knee_Ankle;
+
+				// ToDo: else if {Hybrid mode}
+
+				// Full body
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Wrist_Ankle) == (UInt64)CalibrationPoseRole.FullBody_Wrist_Ankle)
+					calibRole = CalibrationPoseRole.FullBody_Wrist_Ankle;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Wrist_Foot) == (UInt64)CalibrationPoseRole.FullBody_Wrist_Foot)
+					calibRole = CalibrationPoseRole.FullBody_Wrist_Foot;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Handheld_Ankle) == (UInt64)CalibrationPoseRole.FullBody_Handheld_Ankle)
+					calibRole = CalibrationPoseRole.FullBody_Handheld_Ankle;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Handheld_Foot) == (UInt64)CalibrationPoseRole.FullBody_Handheld_Foot)
+					calibRole = CalibrationPoseRole.FullBody_Handheld_Foot;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Hand_Ankle) == (UInt64)CalibrationPoseRole.FullBody_Hand_Ankle)
+					calibRole = CalibrationPoseRole.FullBody_Hand_Ankle;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.FullBody_Hand_Foot) == (UInt64)CalibrationPoseRole.FullBody_Hand_Foot)
+					calibRole = CalibrationPoseRole.FullBody_Hand_Foot;
+
+				// Upper body
+				else if ((roleMask & (UInt64)CalibrationPoseRole.UpperBody_Wrist) == (UInt64)CalibrationPoseRole.UpperBody_Wrist)
+					calibRole = CalibrationPoseRole.UpperBody_Wrist;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.UpperBody_Handheld) == (UInt64)CalibrationPoseRole.UpperBody_Handheld)
+					calibRole = CalibrationPoseRole.UpperBody_Handheld;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.UpperBody_Hand) == (UInt64)CalibrationPoseRole.UpperBody_Hand)
+					calibRole = CalibrationPoseRole.UpperBody_Hand;
+
+				// Arm
+				else if ((roleMask & (UInt64)CalibrationPoseRole.Arm_Wrist) == (UInt64)CalibrationPoseRole.Arm_Wrist)
+					calibRole = CalibrationPoseRole.Arm_Wrist;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.Arm_Handheld) == (UInt64)CalibrationPoseRole.Arm_Handheld)
+					calibRole = CalibrationPoseRole.Arm_Handheld;
+				else if ((roleMask & (UInt64)CalibrationPoseRole.Arm_Hand) == (UInt64)CalibrationPoseRole.Arm_Hand)
+					calibRole = CalibrationPoseRole.Arm_Hand;
+			}
+
+			if (!MatchBodyTrackingMode(mode, calibRole))
+			{
+				ERROR("ApplyCalibrationData() mode: " + mode + ", calibRole: " + calibRole + " NOT mathed.");
+				return WVR_Result.WVR_Error_InvalidArgument;
+			}
+
+			m_UserHeight = userHeight;
+			m_BodyTrackingCalibrationMode = mode;
+			for (int i = 0; i < s_DeviceInfos.Length; i++)
+			{
+				DEBUG("ApplyCalibrationData() " + i + ". " + s_DeviceInfos[i].type + ", id: " + s_DeviceInfos[i].trackerId + ", role: " + s_DeviceInfos[i].role);
+			}
+
+			return WVR_Result.WVR_Success;
+		}
+#endif
+#if WAVE_BODY_IK
+		public WVR_Result CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker)
+		{
+			return WVR_Result.WVR_Error_FeatureNotSupport;
+		}
+		public WVR_Result DestroyBodyTracker(WVR_BodyTracker bodyTracker)
+		{
+			return WVR_Result.WVR_Error_FeatureNotSupport;
+		}
+		public WVR_Result GetBodyJointData(WVR_BodyTracker bodyTracker, WVR_PoseOriginModel originModel, ref WVR_BodyJointData_t data)
+		{
+			return WVR_Result.WVR_Error_FeatureNotSupport;
+		}
+		public WVR_Result GetBodyScale(WVR_BodyTracker bodyTracker, ref float scale)
+		{
+			return WVR_Result.WVR_Error_FeatureNotSupport;
+		}
+		public WVR_Result GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties)
+		{
+			return WVR_Result.WVR_Error_FeatureNotSupport;
+		}
+#endif
 
 		public bool IsDeviceConnected(WVR_DeviceType type)
 		{
@@ -3450,4 +3697,4 @@ namespace Wave.Native
 		}
 	}
 #endif
-}
+	}

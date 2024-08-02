@@ -1,8 +1,10 @@
 {
     "name": "Wave.Essence.Editor",
+    "rootNamespace": "",
     "references": [
         "Wave.Essence",
-		"Wave.XRSDK"
+        "Wave.XRSDK",
+        "Unity.XR.Management.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -18,6 +20,11 @@
             "name": "com.unity.render-pipelines.universal",
             "expression": "0.1.0",
             "define": "URP_INSTALLED"
+        },
+        {
+            "name": "com.unity.xr.management",
+            "expression": "4.2.1",
+            "define": "XR_PLUGIN_MANAGEMENT_4_2_1"
         }
     ],
     "noEngineReferences": false

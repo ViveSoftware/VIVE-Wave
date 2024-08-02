@@ -136,6 +136,15 @@ namespace Wave.Essence
 			get { return WaveEssence.Instance.GetInteractionMode(); }
 			set { }
 		}
+
+		static WVR_PoseState_t onHeadPose = new WVR_PoseState_t(), onGroundPose = new WVR_PoseState_t();
+		public static float GetFloorHeight()
+		{
+			Interop.WVR_GetPoseState(WVR_DeviceType.WVR_DeviceType_HMD, WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnHead, 0, ref onHeadPose);
+			Interop.WVR_GetPoseState(WVR_DeviceType.WVR_DeviceType_HMD, WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnGround, 0, ref onGroundPose);
+
+			return onGroundPose.RawPose.position.v1 - onHeadPose.RawPose.position.v1;
+		}
 	} // class ClientInterface
 
 	public static class Numeric
@@ -502,6 +511,11 @@ namespace Wave.Essence
 		{
 			device = GetAdaptiveDevice(device, adaptiveHanded);
 			return InputDeviceControl.GetAngularVelocity(device.InputDevice(), out angularVelocity);
+		}
+		public static bool GetAcceleration(XR_Device device, ref Vector3 acceleration, bool adaptiveHanded = false)
+		{
+			device = GetAdaptiveDevice(device, adaptiveHanded);
+			return InputDeviceControl.GetAcceleration(device.InputDevice(), out acceleration);
 		}
 
 		#region Controller Pose Mode

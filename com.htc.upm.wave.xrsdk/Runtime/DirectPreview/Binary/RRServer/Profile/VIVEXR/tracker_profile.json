@@ -1,0 +1,106 @@
+{
+	"jsonid": "input_profile",
+	"controller_type": "vive_wrist_tracker",
+	"input_path": "{htc_business_streaming}\\input\\vive_wrist_tracker_profile.json",
+	"input_bindingui_mode": "single_device",
+	"input_bindingui_right": {
+		"image": "{htc}/icons/vive_tracker.svg"
+	},
+	"tracker_types" :
+  {
+  	"TrackerRole_Handed" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_handed_profile.json",
+  	"TrackerRole_LeftFoot" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_left_foot_profile.json",
+  	"TrackerRole_RightFoot" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_right_foot_profile.json",
+  	"TrackerRole_LeftShoulder" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_left_shoulder_profile.json",
+  	"TrackerRole_RightShoulder" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_right_shoulder_profile.json",
+  	"TrackerRole_LeftElbow" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_left_elbow_profile.json",
+  	"TrackerRole_RightElbow" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_right_elbow_profile.json",
+  	"TrackerRole_LeftKnee" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_left_knee_profile.json",
+  	"TrackerRole_RightKnee" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_right_knee_profile.json",
+  	"TrackerRole_Waist" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_waist_profile.json",
+  	"TrackerRole_Chest" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_chest_profile.json",
+  	"TrackerRole_Camera" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_camera_profile.json",
+  	"TrackerRole_Keyboard" : "{htc_business_streaming}/input/wrist_tracker/vive_wrist_tracker_keyboard_profile.json"
+  },
+	"priority": 6,
+	
+	"input_source": {
+		"/input/system": {
+			"type": "button",
+			"click": true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 0
+		},
+		"/input/trigger": {
+			"type": "trigger",
+			"click": true,
+			"touch": true,
+			"value" : true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 1
+		},
+		"/input/trackpad": {
+			"type": "trackpad",
+			"click": true,
+			"touch": true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 2
+		},
+		"/input/grip": {
+			"type": "button",
+			"click": true,
+			"touch": true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 3
+		},
+		"/input/x": {
+			"type": "button",
+			"click": true,
+			"touch": true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 4
+		},
+		"/input/y": {
+			"type": "button",
+			"click": true,
+			"touch": true,
+			"binding_image_point": [
+				0,
+				0
+			],
+			"order": 5
+		},
+		"/pose/raw": {
+			"type": "pose",
+			"binding_image_point": [
+				0,
+				0
+			]
+		}
+	},
+	"default_bindings": [
+		{
+			"app_key": "openvr.component.vrcompositor",
+			"binding_url": "vrcompositor_bindings_vive_wrist_tracker.json"
+		},
+		{
+			"app_key": "openvr.tool.steamvr_environments",
+			"binding_url": "vrenvironment_bindings_vive_wrist_tracker.json"
+		}
+	]
+}

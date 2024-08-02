@@ -988,6 +988,84 @@ namespace Wave.Native
 
 		#endregion
 
+#if WAVE_BODY_CALIBRATION
+		#region wvr_bodytracking.h
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyTrackingRedirectExtrinsicCount", CallingConvention = CallingConvention.Cdecl)]
+		public static extern UInt32 WVR_GetBodyTrackingRedirectExtrinsicCount();
+		public override UInt32 GetBodyTrackingRedirectExtrinsicCount()
+		{
+			return WVR_GetBodyTrackingRedirectExtrinsicCount();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyTrackingDeviceCount", CallingConvention = CallingConvention.Cdecl)]
+		public static extern UInt32 WVR_GetBodyTrackingDeviceCount();
+		public override UInt32 GetBodyTrackingDeviceCount()
+		{
+			return WVR_GetBodyTrackingDeviceCount();
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyTrackingDeviceInfo", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetBodyTrackingDeviceInfo(ref float userHeight, ref WVR_BodyTrackingCalibrationMode mode, [In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount, [In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount);
+		public override WVR_Result GetBodyTrackingDeviceInfo(
+			ref float userHeight,
+			ref WVR_BodyTrackingCalibrationMode mode,
+			[In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount,
+			[In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount)
+		{
+			return WVR_GetBodyTrackingDeviceInfo(ref userHeight, ref mode, devices, ref deviceCount, redirectExtrinsics, ref redirectCount);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_ApplyCalibrationData", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_ApplyCalibrationData(float userHeight, [In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount, WVR_BodyTrackingCalibrationMode mode, [In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount);
+		public override WVR_Result ApplyCalibrationData(
+			float userHeight,
+			[In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount,
+			WVR_BodyTrackingCalibrationMode mode,
+			[In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount)
+		{
+			return WVR_ApplyCalibrationData(userHeight, devices, deviceCount, mode, redirectExtrinsics, redirectCount);
+		}
+		#endregion
+#endif
+#if WAVE_BODY_IK
+		#region wvr_body.h
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_CreateBodyTracker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker);
+		public override WVR_Result CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker)
+		{
+			return WVR_CreateBodyTracker(ref info, ref bodyTracker);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_DestroyBodyTracker", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_DestroyBodyTracker(WVR_BodyTracker bodyTracker);
+		public override WVR_Result DestroyBodyTracker(WVR_BodyTracker bodyTracker)
+		{
+			return WVR_DestroyBodyTracker(bodyTracker);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyJointData", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetBodyJointData(WVR_BodyTracker bodyTracker, WVR_PoseOriginModel originModel, ref WVR_BodyJointData_t data);
+		public override WVR_Result GetBodyJointData(WVR_BodyTracker bodyTracker, WVR_PoseOriginModel originModel, ref WVR_BodyJointData_t data)
+		{
+			return WVR_GetBodyJointData(bodyTracker, originModel, ref data);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyScale", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetBodyScale(WVR_BodyTracker bodyTracker, ref float scale);
+		public override WVR_Result GetBodyScale(WVR_BodyTracker bodyTracker, ref float scale)
+		{
+			return WVR_GetBodyScale(bodyTracker, ref scale);
+		}
+
+		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetBodyProperties", CallingConvention = CallingConvention.Cdecl)]
+		public static extern WVR_Result WVR_GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties);
+		public override WVR_Result GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties)
+		{
+			return WVR_GetBodyProperties(bodyTracker, ref properties);
+		}
+		#endregion
+#endif
+
 		[DllImportAttribute("wvr_api", EntryPoint = "WVR_GetSupportedFeatures", CallingConvention = CallingConvention.Cdecl)]
 		public static extern ulong WVR_GetSupportedFeatures();
 		public override ulong GetSupportedFeatures()

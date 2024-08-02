@@ -1,7 +1,7 @@
 {
   "name": "com.htc.upm.wave.native",
   "displayName": "VIVE Wave XR Plugin - Native",
-  "version": "6.0.0-r.14",
+  "version": "6.1.0-r.8",
   "unity": "2019.4",
   "description": "The \"VIVE Wave XR Plugin - Native\" package provides the wraper of WaveVR.\n\nView the documentation for additional information.\n\n",
   "keywords": [
@@ -15,7 +15,7 @@
     "url": "https://www.htc.com"
   },
   "dependencies": {
-    "com.htc.upm.wave.xrsdk": "6.0.0-r.14"
+    "com.htc.upm.wave.xrsdk": "6.1.0-r.8"
   },
   "samples": [
     {

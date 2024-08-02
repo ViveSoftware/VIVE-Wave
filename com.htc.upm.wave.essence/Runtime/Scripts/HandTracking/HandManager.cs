@@ -279,19 +279,19 @@ namespace Wave.Essence.Hand
 			// 1. Checks if Hand Gesture is supported.
 			if ((supportedFeature & (ulong)WVR_SupportedFeature.WVR_SupportedFeature_HandGesture) == 0)
 			{
-				Log.w(LOG_TAG, "WVR_SupportedFeature_HandGesture is not enabled.", true);
+				sb.Clear().Append("Awake() WVR_SupportedFeature_HandGesture is not enabled."); WARNING(sb);
 				SetHandGestureStatus(GestureStatus.NoSupport);
 			}
 			// 2. Checks if Natural Hand is supported.
 			if ((supportedFeature & (ulong)WVR_SupportedFeature.WVR_SupportedFeature_HandTracking) == 0)
 			{
-				Log.w(LOG_TAG, "Awake() WVR_SupportedFeature_HandTracking is not enabled.", true);
+				sb.Clear().Append("Awake() WVR_SupportedFeature_HandTracking is not enabled."); WARNING(sb);
 				SetHandTrackerStatus(TrackerType.Natural, TrackerStatus.NoSupport);
 			}
 			// 3. Checks if WVR_SupportedFeature electronic hand is supported.
 			if ((supportedFeature & (ulong)WVR_SupportedFeature.WVR_SupportedFeature_ElectronicHand) == 0)
 			{
-				Log.w(LOG_TAG, "Awake() WVR_SupportedFeature_ElectronicHand is not enabled.", true);
+				sb.Clear().Append("Awake() WVR_SupportedFeature_ElectronicHand is not enabled."); WARNING(sb);
 				SetHandTrackerStatus(TrackerType.Electronic, TrackerStatus.NoSupport);
 			}
 
@@ -301,27 +301,29 @@ namespace Wave.Essence.Hand
 			m_GestureOptionValue = m_GestureOptions.Gesture.optionValue;
 
 			if (HandInputSwitch.Instance != null)
-				Log.i(LOG_TAG, "Awake() Loaded HandInputSwitch.", true);
+			{
+				sb.Clear().Append("Awake() Loaded HandInputSwitch."); INFO(sb);
+			}
 		}
 		void Start()
 		{
 			if (m_GestureOptions.InitialStart)
 			{
-				sb.Clear().Append("OnEnable() Starts hand gesture."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts hand gesture."); INFO(sb);
 				StartHandGesture();
 			}
 			if (m_TrackerOptions.Natural.InitialStart)
 			{
-				sb.Clear().Append("OnEnable() Starts the natural hand tracker."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts the natural hand tracker."); INFO(sb);
 				StartHandTracker(TrackerType.Natural);
 			}
 			if (m_TrackerOptions.Electronic.InitialStart)
 			{
-				sb.Clear().Append("OnEnable() Starts the electronic hand tracker."); DEBUG(sb);
+				sb.Clear().Append("OnEnable() Starts the electronic hand tracker."); INFO(sb);
 				StartHandTracker(TrackerType.Electronic);
 			}
 
-			sb.Clear().Append("Start() CheckWristPositionFusion"); DEBUG(sb);
+			sb.Clear().Append("Start() CheckWristPositionFusion"); INFO(sb);
 			CheckWristPositionFusion();
 
 			var ptr = FunctionsHelper.GetFuncPtr("ConvertHandTrackingDataToUnity");
@@ -380,7 +382,7 @@ namespace Wave.Essence.Hand
 		{
 			if (!pause)
 			{
-				sb.Clear().Append("OnApplicationPause() Resume, CheckWristPositionFusion"); DEBUG(sb);
+				sb.Clear().Append("OnApplicationPause() Resume, CheckWristPositionFusion"); INFO(sb);
 				CheckWristPositionFusion();
 			}
 		}
@@ -491,7 +493,7 @@ namespace Wave.Essence.Hand
 			}
 
 			SetHandGestureStatus(GestureStatus.Starting);
-			sb.Clear().Append("StartHandGestureLock() ").Append(m_GestureOptionValue); DEBUG(sb);
+			sb.Clear().Append("StartHandGestureLock() ").Append(m_GestureOptionValue); INFO(sb);
 			WVR_Result result = Interop.WVR_StartHandGesture(m_GestureOptionValue);
 			switch(result)
 			{
@@ -507,7 +509,7 @@ namespace Wave.Essence.Hand
 			}
 
 			GestureStatus status = GetHandGestureStatus();
-			sb.Clear().Append("StartHandGestureLock() ").Append(result).Append(", status: ").Append(status.Name()); DEBUG(sb);
+			sb.Clear().Append("StartHandGestureLock() ").Append(result).Append(", status: ").Append(status.Name()); INFO(sb);
 			GeneralEvent.Send(HAND_GESTURE_STATUS, status);
 
 			if (handGestureResultCB != null)
@@ -520,7 +522,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handGestureThreadLock)
 			{
-				sb.Clear().Append("StartHandGestureThread()"); DEBUG(sb);
+				sb.Clear().Append("StartHandGestureThread()"); INFO(sb);
 				StartHandGestureLock();
 			}
 		}
@@ -545,7 +547,7 @@ namespace Wave.Essence.Hand
 			GestureStatus status = GetHandGestureStatus();
 			if (status == GestureStatus.Available)
 			{
-				sb.Clear().Append("StopHandGestureLock()"); DEBUG(sb);
+				sb.Clear().Append("StopHandGestureLock()"); INFO(sb);
 				SetHandGestureStatus(GestureStatus.Stopping);
 				Interop.WVR_StopHandGesture();
 				SetHandGestureStatus(GestureStatus.NotStart);
@@ -559,7 +561,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handGestureThreadLock)
 			{
-				sb.Clear().Append("StopHandGestureThread()"); DEBUG(sb);
+				sb.Clear().Append("StopHandGestureThread()"); INFO(sb);
 				StopHandGestureLock();
 			}
 		}
@@ -582,7 +584,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handGestureThreadLock)
 			{
-				sb.Clear().Append("RestartHandGestureThread()"); DEBUG(sb);
+				sb.Clear().Append("RestartHandGestureThread()"); INFO(sb);
 				StopHandGestureLock();
 				StartHandGestureLock();
 			}
@@ -736,7 +738,7 @@ namespace Wave.Essence.Hand
 					status == TrackerStatus.Stopping ||
 					status == TrackerStatus.NoSupport)
 				{
-					sb.Clear().Append("CanStartHandTracker(").Append(tracker.Name()).Append(") status: ").Append(status); DEBUG(sb);
+					sb.Clear().Append("CanStartHandTracker(").Append(tracker.Name()).Append(") status: ").Append(status); INFO(sb);
 					return false;
 				}
 
@@ -770,7 +772,7 @@ namespace Wave.Essence.Hand
 		{
 			var status = GetHandTrackerStatus(tracker);
 			if (status == TrackerStatus.Available) { return true; }
-			sb.Clear().Append("CanStopHandTracker(").Append(tracker.Name()).Append(") status:").Append(status.Name()); DEBUG(sb);
+			sb.Clear().Append("CanStopHandTracker(").Append(tracker.Name()).Append(") status:").Append(status.Name()); INFO(sb);
 			return false;
 		}
 
@@ -783,7 +785,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				sb.Clear().Append("StartHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+				sb.Clear().Append("StartHandTrackerLock() XR ").Append(tracker.Name()); INFO(sb);
 
 				#region Input Device
 				if (tracker == TrackerType.Natural) { InputDeviceHand.ActivateNaturalHand(true); }
@@ -814,7 +816,7 @@ namespace Wave.Essence.Hand
 			}
 
 			TrackerStatus status = GetHandTrackerStatus(tracker);
-			sb.Clear().Append("StartHandTrackerLock() ").Append	(tracker.Name()).Append(", ").Append(result).Append(", status: ").Append(status.Name()); DEBUG(sb);
+			sb.Clear().Append("StartHandTrackerLock() ").Append	(tracker.Name()).Append(", ").Append(result).Append(", status: ").Append(status.Name()); INFO(sb);
 			GeneralEvent.Send(HAND_TRACKER_STATUS, tracker, status);
 
 			if (handTrackerResultCB != null)
@@ -827,7 +829,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handTrackerThreadLocker)
 			{
-				sb.Clear().Append("StartHandTrackerThread() ").Append(((TrackerType)tracker).Name()); DEBUG(sb);
+				sb.Clear().Append("StartHandTrackerThread() ").Append(((TrackerType)tracker).Name()); INFO(sb);
 				StartHandTrackerLock((TrackerType)tracker);
 			}
 		}
@@ -876,7 +878,7 @@ namespace Wave.Essence.Hand
 
 			if (UseXRData(tracker))
 			{
-				sb.Clear().Append("StopHandTrackerLock() XR ").Append(tracker.Name()); DEBUG(sb);
+				sb.Clear().Append("StopHandTrackerLock() XR ").Append(tracker.Name()); INFO(sb);
 
 				#region Input Device
 				if (tracker == TrackerType.Natural) { InputDeviceHand.ActivateNaturalHand(false); }
@@ -890,7 +892,7 @@ namespace Wave.Essence.Hand
 				return;
 			}
 
-			sb.Clear().Append("StopHandTrackerLock() ").Append(tracker.Name()); DEBUG(sb);
+			sb.Clear().Append("StopHandTrackerLock() ").Append(tracker.Name()); INFO(sb);
 			SetHandTrackerStatus(tracker, TrackerStatus.Stopping);
 			Interop.WVR_StopHandTracking((WVR_HandTrackerType)tracker);
 			SetHandTrackerStatus(tracker, TrackerStatus.NotStart);
@@ -905,7 +907,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handTrackerThreadLocker)
 			{
-				sb.Clear().Append("StopHandTrackerThread() ").Append(((TrackerType)tracker).Name()); DEBUG(sb);
+				sb.Clear().Append("StopHandTrackerThread() ").Append(((TrackerType)tracker).Name()); INFO(sb);
 				StopHandTrackerLock((TrackerType)tracker);
 			}
 		}
@@ -940,7 +942,7 @@ namespace Wave.Essence.Hand
 		{
 			lock (handTrackerThreadLocker)
 			{
-				sb.Clear().Append("RestartHandTrackerThread() ").Append(((TrackerType)tracker).Name()); DEBUG(sb);
+				sb.Clear().Append("RestartHandTrackerThread() ").Append(((TrackerType)tracker).Name()); INFO(sb);
 				if (UseXRData((TrackerType)tracker))
 				{
 					StopHandTrackerLock((TrackerType)tracker);
@@ -2475,16 +2477,16 @@ namespace Wave.Essence.Hand
 		private void CheckWristPositionFusion()
 		{
 			m_WristPositionFused = Interop.WVR_IsEnhanceHandStable();
-			sb.Clear().Append("CheckWristPositionFusion() ").Append(m_WristPositionFused); DEBUG(sb);
+			sb.Clear().Append("CheckWristPositionFusion() ").Append(m_WristPositionFused); INFO(sb);
 		}
 		private void OnWristPositionFusionChange(WVR_Event_t systemEvent)
 		{
-			sb.Clear().Append("OnWristPositionFusionChange()"); DEBUG(sb);
+			sb.Clear().Append("OnWristPositionFusionChange()"); INFO(sb);
 			CheckWristPositionFusion();
 		}
 		public void FuseWristPositionWithTracker(bool fuse)
 		{
-			sb.Clear().Append("FuseWristPositionWithTracker() ").Append(fuse); DEBUG(sb);
+			sb.Clear().Append("FuseWristPositionWithTracker() ").Append(fuse); INFO(sb);
 			Interop.WVR_EnhanceHandStable(fuse);
 			CheckWristPositionFusion();
 		}

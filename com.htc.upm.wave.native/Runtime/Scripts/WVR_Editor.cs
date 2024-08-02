@@ -349,6 +349,55 @@ namespace Wave.Native
 		}
 		#endregion
 
+#if WAVE_BODY_CALIBRATION
+		public override UInt32 GetBodyTrackingRedirectExtrinsicCount()
+		{
+			return system.GetBodyTrackingRedirectExtrinsicCount();
+		}
+		public override UInt32 GetBodyTrackingDeviceCount()
+		{
+			return system.GetBodyTrackingDeviceCount();
+		}
+		public override WVR_Result GetBodyTrackingDeviceInfo(
+			ref float userHeight,
+			ref WVR_BodyTrackingCalibrationMode mode,
+			[In, Out] WVR_BodyTracking_DeviceInfo_t[] devices, ref UInt32 deviceCount,
+			[In, Out] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, ref UInt32 redirectCount)
+		{
+			return GetBodyTrackingDeviceInfo(ref userHeight, ref mode, devices, ref deviceCount, redirectExtrinsics, ref redirectCount);
+		}
+		public override WVR_Result ApplyCalibrationData(
+			float userHeight,
+			[In] WVR_BodyTracking_DeviceInfo_t[] devices, UInt32 deviceCount,
+			WVR_BodyTrackingCalibrationMode mode,
+			[In] WVR_BodyTracking_RedirectExtrinsic_t[] redirectExtrinsics, UInt32 redirectCount)
+		{
+			return system.ApplyCalibrationData(userHeight, devices, deviceCount, mode, redirectExtrinsics, redirectCount);
+		}
+#endif
+#if WAVE_BODY_IK
+		public override WVR_Result CreateBodyTracker([In] ref WVR_BodyCreateInfo_t info, ref WVR_BodyTracker bodyTracker)
+		{
+			return system.CreateBodyTracker(ref info, ref bodyTracker);
+		}
+		public override WVR_Result DestroyBodyTracker(WVR_BodyTracker bodyTracker)
+		{
+			return system.DestroyBodyTracker(bodyTracker);
+		}
+		public override WVR_Result GetBodyJointData(WVR_BodyTracker bodyTracker, WVR_PoseOriginModel originModel, ref WVR_BodyJointData_t data)
+		{
+			return system.GetBodyJointData(bodyTracker, originModel, ref data);
+		}
+		public override WVR_Result GetBodyScale(WVR_BodyTracker bodyTracker, ref float scale)
+		{
+			return system.GetBodyScale(bodyTracker, ref scale);
+		}
+		public override WVR_Result GetBodyProperties(WVR_BodyTracker bodyTracker, ref WVR_BodyProperties_t properties)
+		{
+			return system.GetBodyProperties(bodyTracker, ref properties);
+		}
+#endif
+
 		public override bool IsDeviceConnected(WVR_DeviceType type)
 		{
 			return system.IsDeviceConnected(type);

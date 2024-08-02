@@ -27,13 +27,15 @@ namespace Wave.Essence
 	{
 		private const string LOG_TAG = "Wave.Essence.WaveEssence";
 		static StringBuilder m_sb = null;
-		protected static StringBuilder sb {
+		static StringBuilder sb {
 			get {
 				if (m_sb == null) { m_sb = new StringBuilder(); }
 				return m_sb;
 			}
 		}
 		private void DEBUG(StringBuilder msg) { Log.d(LOG_TAG, msg, true); }
+		private void INFO(StringBuilder msg) { Log.i(LOG_TAG, msg, true); }
+		private void VERBOSE(StringBuilder msg) { Log.v(LOG_TAG, msg, true); }
 
 		private static WaveEssence instance = null;
 		public static WaveEssence Instance
@@ -1010,7 +1012,7 @@ namespace Wave.Essence
 		}
 		public bool SetControllerPoseMode(WVR_DeviceType type, WVR_ControllerPoseMode mode)
 		{
-			sb.Clear().Append("SetControllerPoseMode() ").Append(type.Name()).Append(", ").Append(mode); DEBUG(sb);
+			sb.Clear().Append("SetControllerPoseMode() ").Append(type.Name()).Append(", ").Append(mode); INFO(sb);
 			return Interop.WVR_SetControllerPoseMode(type, mode);
 		}
 		#endregion
@@ -1023,22 +1025,13 @@ namespace Wave.Essence
 			sb.Clear().Append("UpdateInteractionMode() m_InteractionMode = ").Append(m_InteractionMode); DEBUG(sb);
 		}
 
-		[System.Obsolete("This is an obsolete function.", true)]
-		public void SetInteractionMode(XR_InteractionMode mode)
-		{
-			if (Interop.WVR_SetInteractionMode((WVR_InteractionMode)mode))
-			{
-				m_InteractionMode = mode;
-				sb.Clear().Append("SetInteractionMode() ").Append(m_InteractionMode); DEBUG(sb);
-			}
-		}
-
 		public XR_InteractionMode GetInteractionMode()
 		{
 #if UNITY_EDITOR
 			bool EnableDirectPreview = EditorPrefs.GetBool("Wave/DirectPreview/EnableDirectPreview", false);
 			if(EnableDirectPreview) { return (XR_InteractionMode)Interop.WVR_GetInteractionMode(); }
 #endif
+			sb.Clear().Append("GetInteractionMode() ").Append((int)m_InteractionMode); VERBOSE(sb);
 			return m_InteractionMode;
 		}
 		private void OnInteractionModeChanged(WVR_Event_t systemEvent)
@@ -1090,7 +1083,11 @@ namespace Wave.Essence
 		}
 		public bool IsTableStatic(XR_Hand hand)
 		{
-			if (s_TableStatic != null && s_TableStatic.ContainsKey((WVR_DeviceType)hand)) { return s_TableStatic[(WVR_DeviceType)hand]; }
+			if (s_TableStatic != null && s_TableStatic.ContainsKey((WVR_DeviceType)hand))
+			{
+				sb.Clear().Append("IsTableStatic() ").Append(s_TableStatic[(WVR_DeviceType)hand]); VERBOSE(sb);
+				return s_TableStatic[(WVR_DeviceType)hand];
+			}
 			return false;
 		}
 		#endregion

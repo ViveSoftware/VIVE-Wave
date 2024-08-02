@@ -49,19 +49,7 @@ namespace Wave.Essence.Hand.Editor
 			/// Gesture Options.
 			EditorGUILayout.PropertyField(m_GestureOptions);
 
-			/// Tracker Options.
-			//EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-			/*EditorGUILayout.HelpBox(
-				"The Natural and Electronic hand tracker are both disabled by default.\n" +
-				"To enable the tracker will consume power.",
-				MessageType.Warning);
-
-			EditorGUILayout.PropertyField(m_TrackerOptions);*/
 			GUILayout.Space(5);
-			EditorGUILayout.HelpBox(
-				"Note: You have to check the menu item\n" +
-				"Wave > HandTracking > EnableHandTracking",
-				MessageType.Info);
 			myScript.TrackerOptions.Natural.InitialStart = EditorGUILayout.Toggle("Initial Start Natural Hand", myScript.TrackerOptions.Natural.InitialStart);
 
 			serializedObject.ApplyModifiedProperties();

@@ -242,15 +242,19 @@ namespace Wave.OpenXR
 			}
 		}
 		internal static int inputDeviceFrame = -1;
-		private static void UpdateInputDevices()
+		internal static long updatedTimestamp = 0;
+        private static void UpdateInputDevices()
 		{
-			if (inputDeviceFrame != Time.frameCount)
-			{
-				inputDeviceFrame = Time.frameCount;
-				lock (inputDeviceLock)
+            lock (inputDeviceLock)
+            {
+                if (inputDeviceFrame != Time.frameCount)
 				{
-					InputDevices.GetDevices(s_UpdatedDevices);
-				}
+					inputDeviceFrame = Time.frameCount;
+                    InputDevices.GetDevices(s_UpdatedDevices);
+                    long timestamp = Stopwatch.GetTimestamp();
+                    long frequency = Stopwatch.Frequency;
+                    updatedTimestamp = (long)((double)timestamp / frequency * 1E+9);
+                }
 			}
 		}
 
@@ -354,7 +358,15 @@ namespace Wave.OpenXR
 			return false;
 		}
 
-		internal static Dictionary<bool, Bone> m_Palm = new Dictionary<bool, Bone>()
+		public static bool IsTracked(bool isLeft, out long timestamp)
+		{
+			bool isTracked = IsTracked(isLeft);
+            timestamp = updatedTimestamp;
+			return isTracked;
+        }
+
+
+        internal static Dictionary<bool, Bone> m_Palm = new Dictionary<bool, Bone>()
 		{
 			{ false, new Bone() },
 			{ true, new Bone() },

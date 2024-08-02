@@ -160,11 +160,11 @@ public class WaveXRPlayerSettingsConfigDialog : EditorWindow
 			}
 		};
 
-		var AndroidMinSDK = new Item("Android Min SDK version", AndroidSdkVersions.AndroidApiLevel25.ToString())
+		var AndroidMinSDK = new Item("Android Min SDK version", AndroidSdkVersions.AndroidApiLevel29.ToString())
 		{
-			IsReady = () => { return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel25; },
+			IsReady = () => { return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel29; },
 			GetCurrent = () => { return PlayerSettings.Android.minSdkVersion.ToString(); },
-			Set = () => { PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25; }
+			Set = () => { PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29; }
 		};
 
 #if UNITY_2019_4_OR_NEWER

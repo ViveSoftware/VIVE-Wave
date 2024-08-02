@@ -10,6 +10,7 @@
 
 using UnityEngine;
 using UnityEngine.XR;
+using System;
 using Wave.Native;
 using Wave.OpenXR;
 
@@ -114,31 +115,14 @@ namespace Wave.Essence.Tracker
 			TrackerId.Tracker14,
 			TrackerId.Tracker15,
 		};
-
-		public static TrackerId Id(this WVR_TrackerId trackerId)
+		public static TrackerId GetTrackerId(Int32 id)
 		{
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_0) { return TrackerId.Tracker0; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_1) { return TrackerId.Tracker1; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_2) { return TrackerId.Tracker2; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_3) { return TrackerId.Tracker3; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_4) { return TrackerId.Tracker4; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_5) { return TrackerId.Tracker5; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_6) { return TrackerId.Tracker6; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_7) { return TrackerId.Tracker7; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_8) { return TrackerId.Tracker8; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_9) { return TrackerId.Tracker9; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_10) { return TrackerId.Tracker10; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_11) { return TrackerId.Tracker11; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_12) { return TrackerId.Tracker12; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_13) { return TrackerId.Tracker13; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_14) { return TrackerId.Tracker14; }
-			if (trackerId == WVR_TrackerId.WVR_TrackerId_15) { return TrackerId.Tracker15; }
-
-			return TrackerId.Tracker0;
-		}
-		public static WVR_TrackerId Id(this TrackerId trackerId)
-		{
-			return (WVR_TrackerId)trackerId;
+			for (int i = 0; i < s_TrackerIds.Length; i++)
+			{
+				if ((Int32)s_TrackerIds[i] == id)
+					return s_TrackerIds[i];
+			}
+			return TrackerId.Tracker15;
 		}
 
 		public static string Name(this TrackerId trackerId)
@@ -370,6 +354,32 @@ namespace Wave.Essence.Tracker
 		}
 
 		#region Native
+		public static TrackerId Id(this WVR_TrackerId trackerId)
+		{
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_0) { return TrackerId.Tracker0; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_1) { return TrackerId.Tracker1; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_2) { return TrackerId.Tracker2; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_3) { return TrackerId.Tracker3; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_4) { return TrackerId.Tracker4; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_5) { return TrackerId.Tracker5; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_6) { return TrackerId.Tracker6; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_7) { return TrackerId.Tracker7; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_8) { return TrackerId.Tracker8; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_9) { return TrackerId.Tracker9; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_10) { return TrackerId.Tracker10; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_11) { return TrackerId.Tracker11; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_12) { return TrackerId.Tracker12; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_13) { return TrackerId.Tracker13; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_14) { return TrackerId.Tracker14; }
+			if (trackerId == WVR_TrackerId.WVR_TrackerId_15) { return TrackerId.Tracker15; }
+
+			return TrackerId.Tracker0;
+		}
+		public static WVR_TrackerId Id(this TrackerId trackerId)
+		{
+			return (WVR_TrackerId)trackerId;
+		}
+
 		public static bool ValidWVRInputId(this uint id)
 		{
 			if (id >= (uint)WVR_InputId.WVR_InputId_0 && id <= (uint)WVR_InputId.WVR_InputId_19)

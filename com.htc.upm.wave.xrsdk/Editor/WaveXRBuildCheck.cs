@@ -1067,7 +1067,7 @@ namespace Wave.XR.BuildCheck
 	{
 		const string LOG_TAG = "Wave.XR.CheckIfWaveEnabled";
 		static void DEBUG(string msg) { Debug.Log(LOG_TAG + " " + msg); }
-		const string VERSION_DEFINE_WAVE_XR = "USE_VIVE_WAVE_XR_5_3_1";
+		const string WAVE_XR_SDK = "WAVE_XR_SDK";
 		internal struct ScriptingDefinedSettings
 		{
 			public string[] scriptingDefinedSymbols;
@@ -1080,7 +1080,7 @@ namespace Wave.XR.BuildCheck
 			}
 		}
 		static readonly ScriptingDefinedSettings m_ScriptDefineSettingWaveXR = new ScriptingDefinedSettings(
-			new string[] { VERSION_DEFINE_WAVE_XR, },
+			new string[] { WAVE_XR_SDK, },
 			new BuildTargetGroup[] { BuildTargetGroup.Android, }
 		);
 		const string XR_LOADER_WAVE_XR_NAME = "Wave.XR.Loader.WaveXRLoader";
@@ -1177,24 +1177,6 @@ namespace Wave.XR.BuildCheck
 		}
 		static void OnUpdate()
 		{
-			// Adds the script symbol if Vive Wave XR Plugin is imported and assigned in XR Plugin-in Management.
-			if (ViveWaveXRAndroidAssigned)
-			{
-				if (!HasScriptingDefineSymbols(m_ScriptDefineSettingWaveXR))
-				{
-					DEBUG("OnUpdate() Adds m_ScriptDefineSettingWaveXR.");
-					AddScriptingDefineSymbols(m_ScriptDefineSettingWaveXR);
-				}
-			}
-			// Removes the script symbol if Vive Wave XR Plugin is uninstalled.
-			else
-			{
-				if (HasScriptingDefineSymbols(m_ScriptDefineSettingWaveXR))
-				{
-					DEBUG("OnUpdate() Removes m_ScriptDefineSettingWaveXR.");
-					RemoveScriptingDefineSymbols(m_ScriptDefineSettingWaveXR);
-				}
-			}
 		}
 		static CheckIfWaveEnabled()
 		{
@@ -1288,7 +1270,7 @@ namespace Wave.XR.BuildCheck
 		}
 	}
 
-	[Obsolete("CheckIfTrackerEnabled is deprecated. Please use WaveXRSettings EnableEyeTracking instead.", false)]
+	[Obsolete("CheckIfEyeTrackingEnabled is deprecated. Please use WaveXRSettings EnableEyeTracking instead.", false)]
 	public static class CheckIfEyeTrackingEnabled
 	{
 		internal const string MENU_NAME = "Wave/Eye/Enable Eye Tracking";
@@ -1328,7 +1310,7 @@ namespace Wave.XR.BuildCheck
 		}
 	}
 
-	[Obsolete("CheckIfTrackerEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
+	[Obsolete("CheckIfLipExpressionEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
 	public static class CheckIfLipExpressionEnabled
 	{
 		internal const string MENU_NAME = "Wave/Lip/Enable Lip Expression";
@@ -1347,7 +1329,7 @@ namespace Wave.XR.BuildCheck
 			};
 		}
 
-		[Obsolete("CheckIfTrackerEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
+		[Obsolete("CheckIfLipExpressionEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
 		public static void PerformAction(bool enabled)
 		{
 			/// Set checkmark on menu item
@@ -1360,7 +1342,7 @@ namespace Wave.XR.BuildCheck
 			CheckIfLipExpressionEnabled.enabled_ = enabled;
 		}
 
-		[Obsolete("CheckIfTrackerEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
+		[Obsolete("CheckIfLipExpressionEnabled is deprecated. Please use WaveXRSettings EnableLipExpression instead.", false)]
 		public static bool ValidateEnabled()
 		{
 			Menu.SetChecked(CheckIfLipExpressionEnabled.MENU_NAME, enabled_);
