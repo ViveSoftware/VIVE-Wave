@@ -1,8 +1,11 @@
 [ProductVersion]
-Version=1.0.20.11
-ReleaseDate=2024/03/14
-ReleaseTime=11:00
+Version=1.1.21.32
+ReleaseDate=2024/09/09
+ReleaseTime=15:00
 
 [Includes]
-Vive_rrClient.apk=1.0.20.11
-Vive_vsClient.apk=1.0.20.11e
+Vive_rrClient.apk=1.1.21.32
+Vive_vsClient.apk=1.1.21.32e
+
+[Compatibility]
+MinimumCompatible=1.1.21.31

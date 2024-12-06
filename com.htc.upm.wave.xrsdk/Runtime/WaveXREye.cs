@@ -100,6 +100,7 @@ namespace Wave.OpenXR
         const InputDeviceCharacteristics kEyesCharacteristics = InputDeviceCharacteristics.EyeTracking;
 
         const string kEyeTrackingStatus = "EyeTrackingStatus";
+        const string kEyeTrackingTimestamp = "EyeTrackingTimestamp";
         const string kEyeSpace = "EyeSpace";
 
         const string kCombinedEyeOriginValid = "CombinedEyeOriginValid";
@@ -225,6 +226,18 @@ namespace Wave.OpenXR
         {
             TrackingStatus status = GetEyeTrackingStatus();
             return (status == TrackingStatus.AVAILABLE);
+        }
+
+        /// <summary>
+        /// /// Retrieves the eye tracking data timestamp.
+        /// </summary>
+        /// <returns>The timestamp in <see cref="long"/>.</returns>
+        public static long GetEyeTrackingTimestamp()
+        {
+            long timestamp = 0;
+            SettingsHelper.GetLong(kEyeTrackingTimestamp, ref timestamp);
+
+            return timestamp;
         }
 
         /// <summary>

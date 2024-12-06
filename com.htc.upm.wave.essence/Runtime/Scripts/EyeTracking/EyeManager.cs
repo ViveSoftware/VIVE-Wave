@@ -16,6 +16,7 @@ using Wave.Essence.Events;
 using Wave.OpenXR;
 using Wave.XR.Settings;
 using System.Text;
+using System.Diagnostics;
 #if UNITY_EDITOR
 using Wave.Essence.Editor;
 #endif
@@ -435,6 +436,7 @@ namespace Wave.Essence.Eye
 		private Vector2 m_RightEyePupilPositionInSensorArea = Vector2.zero;
 
 		private bool hasEyeTrackingData = false;
+		private long m_Timestamp = 0;
 		private void GetEyeTrackingData()
 		{
 			if (UseXRData())
@@ -443,6 +445,7 @@ namespace Wave.Essence.Eye
 				hasEyeTrackingData = InputDeviceEye.IsEyeTrackingTracked();
 				if (hasEyeTrackingData)
 				{
+					m_Timestamp = InputDeviceEye.GetEyeTrackingTimestamp();
 					m_CombinedEyeOriginValid = InputDeviceEye.GetCombinedEyeOrigin(out m_CombinedEyeOrigin);
 					m_CombinedEyeDirectionValid = InputDeviceEye.GetCombinedEyeDirection(out m_CombinedEyeDirection);
 
@@ -467,6 +470,8 @@ namespace Wave.Essence.Eye
 				hasEyeTrackingData = Interop.WVR_GetEyeTracking(ref m_EyeData, (WVR_CoordinateSystem)m_LocationSpace) == WVR_Result.WVR_Success ? true : false;
 				if (hasEyeTrackingData)
 				{
+					m_Timestamp = m_EyeData.timestamp;
+
 					/// Combined eye data.
 					m_CombinedEyeOriginValid =
 						((m_EyeData.combined.eyeTrackingValidBitMask & (ulong)WVR_EyeTrackingStatus.WVR_GazeOriginValid) != 0);
@@ -628,6 +633,8 @@ namespace Wave.Essence.Eye
 		/// <summary> Checks if the eye tracking data is provided. </summary>
 		public bool HasEyeTrackingData() { return hasEyeTrackingData; }
 
+		public long GetEyeTrackingTimestamp() { return m_Timestamp; }
+
 		/// <summary> Retrieves the origin location of specified eye. </summary>
 		public bool GetEyeOrigin(EyeType eye, out Vector3 origin)
 		{
@@ -639,6 +646,11 @@ namespace Wave.Essence.Eye
 
 			return false;
 		}
+		public bool GetEyeOrigin(EyeType eye, out Vector3 origin, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetEyeOrigin(eye, out origin);
+		}
 		public bool GetEyeDirectionNormalized(EyeType eye, out Vector3 direction)
 		{
 			direction = Vector3.zero;
@@ -648,6 +660,11 @@ namespace Wave.Essence.Eye
 			if (eye == EyeType.Right) { return GetRightEyeDirectionNormalized(out direction); }
 
 			return false;
+		}
+		public bool GetEyeDirectionNormalized(EyeType eye, out Vector3 direction, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetEyeDirectionNormalized(eye, out direction);
 		}
 
 		// ------------------------- Combined Eye -------------------------
@@ -662,6 +679,11 @@ namespace Wave.Essence.Eye
 			origin = m_CombinedEyeOrigin;
 			return m_CombinedEyeOriginValid;
 		}
+		public bool GetCombinedEyeOrigin(out Vector3 origin, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetCombinedEyeOrigin(out origin);
+		}
 		/// <summary> Retrieves the looking direction (z-normalized) of combined eye. </summary>
 		public bool GetCombindedEyeDirectionNormalized(out Vector3 direction)
 		{
@@ -672,6 +694,11 @@ namespace Wave.Essence.Eye
 			}
 			direction = m_CombinedEyeDirection;
 			return m_CombinedEyeDirectionValid;
+		}
+		public bool GetCombindedEyeDirectionNormalized(out Vector3 direction, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetCombindedEyeDirectionNormalized(out direction);
 		}
 
 		// ------------------------- Left Eye -------------------------
@@ -686,6 +713,11 @@ namespace Wave.Essence.Eye
 			origin = m_LeftEyeOrigin;
 			return m_LeftEyeOriginValid;
 		}
+		public bool GetLeftEyeOrigin(out Vector3 origin, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetLeftEyeOrigin(out origin);
+		}
 		/// <summary> Retrieves the looking direction (z-normalized) of left eye. </summary>
 		public bool GetLeftEyeDirectionNormalized(out Vector3 direction)
 		{
@@ -696,6 +728,11 @@ namespace Wave.Essence.Eye
 			}
 			direction = m_LeftEyeDirection;
 			return m_LeftEyeDirectionValid;
+		}
+		public bool GetLeftEyeDirectionNormalized(out Vector3 direction, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetLeftEyeDirectionNormalized(out direction);
 		}
 		/// <summary> Retrieves the value representing how open the left eye is. </summary>
 		public bool GetLeftEyeOpenness(out float openness)
@@ -708,6 +745,11 @@ namespace Wave.Essence.Eye
 			openness = m_LeftEyeOpenness;
 			return m_LeftEyeOpennessValid;
 		}
+		public bool GetLeftEyeOpenness(out float openness, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetLeftEyeOpenness(out openness);
+		}
 		/// <summary> Retrieves the diameter of left eye pupil in millimeters. </summary>
 		public bool GetLeftEyePupilDiameter(out float diameter)
 		{
@@ -719,6 +761,11 @@ namespace Wave.Essence.Eye
 			diameter = m_LeftEyePupilDiameter;
 			return m_LeftEyePupilDiameterValid;
 		}
+		public bool GetLeftEyePupilDiameter(out float diameter, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetLeftEyePupilDiameter(out diameter);
+		}
 		/// <summary> Retrieves the normalized position of left eye pupil in [0,1]. </summary>
 		public bool GetLeftEyePupilPositionInSensorArea(out Vector2 area)
 		{
@@ -729,6 +776,11 @@ namespace Wave.Essence.Eye
 			}
 			area = m_LeftEyePupilPositionInSensorArea;
 			return m_LeftEyePupilPositionInSensorAreaValid;
+		}
+		public bool GetLeftEyePupilPositionInSensorArea(out Vector2 area, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetLeftEyePupilPositionInSensorArea(out area);
 		}
 
 		// ------------------------- Right Eye -------------------------
@@ -743,6 +795,11 @@ namespace Wave.Essence.Eye
 			origin = m_RightEyeOrigin;
 			return m_RightEyeOriginValid;
 		}
+		public bool GetRightEyeOrigin(out Vector3 origin, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetRightEyeOrigin(out origin);
+		}
 		/// <summary> Retrieves the looking direction (z-normalized) of right eye. </summary>
 		public bool GetRightEyeDirectionNormalized(out Vector3 direction)
 		{
@@ -753,6 +810,11 @@ namespace Wave.Essence.Eye
 			}
 			direction = m_RightEyeDirection;
 			return m_RightEyeDirectionValid;
+		}
+		public bool GetRightEyeDirectionNormalized(out Vector3 direction, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetRightEyeDirectionNormalized(out direction);
 		}
 		/// <summary> Retrieves the value representing how open the right eye is. </summary>
 		public bool GetRightEyeOpenness(out float openness)
@@ -765,6 +827,11 @@ namespace Wave.Essence.Eye
 			openness = m_RightEyeOpenness;
 			return m_RightEyeOpennessValid;
 		}
+		public bool GetRightEyeOpenness(out float openness, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetRightEyeOpenness(out openness);
+		}
 		/// <summary> Retrieves the diameter of right eye pupil in millimeters. </summary>
 		public bool GetRightEyePupilDiameter(out float diameter)
 		{
@@ -776,6 +843,11 @@ namespace Wave.Essence.Eye
 			diameter = m_RightEyePupilDiameter;
 			return m_RightEyePupilDiameterValid;
 		}
+		public bool GetRightEyePupilDiameter(out float diameter, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetRightEyePupilDiameter(out diameter);
+		}
 		/// <summary> Retrieves the normalized position of right eye pupil in [0,1]. </summary>
 		public bool GetRightEyePupilPositionInSensorArea(out Vector2 area)
 		{
@@ -786,6 +858,11 @@ namespace Wave.Essence.Eye
 			}
 			area = m_RightEyePupilPositionInSensorArea;
 			return m_RightEyePupilPositionInSensorAreaValid;
+		}
+		public bool GetRightEyePupilPositionInSensorArea(out Vector2 area, out long timestamp)
+		{
+			timestamp = m_Timestamp;
+			return GetRightEyePupilPositionInSensorArea(out area);
 		}
 		#endregion
 	}

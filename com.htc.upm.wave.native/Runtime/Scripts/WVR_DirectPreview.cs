@@ -130,7 +130,7 @@ namespace Wave.Native
 					WVR_HandTrackerType trackerType,
 					WVR_HandModelType modelType,
 					WVR_PoseOriginModel originModel,
-					ref WVR_DPHandTrackingData_t handTrackerData,
+					ref WVR_HandTrackingData_t handTrackerData,
 					ref WVR_HandPoseData_t pose);
 		public override WVR_Result GetHandTrackingData(
 					WVR_HandTrackerType trackerType,
@@ -139,26 +139,7 @@ namespace Wave.Native
 					ref WVR_HandTrackingData_t handTrackerData,
 					ref WVR_HandPoseData_t pose)
 		{
-			WVR_DPHandTrackingData_t handTrackerDPData = new WVR_DPHandTrackingData_t();
-			WVR_Result result = WVR_GetHandTrackingData_S(trackerType, modelType, originModel, ref handTrackerDPData, ref pose);
-			if (result == WVR_Result.WVR_Success)
-			{
-				handTrackerData.right.isValidPose = handTrackerDPData.right.isValidPose;
-				handTrackerData.right.confidence = handTrackerDPData.right.confidence;
-				handTrackerData.right.jointCount = handTrackerDPData.right.jointCount;
-				handTrackerData.right.joints = handTrackerDPData.right.joints;
-				handTrackerData.right.scale = handTrackerDPData.right.scale;
-				handTrackerData.right.wristLinearVelocity = handTrackerDPData.right.wristLinearVelocity;
-				handTrackerData.right.wristAngularVelocity = handTrackerDPData.right.wristAngularVelocity;
-				handTrackerData.left.isValidPose = handTrackerDPData.left.isValidPose;
-				handTrackerData.left.confidence = handTrackerDPData.left.confidence;
-				handTrackerData.left.jointCount = handTrackerDPData.left.jointCount;
-				handTrackerData.left.joints = handTrackerDPData.left.joints;
-				handTrackerData.left.scale = handTrackerDPData.left.scale;
-				handTrackerData.left.wristLinearVelocity = handTrackerDPData.left.wristLinearVelocity;
-				handTrackerData.left.wristAngularVelocity = handTrackerDPData.left.wristAngularVelocity;
-			}
-			return result;
+			return WVR_GetHandTrackingData_S(trackerType, modelType, originModel, ref handTrackerData, ref pose);
 		}
 
 		[DllImportAttribute("wvr_plugins_directpreview", EntryPoint = "WVR_ControllerSupportElectronicHand_S", CallingConvention = CallingConvention.Cdecl)]

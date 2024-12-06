@@ -1831,6 +1831,7 @@ namespace Wave.Native
 
 		public WVR_Result GetEyeTracking(ref WVR_EyeTracking_t data)
 		{
+			data.timestamp = Time.frameCount;
 			data.combined.eyeTrackingValidBitMask = (ulong)(
 				WVR_EyeTrackingStatus.WVR_GazeOriginValid |
 				WVR_EyeTrackingStatus.WVR_GazeDirectionNormalizedValid
@@ -2909,10 +2910,10 @@ namespace Wave.Native
 			WVR_LipExpression.WVR_LipExpression_Mouth_Upper_Overturn,
 			WVR_LipExpression.WVR_LipExpression_Mouth_Lower_Overturn,	// 10
 			WVR_LipExpression.WVR_LipExpression_Mouth_Pout,
-			WVR_LipExpression.WVR_LipExpression_Mouth_Smile_Right,
-			WVR_LipExpression.WVR_LipExpression_Mouth_Smile_Left,
-			WVR_LipExpression.WVR_LipExpression_Mouth_Sad_Right,
-			WVR_LipExpression.WVR_LipExpression_Mouth_Sad_Left,			// 15
+			WVR_LipExpression.WVR_LipExpression_Mouth_Raiser_Right,
+            WVR_LipExpression.WVR_LipExpression_Mouth_Raiser_Left,
+            WVR_LipExpression.WVR_LipExpression_Mouth_Stretcher_Right,
+            WVR_LipExpression.WVR_LipExpression_Mouth_Stretcher_Left,			// 15
 			WVR_LipExpression.WVR_LipExpression_Cheek_Puff_Right,
 			WVR_LipExpression.WVR_LipExpression_Cheek_Puff_Left,
 			WVR_LipExpression.WVR_LipExpression_Cheek_Suck,

@@ -22,6 +22,7 @@ namespace Wave.OpenXR
 		const string LOG_TAG = "Wave.OpenXR.InputDeviceHand";
 		static void DEBUG(string msg) { UnityEngine.Debug.Log(LOG_TAG + " " + msg); }
 
+		#region Public Declaration
 		public enum TrackingStatus : UInt32
 		{
 			NOT_START = 0,
@@ -52,6 +53,7 @@ namespace Wave.OpenXR
 			Baton = 4,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_Baton,
 			FlashLight = 5,//WVR_HandHoldObjectType.WVR_HandHoldObjectType_FlashLight,
 		}
+		#endregion
 
 		#region Wave XR Interface
 		private const string kNaturalHandStatus = "NaturalHandStatus";
@@ -123,6 +125,8 @@ namespace Wave.OpenXR
 		#endregion
 
 		#region Wave XR Constants
+		public const string kNaturalHandTrackingTimestamp = "NaturalHandTrackingTimestamp";
+		public const string kNaturalHandPoseTimestamp = "NaturalHandPoseTimestamp";
 		public const string kLeftHandName = "Wave Left Hand";
 		public const string kRightHandName = "Wave Right Hand";
 		public const string kLeftHandSN = "HTC-211116-LeftHand";
@@ -192,12 +196,6 @@ namespace Wave.OpenXR
 		/// <returns>True for available.</returns>
 		public static bool IsAvailable() { return (GetNaturalHandStatus() == TrackingStatus.AVAILABLE); }
 
-		[Obsolete("This API is deprecated. Please use IsAvailable() instead.")]
-		public static bool IsAvailable(bool isLeft)
-		{
-			return IsAvailable();
-		}
-
 		public static string GetName(bool isLeft)
 		{
 			return (isLeft ? kLeftHandName : kRightHandName);
@@ -231,7 +229,7 @@ namespace Wave.OpenXR
 
 		internal static object inputDeviceLock = new object();
 		internal static List<InputDevice> s_UpdatedDevices = new List<InputDevice>();
-		internal static List<InputDevice> s_InputDevices 
+		internal static List<InputDevice> s_InputDevices
 		{
 			get
 			{
@@ -242,19 +240,15 @@ namespace Wave.OpenXR
 			}
 		}
 		internal static int inputDeviceFrame = -1;
-		internal static long updatedTimestamp = 0;
-        private static void UpdateInputDevices()
+		private static void UpdateInputDevices()
 		{
-            lock (inputDeviceLock)
-            {
-                if (inputDeviceFrame != Time.frameCount)
+			lock (inputDeviceLock)
+			{
+				if (inputDeviceFrame != Time.frameCount)
 				{
 					inputDeviceFrame = Time.frameCount;
-                    InputDevices.GetDevices(s_UpdatedDevices);
-                    long timestamp = Stopwatch.GetTimestamp();
-                    long frequency = Stopwatch.Frequency;
-                    updatedTimestamp = (long)((double)timestamp / frequency * 1E+9);
-                }
+					InputDevices.GetDevices(s_UpdatedDevices);
+				}
 			}
 		}
 
@@ -307,6 +301,8 @@ namespace Wave.OpenXR
 			return false;
 		}
 
+		#region Tracking
+		#region Tracking - Valid Pose
 		private static Dictionary<bool, bool> s_IsTracked = new Dictionary<bool, bool>()
 		{
 			{ false, false }, // right
@@ -357,16 +353,21 @@ namespace Wave.OpenXR
 			s_IsTracked[isLeft] = false;
 			return false;
 		}
-
+		/// <summary>
+		/// Checks is the left/right hand pose is <see href="https://docs.unity3d.com/ScriptReference/XR.CommonUsages-isTracked.html">tracked</see>.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>Tracked for valid pose.</returns>
 		public static bool IsTracked(bool isLeft, out long timestamp)
 		{
-			bool isTracked = IsTracked(isLeft);
-            timestamp = updatedTimestamp;
-			return isTracked;
-        }
+			GetHandTrackingTimestamp(out timestamp);
+			return IsTracked(isLeft);
+		}
+		#endregion
 
-
-        internal static Dictionary<bool, Bone> m_Palm = new Dictionary<bool, Bone>()
+		#region Tracking - Palm
+		internal static Dictionary<bool, Bone> m_Palm = new Dictionary<bool, Bone>()
 		{
 			{ false, new Bone() },
 			{ true, new Bone() },
@@ -409,7 +410,20 @@ namespace Wave.OpenXR
 			}
 			return m_Palm[isLeft];
 		}
+		/// <summary>
+		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Palm.
+		/// </summary>
+		/// <param name="isLeft">True for left hand</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Palm.</returns>
+		public static Bone GetPalm(bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetPalm(isLeft);
+		}
+		#endregion
 
+		#region Tracking - Wrist
 		internal static Dictionary<bool, Bone> m_Wrist = new Dictionary<bool, Bone>()
 		{
 			{ false, new Bone() },
@@ -443,7 +457,20 @@ namespace Wave.OpenXR
 
 			return m_Wrist[isLeft];
 		}
+		/// <summary>
+		/// Retrieves the <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Wrist.
+		/// </summary>
+		/// <param name="isLeft">True for left hand</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone data</see> of Wrist.</returns>
+		public static Bone GetWrist(bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetWrist(isLeft);
+		}
+		#endregion
 
+		#region Tracking - Finger
 		internal static Dictionary<bool, Dictionary<HandFinger, List<Bone>>> s_FingerBones = new Dictionary<bool, Dictionary<HandFinger, List<Bone>>>()
 		{
 			{ false, new Dictionary<HandFinger, List<Bone>>() {
@@ -517,13 +544,28 @@ namespace Wave.OpenXR
 			}
 			return s_FingerBones[isLeft][finger];
 		}
+		/// <summary>
+		/// Retrieves the bone list of a finger.
+		/// The list length will be zero if cannot find a finger's bone list.
+		/// </summary>
+		/// <param name="isLeft">True for left hand</param>
+		/// <param name="finger">The finger of <see href="https://docs.unity3d.com/ScriptReference/XR.HandFinger.html">XR HandFinger</see>.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>The <see href="https://docs.unity3d.com/ScriptReference/XR.Bone.html">bone</see> list of a finger.</returns>
+		public static List<Bone> GetFingerBones(bool isLeft, HandFinger finger, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetFingerBones(isLeft, finger);
+		}
+		#endregion
 
+		#region Tracking - Scale
 		/// <summary>
 		/// Retrieves the scale of wrist.
 		/// </summary>
 		/// <param name="isLeft">Left or right hand.</param>
 		/// <param name="scale">Wrist scale in Vector3.</param>
-		/// <returns></returns>
+		/// <returns>True for valid wrist scale.</returns>
 		public static bool GetHandScale(bool isLeft, out Vector3 scale)
 		{
 			scale = Vector3.one;
@@ -547,17 +589,21 @@ namespace Wave.OpenXR
 			scale.z = scale_z;
 			return true;
 		}
-
-		[Obsolete("This function is deprecated. Please use bool GetHandConfidence() instead.")]
-		public static float GetHandConfidence(bool isLeft)
+		/// <summary>
+		/// Retrieves the scale of wrist.
+		/// </summary>
+		/// <param name="isLeft">Left or right hand.</param>
+		/// <param name="scale">Wrist scale in Vector3.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid wrist scale.</returns>
+		public static bool GetHandScale(bool isLeft, out Vector3 scale, out long timestamp)
 		{
-			float confidence = 0;
-			if (isLeft)
-				SettingsHelper.GetFloat(kHandConfidenceLeft, ref confidence);
-			else
-				SettingsHelper.GetFloat(kHandConfidenceRight, ref confidence);
-			return confidence;
+			GetHandTrackingTimestamp(out timestamp);
+			return GetHandScale(isLeft, out scale);
 		}
+		#endregion
+
+		#region Tracking - Confidence
 		/// <summary>
 		/// Retrieves the wrist confidence which is a 0~1 float value where 1 means the most accurate.
 		/// </summary>
@@ -568,12 +614,29 @@ namespace Wave.OpenXR
 		{
 			confidence = 0;
 			if (!IsAvailable()) { return false; }
-#pragma warning disable
-			confidence = GetHandConfidence(isLeft);
-#pragma warning enable
+
+			if (isLeft)
+				SettingsHelper.GetFloat(kHandConfidenceLeft, ref confidence);
+			else
+				SettingsHelper.GetFloat(kHandConfidenceRight, ref confidence);
+
 			return true;
 		}
+		/// <summary>
+		/// Retrieves the wrist confidence which is a 0~1 float value where 1 means the most accurate.
+		/// </summary>
+		/// <param name="isLeft">Left or right hand.</param>
+		/// <param name="confidence">0~1 float value where 1 means the most accurate.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for the confidence is available.</returns>
+		public static bool GetHandConfidence(bool isLeft, out float confidence, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetHandConfidence(isLeft, out confidence);
+		}
+		#endregion
 
+		#region Tracking - Velocity
 		/// <summary>
 		/// Retrieves the left/right wrist velocity.
 		/// </summary>
@@ -604,6 +667,19 @@ namespace Wave.OpenXR
 			return true;
 		}
 		/// <summary>
+		/// Retrieves the left/right wrist velocity.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="velocity">Velocity in Vector3.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid velocity.</returns>
+		public static bool GetWristLinearVelocity(bool isLeft, out Vector3 velocity, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetWristLinearVelocity(isLeft, out velocity);
+		}
+
+		/// <summary>
 		/// Retrieves the left/right wrist angular velocity.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
@@ -633,6 +709,84 @@ namespace Wave.OpenXR
 			return true;
 		}
 		/// <summary>
+		/// Retrieves the left/right wrist angular velocity.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="velocity">Angular velocity in Vector3.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid angular velocity.</returns>
+		public static bool GetWristAngularVelocity(bool isLeft, out Vector3 velocity, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetWristAngularVelocity(isLeft, out velocity);
+		}
+		#endregion
+
+		#region Tracking - Grasp
+		/// <summary>
+		/// Retrieves the strength of left/right hand grasp.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="strength">The strength (0~1) where 1 means the hand is grasping.</param>
+		/// <returns>True for valid strength.</returns>
+		public static bool GetGraspStrength(bool isLeft, out float strength)
+		{
+			strength = 0;
+			if (!IsAvailable()) { return false; }
+
+			if (isLeft)
+				SettingsHelper.GetFloat(kHandGraspStrengthLeft, ref strength);
+			else
+				SettingsHelper.GetFloat(kHandGraspStrengthRight, ref strength);
+
+			return true;
+		}
+		/// <summary>
+		/// Retrieves the strength of left/right hand grasp.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="strength">The strength (0~1) where 1 means the hand is grasping.</param>
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid strength.</returns>
+		public static bool GetGraspStrength(bool isLeft, out float strength, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return GetGraspStrength(isLeft, out strength);
+		}
+
+		/// <summary>
+		/// Checks if a hand is grasping currently.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <returns>True for grasping.</returns>
+		public static bool IsHandGrasping(bool isLeft)
+		{
+			bool isGrasping = false;
+
+			if (isLeft)
+				SettingsHelper.GetBool(kHandIsGraspingLeft, ref isGrasping);
+			else
+				SettingsHelper.GetBool(kHandIsGraspingRight, ref isGrasping);
+
+			return isGrasping;
+		}
+		/// <summary>
+		/// Checks if a hand is grasping currently.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for grasping.</returns>
+		public static bool IsHandGrasping(bool isLeft, out long timestamp)
+		{
+			GetHandTrackingTimestamp(out timestamp);
+			return IsHandGrasping(isLeft);
+		}
+		#endregion
+		#endregion
+
+		#region Pose
+		#region Pose - Motion
+		/// <summary>
 		/// Retrieves current left/right hand motion.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
@@ -655,6 +809,21 @@ namespace Wave.OpenXR
 			return true;
 		}
 		/// <summary>
+		/// Retrieves current left/right hand motion.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="motion">None, Hold or Pinch.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid motion.</returns>
+		public static bool GetHandMotion(bool isLeft, out HandMotion motion, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetHandMotion(isLeft, out motion);
+		}
+		#endregion
+
+		#region Pose - Hold
+		/// <summary>
 		/// Retrieves the role of left/right hand while holding.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
@@ -676,6 +845,19 @@ namespace Wave.OpenXR
 			if (roleId == 2) { role = HandHoldRole.Side; }
 			return true;
 		}
+		/// <summary>
+		/// Retrieves the role of left/right hand while holding.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="role">Main hold or Side hold.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid role.</returns>
+		public static bool GetHandHoldRole(bool isLeft, out HandHoldRole role, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetHandHoldRole(isLeft, out role);
+		}
+
 		/// <summary>
 		/// Retrieves the type of left/right handheld object.
 		/// </summary>
@@ -701,7 +883,21 @@ namespace Wave.OpenXR
 			if (typeId == 5) { type = HandHoldType.FlashLight; }
 			return true;
 		}
+		/// <summary>
+		/// Retrieves the type of left/right handheld object.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="type">See <see cref="HandHoldType">HandHoldType</see>.</param>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid type.</returns>
+		public static bool GetHandHoldType(bool isLeft, out HandHoldType type, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetHandHoldType(isLeft, out type);
+		}
+		#endregion
 
+		#region Pose - Pinch
 		/// <summary>
 		/// Retrieves the origin of left/right hand pinch.
 		/// </summary>
@@ -732,6 +928,19 @@ namespace Wave.OpenXR
 			return true;
 		}
 		/// <summary>
+		/// Retrieves the origin of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="origin">World space origin in Vector3.</param>
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid origin.</returns>
+		public static bool GetPinchOrigin(bool isLeft, out Vector3 origin, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetPinchOrigin(isLeft, out origin);
+		}
+
+		/// <summary>
 		/// Retrieves the direction of left/right hand pinch.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
@@ -761,11 +970,24 @@ namespace Wave.OpenXR
 			return true;
 		}
 		/// <summary>
+		/// Retrieves the direction of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="direction">World space direction in Vector3.</param>
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid direction.</returns>
+		public static bool GetPinchDirection(bool isLeft, out Vector3 direction, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetPinchDirection(isLeft, out direction);
+		}
+
+		/// <summary>
 		/// Retrieves the strength of left/right hand pinch.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
 		/// <param name="strength">The strength (0~1) where 1 means the thumb tip and index tip is touching.</param>
-		/// <returns></returns>
+		/// <returns>True for valid pinch strength.</returns>
 		public static bool GetPinchStrength(bool isLeft, out float strength)
 		{
 			strength = 0;
@@ -778,6 +1000,19 @@ namespace Wave.OpenXR
 
 			return true;
 		}
+		/// <summary>
+		/// Retrieves the strength of left/right hand pinch.
+		/// </summary>
+		/// <param name="isLeft">True for left hand.</param>
+		/// <param name="strength">The strength (0~1) where 1 means the thumb tip and index tip is touching.</param>
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for valid pinch strength.</returns>
+		public static bool GetPinchStrength(bool isLeft, out float strength, out long timestamp)
+		{
+			GetHandPoseTimestamp(out timestamp);
+			return GetPinchStrength(isLeft, out strength);
+		}
+
 		/// <summary>
 		/// Retrieves the system default threshold always used to judge if a "selection" happens when the pinch strength value is greater than the threshold.
 		/// </summary>
@@ -805,6 +1040,7 @@ namespace Wave.OpenXR
 			SettingsHelper.GetFloat(kHandPinchOffThreshold, ref threshold);
 			return true;
 		}
+
 		/// <summary>
 		/// Checks if a hand is pinching currently.
 		/// </summary>
@@ -825,39 +1061,42 @@ namespace Wave.OpenXR
 			return isPinching;
 		}
 		/// <summary>
-		/// Retrieves the strength of left/right hand grasp.
+		/// Checks if a hand is pinching currently.
 		/// </summary>
 		/// <param name="isLeft">True for left hand.</param>
-		/// <param name="strength">The strength (0~1) where 1 means the hand is grasping.</param>
-		/// <returns></returns>
-		public static bool GetGraspStrength(bool isLeft, out float strength)
+		/// <param name="timestamp">The data timestamp in <see cref="long"/>.</param>
+		/// <returns>True for pinching.</returns>
+		public static bool IsHandPinching(bool isLeft, out long timestamp)
 		{
-			strength = 0;
-			if (!IsAvailable()) { return false; }
+			GetHandPoseTimestamp(out timestamp);
+			return IsHandPinching(isLeft);
+		}
+		#endregion
+		#endregion
 
-			if (isLeft)
-				SettingsHelper.GetFloat(kHandGraspStrengthLeft, ref strength);
-			else
-				SettingsHelper.GetFloat(kHandGraspStrengthRight, ref strength);
+		/// <summary>
+		/// Retrieves the hand tracking data timestamp.
+		/// </summary>
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for success.</returns>
+		public static bool GetHandTrackingTimestamp(out long timestamp)
+		{
+			timestamp = 0;
+			SettingsHelper.GetLong(kNaturalHandTrackingTimestamp, ref timestamp);
 
 			return true;
 		}
 		/// <summary>
-		/// Checks if a hand is grasping currently.
+		/// Retrieves the hand tracking pose timestamp.
 		/// </summary>
-		/// <param name="isLeft">True for left hand.</param>
-		/// <returns>True for grasping.</returns>
-		public static bool IsHandGrasping(bool isLeft)
+		/// <param name="timestamp">The timestamp in <see cref="long"/>.</param>
+		/// <returns>True for success.</returns>
+		public static bool GetHandPoseTimestamp(out long timestamp)
 		{
-			bool isGrasping = false;
+			timestamp = 0;
+			SettingsHelper.GetLong(kNaturalHandPoseTimestamp, ref timestamp);
 
-			if (isLeft)
-				SettingsHelper.GetBool(kHandIsGraspingLeft, ref isGrasping);
-			else
-				SettingsHelper.GetBool(kHandIsGraspingRight, ref isGrasping);
-
-			return isGrasping;
+			return true;
 		}
-
 	}
 }

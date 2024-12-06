@@ -12,9 +12,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
 using Wave.Essence.Render;
-using Wave.XR.Settings;
-using Wave.XR.Loader;
 using Wave.Native;
+using Wave.XR.Loader;
+using Wave.XR.Settings;
 
 namespace Wave.Essence
 {
@@ -22,6 +22,8 @@ namespace Wave.Essence
 	{
 		static readonly string TAG = "WaveXRRuntimeOnInitialize";
 		static bool isFirstScene = true;
+		public static WaveXR_RuntimeInitializeOnLoad Instance { get; private set; }
+		public Predictor.UpdateLog beforeRenderUpdateLog = new Predictor.UpdateLog();
 
 		[RuntimeInitializeOnLoadMethod]
 		static void OnRuntimeMethodLoad()
@@ -33,6 +35,7 @@ namespace Wave.Essence
 			GameObject obj = new GameObject(TAG, typeof(WaveXR_RuntimeInitializeOnLoad));
 			DontDestroyOnLoad(obj);
 			isFirstScene = true;
+			Instance = obj.GetComponent<WaveXR_RuntimeInitializeOnLoad>();
 		}
 
 		private void Awake()
@@ -49,27 +52,27 @@ namespace Wave.Essence
 		private void SceneLoadActions()
 		{
 #if UNITY_EDITOR
-            if (Application.isEditor)
-                return;
+			if (Application.isEditor)
+				return;
 #endif
-            var settings = WaveXRSettings.GetInstance();
-            if (settings == null)
-            {
-                Debug.Log(TAG + ": WaveXR settings instance is null");
-                return;
-            }
+			var settings = WaveXRSettings.GetInstance();
+			if (settings == null)
+			{
+				Debug.Log(TAG + ": WaveXR settings instance is null");
+				return;
+			}
 
-            if (settings.adaptiveQualityMode != WaveXRSettings.AdaptiveQualityMode.Disabled &&
-                settings.AQ_SendQualityEvent && settings.useAQDynamicResolution)
+			if (settings.adaptiveQualityMode != WaveXRSettings.AdaptiveQualityMode.Disabled &&
+				settings.AQ_SendQualityEvent && settings.useAQDynamicResolution)
 			{
 				if (DynamicResolution.instance == null)
 					new GameObject("DynamicResolution", typeof(DynamicResolution));
 			}
 
-            if ((settings.amcMode == WaveXRSettings.AMCMode.Auto ||
-                settings.amcMode == WaveXRSettings.AMCMode.Force_PMC) &&
-                settings.amcModeConfirm > 0)
-                WaveXR_AMCProcess.FindMainCamera();
+			if ((settings.amcMode == WaveXRSettings.AMCMode.Auto ||
+				settings.amcMode == WaveXRSettings.AMCMode.Force_PMC) &&
+				settings.amcModeConfirm > 0)
+				WaveXR_AMCProcess.FindMainCamera();
 
 			if (settings.enableFSE)
 			{
@@ -83,6 +86,7 @@ namespace Wave.Essence
 		{
 			Debug.Log(TAG + ": OnEnable");
 			SceneManager.sceneLoaded += OnSceneLoaded;
+			Application.onBeforeRender += OnBeforeRender;
 		}
 
 		private void Start()
@@ -97,8 +101,14 @@ namespace Wave.Essence
 
 		private void OnDisable()
 		{
+			Application.onBeforeRender -= OnBeforeRender;
 			SceneManager.sceneLoaded -= OnSceneLoaded;
 			Debug.Log(TAG + ": OnDisable");
+		}
+
+		private void OnBeforeRender()
+		{
+			beforeRenderUpdateLog.Update();
 		}
 	}
 }

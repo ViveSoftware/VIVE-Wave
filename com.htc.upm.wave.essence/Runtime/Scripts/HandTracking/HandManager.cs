@@ -8,19 +8,18 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
-using UnityEngine;
-using UnityEngine.XR;
-using System.Threading;
 using System;
 using System.Runtime.InteropServices;
-using Wave.Native;
+using System.Text;
+using System.Threading;
+using UnityEngine;
+using UnityEngine.Profiling;
+using UnityEngine.XR;
 using Wave.Essence.Events;
+using Wave.Native;
+using Wave.OpenXR;
 using Wave.XR.Function;
 using Wave.XR.Settings;
-using UnityEngine.Profiling;
-
-using Wave.OpenXR;
-using System.Text;
 
 namespace Wave.Essence.Hand
 {
@@ -256,6 +255,7 @@ namespace Wave.Essence.Hand
 		#region MonoBehaviour Overrides
 		private ulong supportedFeature = 0;
 		private ulong m_GestureOptionValue = 0;
+		private bool m_OnBeforeRender = false;
 
 		private delegate void ConvertHandTrackingDataToUnityDelegate(ref WVR_HandJointData_t src, ref HandJointData26 dest);
 
@@ -341,7 +341,7 @@ namespace Wave.Essence.Hand
 			interactionMode = ClientInterface.InteractionMode;
 
 			/// ------------- Gesture -------------
-            Profiler.BeginSample("Gesture");
+			Profiler.BeginSample("Gesture");
 			// Restart the Hand Gesture component when gesture options change.
 			m_GestureOptions.Gesture.UpdateOptionValue();
 			if (m_GestureOptionValue != m_GestureOptions.Gesture.optionValue)
@@ -358,8 +358,10 @@ namespace Wave.Essence.Hand
 
 
 			/// ------------- Tracking -------------
+			m_OnBeforeRender = false;
 			GetHandTrackingData(TrackerType.Natural);
 			GetHandTrackingData(TrackerType.Electronic);
+			AdjustPoseIfNeeded();
 
 			if (printIntervalLog)
 			{
@@ -388,16 +390,24 @@ namespace Wave.Essence.Hand
 		}
 		private void OnEnable()
 		{
+			Application.onBeforeRender += OnBeforeRender;
 			SystemEvent.Listen(WVR_EventType.WVR_EventType_Hand_EnhanceStable, OnWristPositionFusionChange);
 		}
 		private void OnDisable()
 		{
+			Application.onBeforeRender -= OnBeforeRender;
 			SystemEvent.Remove(WVR_EventType.WVR_EventType_Hand_EnhanceStable, OnWristPositionFusionChange);
 
 			// We don't stop hand tracking in this function since OnDisable may be called when ap is stopping.
 			// AP would crash if the ap process ended before the stop thread finished.
 		}
 		#endregion
+
+		public void UpdtaeHandData()
+		{
+			GetHandTrackingData(TrackerType.Natural);
+			GetHandTrackingData(TrackerType.Electronic);
+		}
 
 		public bool GetPreferTracker(ref TrackerType tracker)
 		{
@@ -495,7 +505,7 @@ namespace Wave.Essence.Hand
 			SetHandGestureStatus(GestureStatus.Starting);
 			sb.Clear().Append("StartHandGestureLock() ").Append(m_GestureOptionValue); INFO(sb);
 			WVR_Result result = Interop.WVR_StartHandGesture(m_GestureOptionValue);
-			switch(result)
+			switch (result)
 			{
 				case WVR_Result.WVR_Success:
 					SetHandGestureStatus(GestureStatus.Available);
@@ -816,7 +826,7 @@ namespace Wave.Essence.Hand
 			}
 
 			TrackerStatus status = GetHandTrackerStatus(tracker);
-			sb.Clear().Append("StartHandTrackerLock() ").Append	(tracker.Name()).Append(", ").Append(result).Append(", status: ").Append(status.Name()); INFO(sb);
+			sb.Clear().Append("StartHandTrackerLock() ").Append(tracker.Name()).Append(", ").Append(result).Append(", status: ").Append(status.Name()); INFO(sb);
 			GeneralEvent.Send(HAND_TRACKER_STATUS, tracker, status);
 
 			if (handTrackerResultCB != null)
@@ -1023,7 +1033,7 @@ namespace Wave.Essence.Hand
 				if (tracker == TrackerType.Electronic) { return TrackerStatus.NoSupport; }
 
 				var status = InputDeviceHand.GetNaturalHandStatus();
-				switch(status)
+				switch (status)
 				{
 					case InputDeviceHand.TrackingStatus.NOT_START:
 						return TrackerStatus.NotStart;
@@ -1084,6 +1094,11 @@ namespace Wave.Essence.Hand
 		public bool GetHandTrackingTimestamp(TrackerType tracker, out long timestamp)
 		{
 			timestamp = 0;
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.GetHandTrackingTimestamp(out timestamp);
+			}
 
 			if (tracker == TrackerType.Natural && hasNaturalHandTrackerData && hasNaturalTrackerInfo)
 			{
@@ -1459,6 +1474,11 @@ namespace Wave.Essence.Hand
 				}
 			}
 
+			if (AdjustPoseIfNeeded())
+			{
+				AdjustPosition(ref position, isLeft);
+			}
+
 			if (printIntervalLog)
 			{
 				sb.Clear().Append("GetJointPosition() tracker: ").Append(tracker.Name())
@@ -1587,6 +1607,11 @@ namespace Wave.Essence.Hand
 						}
 					}
 				}
+			}
+
+			if (AdjustPoseIfNeeded())
+			{
+				AdjustRotation(ref rotation, isLeft);
 			}
 
 			if (printIntervalLog)
@@ -1855,6 +1880,11 @@ namespace Wave.Essence.Hand
 		public bool GetHandPoseTimestamp(TrackerType tracker, out long timestamp)
 		{
 			timestamp = 0;
+
+			if (UseXRData(tracker))
+			{
+				return InputDeviceHand.GetHandPoseTimestamp(out timestamp);
+			}
 
 			if (tracker == TrackerType.Natural && hasNaturalHandTrackerData && hasNaturalTrackerInfo)
 			{
@@ -2499,14 +2529,24 @@ namespace Wave.Essence.Hand
 		private WVR_Pose_t[] s_NaturalHandJointsPoseLeft;
 		private WVR_HandJointData_t m_NaturalHandJointDataRight = new WVR_HandJointData_t();
 		private WVR_Pose_t[] s_NaturalHandJointsPoseRight;
+		public Predictor.UpdateLog naturalHandUpdateLog = new Predictor.UpdateLog();
 
-		private uint m_ElectronicHandJointCount;
+		private uint m_ElectronicHandJointCount = 0;
 		private WVR_HandTrackingData_t m_ElectronicHandTrackerData = new WVR_HandTrackingData_t();
 		private WVR_HandJointData_t m_ElectronicHandJointDataLeft = new WVR_HandJointData_t();
 		private WVR_Pose_t[] s_ElectronicHandJointsPoseLeft;
 		private WVR_HandJointData_t m_ElectronicHandJointDataRight = new WVR_HandJointData_t();
 		private WVR_Pose_t[] s_ElectronicHandJointsPoseRight;
 		private HandJointData26 jointData26 = new HandJointData26();
+		public Predictor.UpdateLog electronicHandUpdateLog = new Predictor.UpdateLog();
+
+		private int m_CheckFrameCount = -1;
+		private bool m_IsPoseAdjustNeeded = false;
+		private float m_predictTime = 0.0f;
+		private Vector3 m_wristLinearVelocityLeft = Vector3.zero;
+		private Vector3 m_wristAngularVelocityLeft = Vector3.zero;
+		private Vector3 m_wristLinearVelocityRight = Vector3.zero;
+		private Vector3 m_wristAngularVelocityRight = Vector3.zero;
 
 		private void GetHandJointCount(TrackerType tracker)
 		{
@@ -2577,6 +2617,11 @@ namespace Wave.Essence.Hand
 					DEBUG(sb);
 				}
 			}
+		}
+
+		private void OnBeforeRender()
+		{
+			m_OnBeforeRender = true;
 		}
 
 		#region Hand Tracker Info
@@ -2663,7 +2708,7 @@ namespace Wave.Essence.Hand
 			}
 
 			Marshal.Copy(handTrackerInfo.jointValidFlagArray, jointValidFlagArrayBytes, 0, jointValidFlagArrayBytes.Length);
-			for (int byteIndex = 0; byteIndex < jointValidFlagArrayBytes.Length; byteIndex = byteIndex+8)
+			for (int byteIndex = 0; byteIndex < jointValidFlagArrayBytes.Length; byteIndex = byteIndex + 8)
 			{
 				int i = (byteIndex / 8);
 				jointValidFlagArray[i] = BitConverter.ToUInt64(jointValidFlagArrayBytes, byteIndex);
@@ -2890,7 +2935,7 @@ namespace Wave.Essence.Hand
 
 		private bool ExtractHandTrackerData(WVR_HandTrackingData_t handTrackerData, ref WVR_Pose_t[] handJointsPoseLeft, ref WVR_Pose_t[] handJointsPoseRight)
 		{
-			if (handTrackerData.left.jointCount == 26 && 
+			if (handTrackerData.left.jointCount == 26 &&
 				handTrackerData.right.jointCount == 26 &&
 				handJointsPoseLeft.Length == 26 &&
 				handJointsPoseRight.Length == 26 &&
@@ -2930,7 +2975,6 @@ namespace Wave.Essence.Hand
 					m_NaturalTrackerInfo.jointCount != 0 &&
 					(m_NaturalTrackerInfo.handModelTypeBitMask & (ulong)WVR_HandModelType.WVR_HandModelType_WithoutController) != 0)
 				{
-					Profiler.BeginSample("GetHandTrackingData");
 					result = Interop.WVR_GetHandTrackingData(
 						WVR_HandTrackerType.WVR_HandTrackerType_Natural,
 						WVR_HandModelType.WVR_HandModelType_WithoutController,
@@ -2938,7 +2982,7 @@ namespace Wave.Essence.Hand
 						ref m_NaturalHandTrackerData,
 						ref m_NaturalHandPoseData
 					);
-					Profiler.EndSample();
+					naturalHandUpdateLog.Update();
 
 					hasNaturalHandTrackerData = result == WVR_Result.WVR_Success ? true : false;
 					if (hasNaturalHandTrackerData)
@@ -3024,7 +3068,7 @@ namespace Wave.Essence.Hand
 			}
 			if (tracker == TrackerType.Electronic)
 			{
-				Profiler.BeginSample("Natural Hand");
+				Profiler.BeginSample("Electronic Hand");
 				switch (m_TrackerOptions.Electronic.Model)
 				{
 					case HandModel.WithController:
@@ -3051,6 +3095,7 @@ namespace Wave.Essence.Hand
 						ref m_ElectronicHandTrackerData,
 						ref m_ElectronicHandPoseData
 					);
+					electronicHandUpdateLog.Update();
 
 					hasElectronicHandTrackerData = result == WVR_Result.WVR_Success ? true : false;
 					if (hasElectronicHandTrackerData)
@@ -3111,6 +3156,67 @@ namespace Wave.Essence.Hand
 				Profiler.EndSample();
 			}
 		}
+
+		private bool AdjustPoseIfNeeded()
+		{
+			int currentFrameCount = Time.frameCount;
+			if (currentFrameCount != m_CheckFrameCount)
+			{
+				if (Predictor.IsHandPoseLate())
+				{
+					m_predictTime = Predictor.GetVsyncTime();
+					GetWristLinearVelocity(ref m_wristLinearVelocityLeft, true);
+					GetWristAngularVelocity(ref m_wristAngularVelocityLeft, true);
+					GetWristLinearVelocity(ref m_wristLinearVelocityRight, false);
+					GetWristAngularVelocity(ref m_wristAngularVelocityRight, false);
+					m_IsPoseAdjustNeeded = true;
+
+				}
+				else
+				{
+					m_IsPoseAdjustNeeded = false;
+
+				}
+				m_CheckFrameCount = currentFrameCount;
+			}
+			return !m_OnBeforeRender && m_IsPoseAdjustNeeded;
+		}
+
+		private void AdjustPosition(ref Vector3 pos, bool isLeft)
+		{
+			if (isLeft)
+			{
+				pos += m_wristLinearVelocityLeft * m_predictTime;
+			}
+			else
+			{
+				pos += m_wristLinearVelocityRight * m_predictTime;
+			}
+		}
+		private void AdjustRotation(ref Quaternion rot, bool isLeft)
+		{
+			Vector3 angShift = Vector3.zero;
+			if (isLeft)
+			{
+				angShift = m_wristAngularVelocityLeft * m_predictTime;
+			}
+			else
+			{
+				angShift = m_wristAngularVelocityRight * m_predictTime;
+			}
+
+			float theta = Mathf.Max(angShift.magnitude, 1e-8f);
+			float sin = Mathf.Sin(theta / 2.0f);
+			float cos = Mathf.Cos(theta / 2.0f);
+			Quaternion fixedRot = new Quaternion()
+			{
+				w = cos,
+				x = sin * angShift.x / theta,
+				y = sin * angShift.y / theta,
+				z = sin * angShift.z / theta,
+			};
+			rot *= fixedRot;
+		}
 		#endregion
 	}
 
@@ -3143,7 +3249,7 @@ namespace Wave.Essence.Hand
 		}
 		public static string Name(this HandManager.GestureType type)
 		{
-			switch(type)
+			switch (type)
 			{
 				case HandManager.GestureType.Unknown:
 					return "Unknown";
@@ -3169,7 +3275,7 @@ namespace Wave.Essence.Hand
 		}
 		public static HandFinger Finger(this HandManager.HandJoint joint)
 		{
-			switch(joint)
+			switch (joint)
 			{
 				case HandManager.HandJoint.Thumb_Joint0:
 				case HandManager.HandJoint.Thumb_Joint1:

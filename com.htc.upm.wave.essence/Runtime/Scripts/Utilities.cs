@@ -9,16 +9,17 @@
 // specifications, and documentation provided by HTC to You."
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.XR;
+using Wave.Essence.Hand;
 using Wave.Native;
 using Wave.OpenXR;
 using Wave.XR;
 using Wave.XR.Function;
-using System.Collections.Generic;
-using UnityEngine.Profiling;
-using System.Diagnostics;
 
 namespace Wave.Essence
 {
@@ -765,6 +766,121 @@ namespace Wave.Essence
 			}
 
 			return caller;
+		}
+	}
+
+	public static class Predictor
+	{
+		public class UpdateLog
+		{
+			public struct UpdateData
+			{
+				public uint frameCount;
+				public long timestamp;
+				public long predictDisplayTime;
+
+				public UpdateData(long timestamp)
+				{
+					this.frameCount = (uint)Time.frameCount;
+					this.timestamp = timestamp;
+					predictDisplayTime = Interop.WVR_GetPredictedDisplayTime();
+				}
+
+				public static UpdateData Identify = new UpdateData(0);
+
+				public override bool Equals(object obj)
+				{
+					return obj is UpdateData updateData &&
+						   updateData.frameCount == this.frameCount &&
+						   updateData.timestamp == this.timestamp &&
+						   updateData.predictDisplayTime == this.predictDisplayTime;
+				}
+				public override int GetHashCode()
+				{
+					return frameCount.GetHashCode() ^ timestamp.GetHashCode() ^ predictDisplayTime.GetHashCode();
+				}
+				public static bool operator ==(UpdateData source, UpdateData target) => source.Equals(target);
+				public static bool operator !=(UpdateData source, UpdateData target) => !(source == target);
+			}
+
+			private static readonly int MAX_LOG_COUNT = 3;
+			private List<UpdateData> m_UpdateDatabase = new List<UpdateData>();
+			public IReadOnlyList<UpdateData> updateDatabase => m_UpdateDatabase.AsReadOnly();
+
+			public void Update()
+			{
+				long timestamp = System.Diagnostics.Stopwatch.GetTimestamp();
+				long frequency = System.Diagnostics.Stopwatch.Frequency;
+				timestamp = (long)((double)timestamp / frequency * 1E+9);
+				UpdateData data = new UpdateData(timestamp);
+				if (m_UpdateDatabase != null)
+				{
+					m_UpdateDatabase.Add(data);
+					if (m_UpdateDatabase.Count > MAX_LOG_COUNT)
+					{
+						m_UpdateDatabase.RemoveRange(0, m_UpdateDatabase.Count - MAX_LOG_COUNT);
+					}
+				}
+			}
+		}
+
+		private static UpdateLog xrHandUpdateLog = new UpdateLog();
+		public static bool IsHandPoseLate()
+		{
+			if (WaveXR_RuntimeInitializeOnLoad.Instance != null)
+			{
+				UpdateLog beforeRenderUpdateLog = WaveXR_RuntimeInitializeOnLoad.Instance.beforeRenderUpdateLog;
+				UpdateLog handUpdateLog = null;
+				if (HandManager.Instance != null && !HandManager.Instance.UseXRDevice)
+				{
+					HandManager.TrackerType tracker = HandManager.TrackerType.Electronic;
+					if (HandManager.Instance.GetPreferTracker(ref tracker))
+					{
+						handUpdateLog = tracker == HandManager.TrackerType.Natural ? HandManager.Instance.naturalHandUpdateLog : HandManager.Instance.electronicHandUpdateLog;
+					}
+				}
+				else
+				{
+                    InputDeviceHand.IsHandDeviceConnected(default);
+                    xrHandUpdateLog.Update();
+					handUpdateLog = xrHandUpdateLog;
+				}
+
+				if (handUpdateLog != null)
+				{
+					UpdateLog.UpdateData handUpdateData = handUpdateLog.updateDatabase[handUpdateLog.updateDatabase.Count - 1];
+					UpdateLog.UpdateData lastUpdateData = UpdateLog.UpdateData.Identify;
+					for (int i = beforeRenderUpdateLog.updateDatabase.Count - 1; i >= 0; i--)
+					{
+						UpdateLog.UpdateData updateData = beforeRenderUpdateLog.updateDatabase[i];
+						if (handUpdateData.frameCount >= updateData.frameCount)
+						{
+							lastUpdateData = updateData;
+							break;
+						}
+					}
+
+					if (lastUpdateData != UpdateLog.UpdateData.Identify)
+					{
+						long diff = handUpdateData.predictDisplayTime - lastUpdateData.predictDisplayTime;
+						float diffms = diff * 1e-6f;
+						return Mathf.Abs(diffms) < 0.01f;
+					}
+				}
+			}
+			return false;
+		}
+
+		private static float vsyncTime = 1.0f / (float)Application.targetFrameRate;
+		public static float GetVsyncTime()
+		{
+			uint fps = 0;
+			WVR_Result result = Interop.WVR_GetFrameRate(ref fps);
+			if (result == WVR_Result.WVR_Success)
+			{
+				vsyncTime = 1.0f / (float)fps;
+			}
+			return vsyncTime;
 		}
 	}
 }

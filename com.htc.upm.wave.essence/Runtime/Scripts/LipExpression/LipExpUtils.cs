@@ -8,6 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System;
 using Wave.Native;
 using Wave.OpenXR;
 
@@ -27,10 +28,10 @@ namespace Wave.Essence.LipExpression
         Mouth_Upper_Overturn = WVR_LipExpression.WVR_LipExpression_Mouth_Upper_Overturn,
         Mouth_Lower_Overturn = WVR_LipExpression.WVR_LipExpression_Mouth_Lower_Overturn,   // 10
         Mouth_Pout = WVR_LipExpression.WVR_LipExpression_Mouth_Pout,
-        Mouth_Smile_Right = WVR_LipExpression.WVR_LipExpression_Mouth_Smile_Right,
-        Mouth_Smile_Left = WVR_LipExpression.WVR_LipExpression_Mouth_Smile_Left,
-        Mouth_Sad_Right = WVR_LipExpression.WVR_LipExpression_Mouth_Sad_Right,
-        Mouth_Sad_Left = WVR_LipExpression.WVR_LipExpression_Mouth_Sad_Left,         // 15
+        Mouth_Raiser_Right = WVR_LipExpression.WVR_LipExpression_Mouth_Raiser_Right,
+        Mouth_Raiser_Left = WVR_LipExpression.WVR_LipExpression_Mouth_Raiser_Left,
+        Mouth_Stretcher_Right = WVR_LipExpression.WVR_LipExpression_Mouth_Stretcher_Right,
+        Mouth_Stretcher_Left = WVR_LipExpression.WVR_LipExpression_Mouth_Stretcher_Left,         // 15
         Cheek_Puff_Right = WVR_LipExpression.WVR_LipExpression_Cheek_Puff_Right,
         Cheek_Puff_Left = WVR_LipExpression.WVR_LipExpression_Cheek_Puff_Left,
         Cheek_Suck = WVR_LipExpression.WVR_LipExpression_Cheek_Suck,
@@ -70,10 +71,10 @@ namespace Wave.Essence.LipExpression
         LipExp.Mouth_Upper_Overturn,
         LipExp.Mouth_Lower_Overturn,    // 10
         LipExp.Mouth_Pout,
-        LipExp.Mouth_Smile_Right,
-        LipExp.Mouth_Smile_Left,
-        LipExp.Mouth_Sad_Right,
-        LipExp.Mouth_Sad_Left,          // 15
+        LipExp.Mouth_Raiser_Right,
+        LipExp.Mouth_Raiser_Left,
+        LipExp.Mouth_Stretcher_Right,
+        LipExp.Mouth_Stretcher_Left,          // 15
         LipExp.Cheek_Puff_Right,
         LipExp.Cheek_Puff_Left,
         LipExp.Cheek_Suck,

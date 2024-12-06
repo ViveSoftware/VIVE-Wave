@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿// HTC Corporation. All Rights Reserved.
+
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.XR;
 using Wave.XR.Loader;
@@ -192,6 +194,9 @@ namespace Wave.XR.Settings
         [DllImport("wvrunityxr", EntryPoint = "SettingsSetFloat")]
         public static extern ErrorCode SetFloat(string name, float value);
 
+        [DllImport("wvrunityxr", EntryPoint = "SettingsSetLong")]
+        public static extern ErrorCode SetLong(string name, long value);
+
         [DllImport("wvrunityxr", EntryPoint = "SettingsSetString")]
         internal static extern ErrorCode SetFloatArray(string name, [In, Out] float[] array, uint length);
         public static ErrorCode SetFloatArray(string name, float[] array)
@@ -218,6 +223,9 @@ namespace Wave.XR.Settings
 
         [DllImport("wvrunityxr", EntryPoint = "SettingsGetFloat")]
         public static extern ErrorCode GetFloat(string name, ref float value);
+
+        [DllImport("wvrunityxr", EntryPoint = "SettingsGetLong")]
+        public static extern ErrorCode GetLong(string name, ref long value);
 
         [DllImport("wvrunityxr", EntryPoint = "SettingsGetFloatArray")]
         internal static extern ErrorCode GetFloatArray(string name, ref float[] array, uint bufferSize);
