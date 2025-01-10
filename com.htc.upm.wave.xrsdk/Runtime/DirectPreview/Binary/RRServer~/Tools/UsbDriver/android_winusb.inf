@@ -1,0 +1,122 @@
+;
+; Android WinUsb driver installation.
+;
+[Version]
+Signature           = "$Windows NT$"
+Class               = AndroidUsbDeviceClass
+ClassGuid           = {3F966BD9-FA04-4ec5-991C-D326973B5128}
+Provider            = %ProviderName%
+DriverVer           = 05/06/2021,13.0.0000.0
+CatalogFile.NTx86   = androidwinusb86.cat
+CatalogFile.NTamd64 = androidwinusba64.cat
+
+[ClassInstall32]
+Addreg = AndroidWinUsbClassReg
+
+[AndroidWinUsbClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-1
+
+
+[Manufacturer]
+%ProviderName% = Google, NTx86, NTamd64
+
+
+[Google.NTx86]
+
+;HTC HMD
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0344&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_034B&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0352&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0353&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0354&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0355&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0356&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0357&MI_03
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0344&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_034B&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0352&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0353&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0354&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0355&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0356&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0357&MI_04
+[Google.NTamd64]
+
+;HTC HMD
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0344&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_034B&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0352&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0353&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0354&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0355&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0356&MI_03
+%HTCRRInterface%       = USB_Install, USB\VID_0BB4&PID_0357&MI_03
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0344&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_034B&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0352&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0353&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0354&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0355&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0356&MI_04
+%HTCHUBInterface%      = USB_Install, USB\VID_0BB4&PID_0357&MI_04
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
+
+[USB_Install.Services]
+Include     = winusb.inf
+AddService  = WinUSB,0x00000002,WinUSB_ServiceInstall
+
+[WinUSB_ServiceInstall]
+DisplayName     = %WinUSB_SvcDesc%
+ServiceType     = 1
+StartType       = 3
+ErrorControl    = 1
+ServiceBinary   = %12%\WinUSB.sys
+
+[USB_Install.Wdf]
+KmdfService = WINUSB, WinUSB_Install
+
+[WinUSB_Install]
+KmdfLibraryVersion  = 1.9
+
+[USB_Install.HW]
+AddReg  = Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{F72FE0D4-CBCB-407d-8814-9ED673D0DD6B}"
+
+[USB_Install.CoInstallers]
+AddReg    = CoInstallers_AddReg
+CopyFiles = CoInstallers_CopyFiles
+
+[CoInstallers_AddReg]
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01009.dll,WdfCoInstaller","WinUSBCoInstaller2.dll"
+
+[CoInstallers_CopyFiles]
+WinUSBCoInstaller2.dll
+WdfCoInstaller01009.dll
+
+[DestinationDirs]
+CoInstallers_CopyFiles=11
+
+[SourceDisksNames]
+1 = %DISK_NAME%,,,\i386
+2 = %DISK_NAME%,,,\amd64
+
+[SourceDisksFiles.x86]
+WinUSBCoInstaller2.dll  = 1
+WdfCoInstaller01009.dll = 1
+
+[SourceDisksFiles.amd64]
+WinUSBCoInstaller2.dll  = 2
+WdfCoInstaller01009.dll = 2
+
+[Strings]
+ProviderName                = "HTC Vive"
+HTCRRInterface              = "VIVE RR Interface"
+HTCHUBInterface             = "VIVE HUB Interface"
+WinUSB_SvcDesc              = "HTC USB Driver"
+DISK_NAME                   = "HTC WinUsb installation disk"
+ClassName                   = "HTC Device"

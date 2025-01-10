@@ -1551,22 +1551,6 @@ namespace Wave.Native
 		public WVR_HandGraspState_t grasp;
 	}
 
-	/**
-	 * @brief The data structure of one hand that copy from WVR_HandTrackingData_t since DP not support hand grasp.
-	 * @version API Level 6
-	 */
-	[StructLayout(LayoutKind.Sequential)]
-	public struct WVR_DPHandJointData_t
-	{
-		public bool isValidPose;     /**< The label of valid(true)/invalid(false) pose. */
-		public float confidence;     /**< The hand confidence value. */
-		public uint jointCount;      /**< Specify the size of the @ref WVR_Pose_t array. */
-		public IntPtr joints;        /**< The array of the @ref WVR_Pose_t. */
-		public WVR_Vector3f_t scale; /**< defualt is 1. */
-		public WVR_Vector3f_t wristLinearVelocity;
-		public WVR_Vector3f_t wristAngularVelocity;
-	}
-
 	[StructLayout(LayoutKind.Sequential)]
     public struct HandJointData26
     {
@@ -1614,18 +1598,6 @@ namespace Wave.Native
 		public long timestamp;
 		public WVR_HandJointData_t right;    /**< The hand tracker data of right hand, refer to @ref WVR_HandJointData_t. */
 		public WVR_HandJointData_t left;     /**< The hand tracker data of left hand, refer to @ref WVR_HandJointData_t. */
-	}
-
-	/**
-	 * @brief The data structure of the hand tracker data that copy from WVR_HandTrackingData_t since DP not support hand grasp.
-	 * @version API Level 6
-	 */
-	[StructLayout(LayoutKind.Sequential)]
-	public struct WVR_DPHandTrackingData_t
-	{
-		public long timestamp;
-		public WVR_DPHandJointData_t right;    /**< The hand tracker data of right hand, refer to @ref WVR_HandJointData_t. */
-		public WVR_DPHandJointData_t left;     /**< The hand tracker data of left hand, refer to @ref WVR_HandJointData_t. */
 	}
 	#endregion
 
@@ -1731,11 +1703,11 @@ namespace Wave.Native
 		WVR_LipExpression_Mouth_Upper_Overturn = 9,
 		WVR_LipExpression_Mouth_Lower_Overturn = 10,	// 10
 		WVR_LipExpression_Mouth_Pout = 11,
-		WVR_LipExpression_Mouth_Smile_Right = 12,
-		WVR_LipExpression_Mouth_Smile_Left = 13,
-		WVR_LipExpression_Mouth_Sad_Right = 14,
-		WVR_LipExpression_Mouth_Sad_Left = 15,			// 15
-		WVR_LipExpression_Cheek_Puff_Right = 16,
+		WVR_LipExpression_Mouth_Raiser_Right = 12,
+        WVR_LipExpression_Mouth_Raiser_Left = 13,
+        WVR_LipExpression_Mouth_Stretcher_Right = 14,
+        WVR_LipExpression_Mouth_Stretcher_Left = 15,			// 15
+        WVR_LipExpression_Cheek_Puff_Right = 16,
 		WVR_LipExpression_Cheek_Puff_Left = 17,
 		WVR_LipExpression_Cheek_Suck = 18,
 		WVR_LipExpression_Mouth_Upper_Upright = 19,
@@ -4033,8 +4005,13 @@ namespace Wave.Native
             WVR_Base.Instance.EnableHandleDisplayChanged(enable);
         }
 
-        #region Internal
-        public static string WVR_DeployRenderModelAssets(int deviceIndex, string renderModelName)
+		public static long WVR_GetPredictedDisplayTime()
+		{
+			return WVR_Base.Instance.GetPredictedDisplayTime();
+		}
+
+		#region Internal
+		public static string WVR_DeployRenderModelAssets(int deviceIndex, string renderModelName)
 		{
 			return WVR_Base.Instance.DeployRenderModelAssets(deviceIndex, renderModelName);
 		}
@@ -5391,8 +5368,13 @@ namespace Wave.Native
                 return;
             }
 
+			public virtual long GetPredictedDisplayTime()
+			{
+				return 0;
+			}
+
 			#region Internal
-            public virtual string DeployRenderModelAssets(int deviceIndex, string renderModelName)
+			public virtual string DeployRenderModelAssets(int deviceIndex, string renderModelName)
 			{
 				return "";
 			}

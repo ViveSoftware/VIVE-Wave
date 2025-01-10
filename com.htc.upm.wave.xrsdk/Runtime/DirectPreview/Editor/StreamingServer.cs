@@ -38,7 +38,7 @@ namespace Wave.XR.DirectPreview.Editor
 
 		public static bool isStreamingServerExist()
 		{
-			var absolutePath = Path.GetFullPath("Packages/com.htc.upm.wave.xrsdk/Runtime/DirectPreview/Binary/RRServer/RRserver.exe");
+			var absolutePath = Path.GetFullPath("Packages/com.htc.upm.wave.xrsdk/Runtime/DirectPreview/Binary/RRServer~/RRserver.exe");
 
 			UnityEngine.Debug.Log("StreamingServer pull path = " + absolutePath);
 
@@ -52,7 +52,7 @@ namespace Wave.XR.DirectPreview.Editor
 			{
 				try
 				{
-					var absolutePath = Path.GetFullPath("Packages/com.htc.upm.wave.xrsdk/Runtime/DirectPreview/Binary/RRServer");
+					var absolutePath = Path.GetFullPath("Packages/com.htc.upm.wave.xrsdk/Runtime/DirectPreview/Binary/RRServer~");
 					var driveStr = absolutePath.Substring(0, 2);
 
 					UnityEngine.Debug.Log("StreamingServer in " + absolutePath);

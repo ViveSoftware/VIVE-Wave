@@ -60,7 +60,7 @@ public class FramerateTest : MonoBehaviour
 			Profiler.BeginSample("WVR_GetFrameRate");
 			ret = Interop.WVR_GetFrameRate(ref fr);
 			Profiler.EndSample();
-			Debug.Log("GetFrameRate(" + fr + ")=" + ret);
+			Log.d("FramerateTest", "GetFrameRate(" + fr + ")=" + ret);
 			if (ret == WVR_Result.WVR_Success)
 			{
 				foreach (var pair in frameRateTextMap)

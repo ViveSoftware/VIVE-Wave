@@ -39,8 +39,6 @@ namespace Wave.Native
 			if ((m_WaveXRSettings.debugLogFlagForUnity & (uint)flag) == 0) { return false; }
 			return true;
 		}
-		[Obsolete("This variable is deprecated. Please use Project Settings > WaveXRSettings > Log Flag for Unity instead.")]
-		public static bool EnableDebugLog = true;
 		private const int LOG_VERBOSE = 2;
 		private const int LOG_DEBUG = 3;
 		private const int LOG_INFO = 4;

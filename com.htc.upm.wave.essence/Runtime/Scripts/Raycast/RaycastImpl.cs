@@ -250,6 +250,7 @@ namespace Wave.Essence.Raycast
 			Ray ray = new Ray(transform.position, (physicsWorldPosition - transform.position));
 			PhysicsRaycast(ray, m_Camera, resultAppendList);
 			/// When dragging, it should add the raycast result of begin dragging to avoid raycasting failure.
+			if (pointerData == null) { pointerData = new RaycastEventData(EventSystem.current, gameObject); }
 			if (pointerData.dragging && draggingRaycastResult.isValid &&
 				draggingRaycastResult.module.eventCamera != null)
 			{

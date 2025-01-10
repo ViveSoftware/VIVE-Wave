@@ -2082,5 +2082,12 @@ namespace Wave.Native
         {
             WVR_EnableHandleDisplayChanged_Android(enable);
         }
-    }
+
+		[DllImport("wvr_api", EntryPoint = "WVR_GetPredictedDisplayTime", CallingConvention = CallingConvention.Cdecl)]
+		public static extern long WVR_GetPredictedDisplayTime_Android();
+		public override long GetPredictedDisplayTime()
+		{
+			return WVR_GetPredictedDisplayTime_Android();
+		}
+	}
 }

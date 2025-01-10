@@ -31,7 +31,8 @@ namespace Wave.Essence.Samples.Raycast
 		{
 			if (m_Text == null || EyeManager.Instance == null) { return; }
 
-			m_Text.text = (IsLeft ? "Left eye: " : "Right eye: ");
+			long timestamp = EyeManager.Instance.GetEyeTrackingTimestamp();
+			m_Text.text = (IsLeft ? "Left eye: " : "Right eye: ") + timestamp;
 
 			if (IsLeft)
 			{
@@ -39,25 +40,25 @@ namespace Wave.Essence.Samples.Raycast
 				{
 					if (EyeManager.Instance.GetLeftEyeOrigin(out Vector3 value))
 						origin = value;
-					m_Text.text += "origin: (" + origin.x.ToString() + ", " + origin.y.ToString() + ", " + origin.z.ToString() + ")\n";
+					m_Text.text += "\norigin: (" + origin.x.ToString() + ", " + origin.y.ToString() + ", " + origin.z.ToString() + ")";
 				}
 				float pupilDiameter = 0;
 				{
 					if (EyeManager.Instance.GetLeftEyePupilDiameter(out float value))
 						pupilDiameter = value;
-					m_Text.text += "pupil diameter: " + pupilDiameter + "\n";
+					m_Text.text += "\npupil diameter: " + pupilDiameter;
 				}
 				Vector2 pupilSensorPosition = Vector2.zero;
 				{
 					if (EyeManager.Instance.GetLeftEyePupilPositionInSensorArea(out Vector2 value))
 						pupilSensorPosition = value;
-					m_Text.text += "sensor position (" + pupilSensorPosition.x.ToString() + ", " + pupilSensorPosition.y.ToString() + ")\n";
+					m_Text.text += "\nsensor position (" + pupilSensorPosition.x.ToString() + ", " + pupilSensorPosition.y.ToString() + ")";
 				}
 				float openness = 0;
 				{
 					if (EyeManager.Instance.GetLeftEyeOpenness(out float value))
 						openness = value;
-					m_Text.text += "openness: " + openness;
+					m_Text.text += "\nopenness: " + openness;
 				}
 			}
 			else
@@ -66,25 +67,25 @@ namespace Wave.Essence.Samples.Raycast
 				{
 					if (EyeManager.Instance.GetRightEyeOrigin(out Vector3 value))
 						origin = value;
-					m_Text.text += "origin: (" + origin.x.ToString() + ", " + origin.y.ToString() + ", " + origin.z.ToString() + ")\n";
+					m_Text.text += "\norigin: (" + origin.x.ToString() + ", " + origin.y.ToString() + ", " + origin.z.ToString() + ")";
 				}
 				float pupilDiameter = 0;
 				{
 					if (EyeManager.Instance.GetRightEyePupilDiameter(out float value))
 						pupilDiameter = value;
-					m_Text.text += "pupil diameter: " + pupilDiameter + "\n";
+					m_Text.text += "\npupil diameter: " + pupilDiameter;
 				}
 				Vector2 pupilSensorPosition = Vector2.zero;
 				{
 					if (EyeManager.Instance.GetRightEyePupilPositionInSensorArea(out Vector2 value))
 						pupilSensorPosition = value;
-					m_Text.text += "sensor position (" + pupilSensorPosition.x.ToString() + ", " + pupilSensorPosition.y.ToString() + ")\n";
+					m_Text.text += "\nsensor position (" + pupilSensorPosition.x.ToString() + ", " + pupilSensorPosition.y.ToString() + ")";
 				}
 				float openness = 0;
 				{
 					if (EyeManager.Instance.GetRightEyeOpenness(out float value))
 						openness = value;
-					m_Text.text += "openness: " + openness;
+					m_Text.text += "\nopenness: " + openness;
 				}
 			}
 		}

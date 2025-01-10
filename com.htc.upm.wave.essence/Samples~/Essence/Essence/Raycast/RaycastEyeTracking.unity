@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.006490347, g: 0.023789566, b: 0.076484226, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1277,7 +1277,7 @@ MonoBehaviour:
   m_ShowRay: 1
   m_RayStartWidth: 0.01
   m_RayEndWidth: 0.01
-  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 3}
+  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_Pointer: {fileID: 1625088994}
   m_Hand: 1
   m_UsePose: 1
@@ -1351,7 +1351,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1377,7 +1377,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1969,19 +1969,6 @@ MonoBehaviour:
     m_LeftHand: 1
     m_RightHand: 1
     m_DefaultPinch: 0
-  m_UseInputAction: 0
-  m_RotationInput:
-    m_UseReference: 0
-    m_Action:
-      m_Name: 
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 0}
   m_AlwaysEnable: 0
   pinchedL: 0
   pinchedR: 0
@@ -4166,7 +4153,7 @@ MonoBehaviour:
   m_ShowRay: 1
   m_RayStartWidth: 0.01
   m_RayEndWidth: 0.01
-  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 3}
+  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_Pointer: {fileID: 1813687234}
   m_Controller: 2
   m_ControlKey:
@@ -4194,7 +4181,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4220,7 +4207,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -4330,7 +4317,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Device: 1
   m_PoseSource: 5
-  m_PoseProviderComponent: {fileID: 0}
+  m_PoseProviderComponent: {fileID: 2112806103}
   m_TrackingType: 0
   m_UpdateType: 0
   m_UseRelativeTransform: 0
@@ -4391,7 +4378,7 @@ MonoBehaviour:
   m_ShowRay: 1
   m_RayStartWidth: 0.01
   m_RayEndWidth: 0.01
-  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 3}
+  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_Pointer: {fileID: 461310355}
   m_Controller: 3
   m_ControlKey:
@@ -4419,7 +4406,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4445,7 +4432,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -4555,7 +4542,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Device: 1
   m_PoseSource: 4
-  m_PoseProviderComponent: {fileID: 0}
+  m_PoseProviderComponent: {fileID: 2021509436}
   m_TrackingType: 0
   m_UpdateType: 0
   m_UseRelativeTransform: 0
@@ -4723,7 +4710,7 @@ MonoBehaviour:
   m_ShowRay: 1
   m_RayStartWidth: 0.01
   m_RayEndWidth: 0.01
-  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 3}
+  m_RayMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_Pointer: {fileID: 372206070}
   m_Hand: 0
   m_UsePose: 1
@@ -4797,7 +4784,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4823,7 +4810,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -8495,6 +8482,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2021509436 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7566242026288510531, guid: fe26b6d4f24c88f43badd1c44298baf9,
+    type: 3}
+  m_PrefabInstance: {fileID: 499034885}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6864e6a9e7fce3143911e526d97a7c13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2051254357
 GameObject:
   m_ObjectHideFlags: 0
@@ -8782,6 +8781,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &2112806103 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1139730378515063766, guid: 9f0db195554da7649b9bc90f6f4a4fee,
+    type: 3}
+  m_PrefabInstance: {fileID: 1531094112}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6864e6a9e7fce3143911e526d97a7c13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1053594582206330
 GameObject:
   m_ObjectHideFlags: 0
@@ -10459,8 +10470,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 114305613345136316}
   m_HandleRect: {fileID: 224225765845599858}
   m_Direction: 2
-  m_Value: -0.00000011137802
-  m_Size: 0.54333335
+  m_Value: 0.00000022275604
+  m_Size: 0.54332834
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -11102,7 +11113,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000019073486, y: 137}
+  m_AnchoredPosition: {x: -0.000019073486, y: 136.99997}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!224 &224701558979040588

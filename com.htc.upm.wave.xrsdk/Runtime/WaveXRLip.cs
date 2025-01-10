@@ -8,6 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
+using System;
 using System.Diagnostics;
 using UnityEngine;
 using Wave.XR.Settings;
@@ -33,11 +34,11 @@ namespace Wave.OpenXR
 			Mouth_Upper_Overturn = 9,
 			Mouth_Lower_Overturn = 10,
 			Mouth_Pout = 11,
-			Mouth_Smile_Right = 12,
-			Mouth_Smile_Left = 13,
-			Mouth_Sad_Right = 14,
-			Mouth_Sad_Left = 15,
-			Cheek_Puff_Right = 16,
+            Mouth_Raiser_Right = 12,
+            Mouth_Raiser_Left = 13,
+            Mouth_Stretcher_Right = 14,
+            Mouth_Stretcher_Left = 15,
+            Cheek_Puff_Right = 16,
 			Cheek_Puff_Left = 17,
 			Cheek_Suck = 18,
 			Mouth_Upper_UpRight = 19,
@@ -74,10 +75,10 @@ namespace Wave.OpenXR
 		Expressions.Mouth_Upper_Overturn,
 		Expressions.Mouth_Lower_Overturn,    // 10
         Expressions.Mouth_Pout,
-		Expressions.Mouth_Smile_Right,
-		Expressions.Mouth_Smile_Left,
-		Expressions.Mouth_Sad_Right,
-		Expressions.Mouth_Sad_Left,          // 15
+		Expressions.Mouth_Raiser_Right,
+		Expressions.Mouth_Raiser_Left,
+		Expressions.Mouth_Stretcher_Right,
+		Expressions.Mouth_Stretcher_Left,          // 15
         Expressions.Cheek_Puff_Right,
 		Expressions.Cheek_Puff_Left,
 		Expressions.Cheek_Suck,
@@ -117,10 +118,10 @@ namespace Wave.OpenXR
 		const string kLipExpression_Mouth_Upper_Overturn = "LipExpression_Mouth_Upper_Overturn";
 		const string kLipExpression_Mouth_Lower_Overturn = "LipExpression_Mouth_Lower_Overturn"; // 10
 		const string kLipExpression_Mouth_Pout = "LipExpression_Mouth_Pout";
-		const string kLipExpression_Mouth_Smile_Right = "LipExpression_Mouth_Smile_Right";
-		const string kLipExpression_Mouth_Smile_Left = "LipExpression_Mouth_Smile_Left";
-		const string kLipExpression_Mouth_Sad_Right = "LipExpression_Mouth_Sad_Right";
-		const string kLipExpression_Mouth_Sad_Left = "LipExpression_Mouth_Sad_Left"; // 15
+		const string kLipExpression_Mouth_Raiser_Right = "LipExpression_Mouth_Raiser_Right";
+		const string kLipExpression_Mouth_Raiser_Left = "LipExpression_Mouth_Raiser_Left";
+		const string kLipExpression_Mouth_Stretcher_Right = "LipExpression_Mouth_Stretcher_Right";
+		const string kLipExpression_Mouth_Stretcher_Left = "LipExpression_Mouth_Stretcher_Left"; // 15
 		const string kLipExpression_Cheek_Puff_Right = "LipExpression_Cheek_Puff_Right";
 		const string kLipExpression_Cheek_Puff_Left = "LipExpression_Cheek_Puff_Left";
 		const string kLipExpression_Cheek_Suck = "LipExpression_Cheek_Suck";
@@ -158,10 +159,10 @@ namespace Wave.OpenXR
 			kLipExpression_Mouth_Upper_Overturn,
 			kLipExpression_Mouth_Lower_Overturn, // 10
 			kLipExpression_Mouth_Pout,
-			kLipExpression_Mouth_Smile_Right,
-			kLipExpression_Mouth_Smile_Left,
-			kLipExpression_Mouth_Sad_Right,
-			kLipExpression_Mouth_Sad_Left, // 15
+            kLipExpression_Mouth_Raiser_Right,
+            kLipExpression_Mouth_Raiser_Left,
+            kLipExpression_Mouth_Stretcher_Right,
+            kLipExpression_Mouth_Stretcher_Left, // 15
 			kLipExpression_Cheek_Puff_Right,
 			kLipExpression_Cheek_Puff_Left,
 			kLipExpression_Cheek_Suck,
@@ -197,10 +198,10 @@ namespace Wave.OpenXR
 			0, // Mouth_Upper_Overturn
 			0, // Mouth_Lower_Overturn = 10
 			0, // Mouth_Pout
-			0, // Mouth_Smile_Right
-			0, // Mouth_Smile_Left
-			0, // Mouth_Sad_Right
-			0, // Mouth_Sad_Left = 15
+			0, // Mouth_Raiser_Right
+			0, // Mouth_Raiser_Left
+			0, // Mouth_Stretcher_Right
+			0, // Mouth_Stretcher_Left = 15
 			0, // Cheek_Puff_Right
 			0, // Cheek_Puff_Left
 			0, // Cheek_Suck

@@ -14,6 +14,9 @@ using System;
 using System.Diagnostics;
 
 #if UNITY_EDITOR && UNITY_EDITOR_WIN
+using UnityEditor.XR.Management;
+using Wave.XR.Loader;
+
 namespace Wave.XR.DirectPreview.Editor
 {
 	public class DirectPreviewControlPanel : EditorWindow
@@ -32,10 +35,10 @@ namespace Wave.XR.DirectPreview.Editor
 		private bool isRenderImageToggle = false;
 		private bool isCurrentRenderImageState = false;
 
-		//private bool isDllLogSavedFlagToggle = false;
-		//private bool isCurrentIsDllLogSavedState = false;
+        //private bool isDllLogSavedFlagToggle = false;
+        //private bool isCurrentIsDllLogSavedState = false;
 
-		private bool bOutputImagesToFile = false;
+        private bool bOutputImagesToFile = false;
 		private bool aOutputImagesToFile = false;
 
 		// 	Connection Type
@@ -271,6 +274,29 @@ namespace Wave.XR.DirectPreview.Editor
             }
         }
 
+        static public bool CheckIfWaveEnabledForWin()
+        {
+            var winGenericSettings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Standalone);
+            if (winGenericSettings == null)
+                return false;
+
+            var winXRMSettings = winGenericSettings.AssignedSettings;
+            if (winXRMSettings == null)
+                return false;
+
+#pragma warning disable
+            var loaders = winXRMSettings.loaders;
+#pragma warning enable
+            foreach (var loader in loaders)
+            {
+                if (loader.GetType() == typeof(WaveXRLoader))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         void OnGUI()
 		{
             if (Application.isPlaying)
@@ -286,6 +312,14 @@ namespace Wave.XR.DirectPreview.Editor
                 EditorGUILayout.HelpBox("Adb does not exist.\n" +
                     "Please set \"<your android sdk>\\platform-tools\" into your environment path, and then reboot your PC to take effect."
                     , MessageType.Error);
+
+			if (!CheckIfWaveEnabledForWin())
+			{
+                EditorGUILayout.HelpBox("Wave Loader Not Enabled for Standalone Tab.\n" +
+                    "Please enable it by navigating to Project Settings → XR Plug-in Manager → PC, Mac, and Linux Standalone settings → WaveXR."
+                    , MessageType.Error);
+            }
+
 
             //configFoldout = EditorGUILayout.Foldout(configFoldout, "Config");
             //if (configFoldout)
